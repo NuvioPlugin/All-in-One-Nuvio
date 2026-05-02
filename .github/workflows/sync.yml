@@ -1,0 +1,35 @@
+name: Sync Fork & Remove PlayIMDb
+
+on:
+  schedule:
+    - cron: '0 6 * * *'  # Runs daily at 6am UTC
+  workflow_dispatch:       # Also allows manual trigger
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout fork
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 0
+
+      - name: Sync with upstream
+        run: |
+          git remote add upstream https://github.com/D3adlyRocket/All-in-One-Nuvio.git
+          git fetch upstream
+          git merge upstream/main --allow-unrelated-histories -X theirs
+
+      - name: Delete PlayIMDb files
+        run: |
+          find . -name "playimdb*.js" -delete
+          echo "Deleted playimdb files"
+
+      - name: Commit & push
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git diff --staged --quiet || git commit -m "Auto-sync: removed playimdb scrapers"
+          git push
