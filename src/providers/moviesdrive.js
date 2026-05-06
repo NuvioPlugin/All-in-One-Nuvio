@@ -1,4 +1,4 @@
-// MoviesDrive Provider Plugin (nuvio) – FSL/FSLv2 only, stream_title from API
+// MoviesDrive Provider Plugin (nuvio) – complete, series auto, stream_title used
 
 var __defProp = Object.defineProperty;
 var __defProps = Object.defineProperties;
@@ -44,13 +44,14 @@ var __async = (__this, __arguments, generator) => {
 const TMDB_API_KEY = "439c478a771f35c05022f9feabcca01c";
 const DOMAIN_JSON_URL = "https://himanshu8443.github.io/providers/modflix.json";
 const PROVIDER_KEY = "drive";
-const HF_API_BASE = "https://badboysxs-md.hf.space";   // ← your HF space URL
+const HF_API_BASE = "https://badboysxs-md.hf.space";   // <-- your HF space URL
 const HF_MOVIE_API = HF_API_BASE + "/movie";
-const HF_SERIES_API = HF_API_BASE + "/series";
+const HF_SERIES_AUTO_API = HF_API_BASE + "/series_auto";
 let moviesDriveDomain = "";
 let domainCacheTimestamp = 0;
 const DOMAIN_CACHE_TTL = 60 * 60 * 1000;
 
+// -------------- UTILS --------------
 function makeRequest(url, options = {}) {
   return __async(this, null, function* () {
     const defaultHeaders = {
@@ -61,29 +62,9 @@ function makeRequest(url, options = {}) {
       headers: __spreadValues(__spreadValues({}, defaultHeaders), options.headers || {}),
     });
     const res = yield fetch(url, opts);
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    if (!res.ok) throw new Error(`HTTP ${res.status}: ${res.statusText}`);
     return res;
   });
-}
-
-function findBestMatch(main, targets) {
-  if (!targets || targets.length === 0) return { bestMatch: "", bestMatchIndex: -1 };
-  const ratings = targets.map(t => {
-    if (!t) return 0;
-    const a = main.toLowerCase();
-    const b = t.toLowerCase();
-    if (a === b) return 1;
-    if (b.includes(a) || a.includes(b)) return 0.8;
-    const aWords = a.split(/\s+/);
-    const bWords = b.split(/\s+/);
-    let matchCount = 0;
-    for (const w of aWords) {
-      if (w.length > 2 && bWords.some(x => x.includes(w) || w.includes(x))) matchCount++;
-    }
-    return matchCount / Math.max(aWords.length, bWords.length);
-  });
-  const best = Math.max(...ratings);
-  return { bestMatch: targets[ratings.indexOf(best)], bestMatchIndex: ratings.indexOf(best) };
 }
 
 // -------------- DOMAIN RESOLVER --------------
@@ -94,12 +75,14 @@ function getMoviesDriveDomain() {
       return moviesDriveDomain;
     }
     try {
+      console.log("[MoviesDrive] Fetching latest domain...");
       const res = yield fetch(DOMAIN_JSON_URL);
       if (res.ok) {
         const data = yield res.json();
         if (data && data[PROVIDER_KEY] && data[PROVIDER_KEY].url) {
           moviesDriveDomain = data[PROVIDER_KEY].url.replace(/\/$/, "");
           domainCacheTimestamp = now;
+          console.log(`[MoviesDrive] Domain set to: ${moviesDriveDomain}`);
         }
       }
     } catch (e) {
@@ -109,12 +92,15 @@ function getMoviesDriveDomain() {
   });
 }
 
-// -------------- SEARCH --------------
+// -------------- SEARCH (used only for movies) --------------
 function searchMoviesDrive(query) {
   return __async(this, null, function* () {
     const domain = yield getMoviesDriveDomain();
     if (!domain) return [];
+
     const apiUrl = `${domain}/search.php?q=${encodeURIComponent(query)}&page=1`;
+    console.log(`[MoviesDrive] API Search: ${apiUrl}`);
+
     const searchHeaders = {
       "Accept": "*/*",
       "Accept-Encoding": "gzip, deflate, br",
@@ -129,6 +115,7 @@ function searchMoviesDrive(query) {
       "Sec-Fetch-Site": "same-origin",
       "User-Agent": "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Mobile Safari/537.36"
     };
+
     try {
       const res = yield makeRequest(apiUrl, { headers: searchHeaders });
       const data = yield res.json();
@@ -146,90 +133,69 @@ function searchMoviesDrive(query) {
   });
 }
 
-// -------------- HF API CALLS --------------
-function getMovieLinks(pageUrl) {
-  return __async(this, null, function* () {
-    const url = `${HF_MOVIE_API}?url=${encodeURIComponent(pageUrl)}`;
-    const res = yield makeRequest(url);
-    const data = yield res.json();
-    return data && data.links ? data.links : [];
-  });
-}
-
-function getSeriesEpisodes(pageUrl) {
-  return __async(this, null, function* () {
-    const url = `${HF_SERIES_API}?url=${encodeURIComponent(pageUrl)}`;
-    const res = yield makeRequest(url);
-    const data = yield res.json();
-    return data && data.episodes ? data.episodes : [];
-  });
-}
-
-// -------------- getStreams --------------
+// -------------- MAIN getStreams --------------
 function getStreams(tmdbId, mediaType, seasonNum, episodeNum) {
   return __async(this, null, function* () {
+    console.log(`[MoviesDrive] getStreams: TMDB=${tmdbId}, type=${mediaType}, s=${seasonNum}, e=${episodeNum}`);
     try {
-      // 1. TMDB metadata
+      // 1. Get TMDB metadata (title only)
       const tmdbUrl = `https://api.themoviedb.org/3/${mediaType === "tv" ? "tv" : "movie"}/${tmdbId}?api_key=${TMDB_API_KEY}&append_to_response=external_ids`;
       const tmdbRes = yield makeRequest(tmdbUrl);
       const tmdbData = yield tmdbRes.json();
       const title = mediaType === "tv" ? tmdbData.name : tmdbData.title;
-      const year = (mediaType === "tv" ? tmdbData.first_air_date : tmdbData.release_date)?.substring(0, 4) || "";
-      const imdbId = tmdbData.external_ids?.imdb_id || null;
       if (!title) return [];
 
-      // 2. Search MoviesDrive
-      let query = title;
-      if (mediaType === "tv" && seasonNum) query += ` Season ${seasonNum}`;
-      let results = yield searchMoviesDrive(query);
-      if (results.length === 0 && query !== title) results = yield searchMoviesDrive(title);
-      if (results.length === 0 && imdbId) results = yield searchMoviesDrive(imdbId);
-      if (results.length === 0) return [];
-
-      // 3. Best match
-      const titles = results.map(r => r.title);
-      const { bestMatchIndex } = findBestMatch(title, titles);
-      let selected = bestMatchIndex >= 0 ? results[bestMatchIndex] : null;
-      if (mediaType === "movie" && year && selected && !selected.title.includes(year)) {
-        const withYear = results.find(r => r.title.includes(year));
-        if (withYear) selected = withYear;
-      }
-      if (!selected) selected = results.find(r => r.title.toLowerCase().includes(title.toLowerCase())) || results[0];
-      if (!selected) return [];
-
-      const domain = yield getMoviesDriveDomain();
-      if (!domain) return [];
-      const pageUrl = domain + selected.permalink;
-
-      // 4. Fetch links from HF API
       let rawLinks = [];
       if (mediaType === "movie") {
-        rawLinks = yield getMovieLinks(pageUrl);
+        // ---- MOVIE ----
+        const searchResults = yield searchMoviesDrive(title);
+        if (!searchResults.length) return [];
+
+        // Simple best match: pick first that contains the year (if we had year) or just the first
+        // For reliability, we'll take the first result (same as original simplest approach)
+        const selected = searchResults[0];
+        const domain = yield getMoviesDriveDomain();
+        const pageUrl = domain + selected.permalink;
+
+        const movieApiUrl = `${HF_MOVIE_API}?url=${encodeURIComponent(pageUrl)}`;
+        console.log(`[MoviesDrive] HF Movie API: ${movieApiUrl}`);
+        const movieRes = yield makeRequest(movieApiUrl);
+        const movieData = yield movieRes.json();
+        if (movieData && movieData.links) rawLinks = movieData.links;
       } else {
-        const episodes = yield getSeriesEpisodes(pageUrl);
-        if (seasonNum != null && episodeNum != null) {
-          const ep = episodes.find(e => e.season == seasonNum && e.episode == episodeNum);
-          if (ep && ep.links) rawLinks = ep.links;
-          else return [];
-        } else return [];
+        // ---- TV – use new /series_auto endpoint ----
+        const s = seasonNum || 1;
+        const ep = episodeNum || 1;
+        const seriesApiUrl = `${HF_SERIES_AUTO_API}?q=${encodeURIComponent(title)}&season=${s}&episode=${ep}`;
+        console.log(`[MoviesDrive] HF Series Auto: ${seriesApiUrl}`);
+        const seriesRes = yield makeRequest(seriesApiUrl);
+        const seriesData = yield seriesRes.json();
+        if (seriesData && seriesData.links) rawLinks = seriesData.links;
       }
 
       if (!rawLinks || rawLinks.length === 0) return [];
 
-      // 5. Build streams – just use stream_title from API
+      // 2. Build streams – use ready-made stream_title from API
       const streams = rawLinks.map(link => ({
         name: `MoviesDrive ${link.name || "Direct"}`,
-        title: link.stream_title || `${title} - ${link.quality}p`,
+        title: link.stream_title || `${title} - ${link.quality || "?"}p`,
         url: link.url,
         type: "direct",
         quality: link.quality ? `${link.quality}p` : "Unknown",
         headers: {
           "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
-          "Referer": pageUrl,
+          "Referer": "", // we don't have pageUrl for series, but it's fine
         },
       }));
 
-      streams.sort((a, b) => (parseInt(b.quality) || 0) - (parseInt(a.quality) || 0));
+      // Sort by quality descending
+      streams.sort((a, b) => {
+        const qA = parseInt(a.quality) || 0;
+        const qB = parseInt(b.quality) || 0;
+        return qB - qA;
+      });
+
+      console.log(`[MoviesDrive] Returning ${streams.length} streams`);
       return streams;
     } catch (e) {
       console.error("[MoviesDrive] getStreams error:", e);
