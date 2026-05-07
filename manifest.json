@@ -637,7 +637,7 @@
       "filename": "providers/onetouchtv.js",
       "enabled": true,
       "formats": ["mp4", "mkv", "m3u8"],
-      "logo": "https://i.postimg.cc/dtX84Gqc/onlykdrama.jpg",
+      "logo": "https://i.postimg.cc/PNns1nRL/onetouchtv.png",
       "contentLanguage": ["en", "ko", "ja", "zh"]
     },
     {
