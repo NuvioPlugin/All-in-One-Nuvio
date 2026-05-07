@@ -97,7 +97,7 @@ function normalizeSources(sources, endpoint) {
     var displayTitle = '🎬 ' + (s.name || 'Nakios') + 
                        ' | 📺 ' + quality + 
                        ' | ' + langIcon + ' ' + lang + 
-                       ' | 🛠️ [' + format + ']' + 
+                       ' |  🎞️  [' + format + ']' + 
                        size;
 
     results.push({
