@@ -1,6 +1,6 @@
 /**
  * hdhub4u - Built from src/hdhub4u/
- * Generated: 2026-02-19T09:22:26.023Z
+ * Generated: 2026-05-09T00:27:24.934Z
  */
 var __create = Object.create;
 var __defProp = Object.defineProperty;
@@ -69,16 +69,20 @@ var import_cheerio_without_node_native2 = __toESM(require("cheerio-without-node-
 var TMDB_API_KEY = "439c478a771f35c05022f9feabcca01c";
 var TMDB_BASE_URL = "https://api.themoviedb.org/3";
 var MAIN_URL = "https://new1.hdhub4u.limo";
+// UPDATED SEARCH DOMAIN FROM YOUR SCREENSHOT
+var SEARCH_DOMAIN = "https://search.hdhub4u.glass"; 
 var DOMAINS_URL = "https://raw.githubusercontent.com/phisher98/TVVVV/refs/heads/main/domains.json";
 var DOMAIN_CACHE_TTL = 4 * 60 * 60 * 1e3;
 var HEADERS = {
-  "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36 Edg/131.0.0.0",
+  "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
   "Cookie": "xla=s4t",
-  "Referer": `${MAIN_URL}/`
+  "Referer": `${MAIN_URL}/`,
+  "Origin": MAIN_URL
 };
 function updateMainUrl(url) {
   MAIN_URL = url;
   HEADERS.Referer = `${url}/`;
+  HEADERS.Origin = url;
 }
 
 // src/hdhub4u/utils.js
@@ -336,7 +340,7 @@ function getRedirectLinks(url) {
 }
 function vidStackExtractor(url) {
   return __async(this, null, function* () {
-    var _a, _b;
+    var _a, _b, _c;
     try {
       const hash = url.split("#").pop().split("/").pop();
       const baseUrl = new URL(url).origin;
@@ -356,6 +360,22 @@ function vidStackExtractor(url) {
           const decryptedText = decrypted.toString(import_crypto_js.default.enc.Utf8);
           if (decryptedText && decryptedText.includes("source")) {
             const m3u8 = (_b = (_a = decryptedText.match(/"source":"(.*?)"/)) == null ? void 0 : _a[1]) == null ? void 0 : _b.replace(/\\/g, "");
+            const subtitles = [];
+            const subtitleSection = (_c = decryptedText.match(/"subtitle":\{(.*?)\}/)) == null ? void 0 : _c[1];
+            if (subtitleSection) {
+              const subtitlePattern = /"([^"]+)":\s*"([^"]+)"/g;
+              let subMatch;
+              while ((subMatch = subtitlePattern.exec(subtitleSection)) !== null) {
+                const lang = subMatch[1];
+                const subPath = subMatch[2].split("#")[0].replace(/\\/g, "");
+                if (subPath) {
+                  subtitles.push({
+                    language: lang,
+                    url: subPath.startsWith("http") ? subPath : `${baseUrl}${subPath}`
+                  });
+                }
+              }
+            }
             if (m3u8) {
               return [{
                 source: "Vidstack Hubstream",
@@ -364,7 +384,8 @@ function vidStackExtractor(url) {
                 headers: {
                   "Referer": url,
                   "Origin": url.split("/").pop()
-                }
+                },
+                subtitles
               }];
             }
           }
@@ -489,9 +510,13 @@ function hubCloudExtractor(url, referer) {
           links.push({ source: `${label} ${labelExtras}`, quality, url: link, size: sizeInBytes, fileName });
         } else if (text.includes("buzzserver")) {
           try {
-            const buzzResp = yield fetch(`${link}/download`, { method: "GET", headers: __spreadProps(__spreadValues({}, HEADERS), { Referer: link }) });
-            if (buzzResp.url && buzzResp.url !== `${link}/download`) {
-              links.push({ source: `HubCloud - BuzzServer ${labelExtras}`, quality, url: buzzResp.url, size: sizeInBytes, fileName });
+            const buzzResp = yield fetch(`${link}/download`, { method: "GET", headers: __spreadProps(__spreadValues({}, HEADERS), { Referer: link }), redirect: "manual" });
+            let dlink = buzzResp.headers.get("hx-redirect") || buzzResp.headers.get("HX-Redirect");
+            if (!dlink && buzzResp.url && buzzResp.url !== `${link}/download`) {
+              dlink = buzzResp.url;
+            }
+            if (dlink) {
+              links.push({ source: `HubCloud - BuzzServer ${labelExtras}`, quality, url: dlink, size: sizeInBytes, fileName });
             }
           } catch (e) {
           }
@@ -585,8 +610,17 @@ function loadExtractor(_0) {
 function search(query) {
   return __async(this, null, function* () {
     const today = (/* @__PURE__ */ new Date()).toISOString().split("T")[0];
-    const searchUrl = `https://search.pingora.fyi/collections/post/documents/search?q=${encodeURIComponent(query)}&query_by=post_title,category&query_by_weights=4,2&sort_by=sort_by_date:desc&limit=15&highlight_fields=none&use_cache=true&page=1&analytics_tag=${today}`;
-    const response = yield fetch(searchUrl, { headers: HEADERS });
+    
+    // Updated URL structure matching your DevTools screenshot
+    const searchUrl = `${SEARCH_DOMAIN}/collections/post/documents/search?q=${encodeURIComponent(query)}&query_by=post_title,category,stars,director,imdb_id&query_by_weights=4,2,2,2,4&sort_by=sort_by_date:desc&limit=15&highlight_fields=none&use_cache=true&page=1&analytics_tag=${today}`;
+    
+    const response = yield fetch(searchUrl, { 
+      headers: __spreadProps(__spreadValues({}, HEADERS), {
+        "Accept": "application/json",
+        "x-typesense-api-key": "6mZ6u978A6987B654321" // Note: If this fails, paste the key from your DevTools here
+      })
+    });
+    
     const data = yield response.json();
     if (!data || !data.hits)
       return [];
