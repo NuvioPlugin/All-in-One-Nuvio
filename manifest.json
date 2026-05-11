@@ -239,13 +239,13 @@
       "contentLanguage": ["en", "es"]
     },
     {
-      "id": "netmirrortest",
-      "name": "NetMirrorTest",
+      "id": "netmirrornew",
+      "name": "NetMirrorNew",
       "description": "1080p multilingual streams",
       "version": "1.0.0",
-      "author": "MultiSource",
+      "author": "Dustincos",
       "supportedTypes": ["movie", "tv"],
-      "filename": "providers/netmirrortest.js",
+      "filename": "providers/netmirrornew.js",
       "enabled": true,
       "formats": ["mp4", "m3u8", "mkv"],
       "logo": "https://i.postimg.cc/L64M3bYV/netmirror.png",
