@@ -162,7 +162,7 @@
     },
     {
       "id": "castle",
-      "name": "Castle",
+      "name": "🏰 Castle",
       "description": "Multi Lang provider",
       "version": "2.0.0",
       "author": "Nuvio Team",
@@ -710,7 +710,7 @@
     },
     {
       "id": "onlykdrama",
-      "name": "OnlyKDrama",
+      "name": "🫰 OnlyKDrama",
       "description": "Asian Drama",
       "version": "1.0.0",
       "author": "Moiz Ahmed + Codex",
@@ -736,7 +736,7 @@
     },
     {
       "id": "kisskh",
-      "name": "Kisskh",
+      "name": "💋 Kisskh",
       "description": "Streams Korean dramas and movies from onlykdrama.top",
       "version": "1.0.0",
       "author": "Michat88",
