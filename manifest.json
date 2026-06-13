@@ -238,20 +238,6 @@
       "logo": "https://i.postimg.cc/W1fmh5C9/cinetv.png",
       "contentLanguage": ["en", "hi"]
     },
-    { 
-      "id": "corsaroviola",
-      "name": "CorsaroViola",
-      "description": "Movies & TV shows in 🇺🇸 & 🇮🇹 through IlCorsaroViola + TorBox, with instant HTTP streaming",
-      "version": "1.0.0",
-      "author": "Batman",
-      "supportedTypes": ["movie", "tv"],
-      "filename": "providers/corsaroviola.js",
-      "enabled": true,
-      "resources": ["stream"],
-      "formats": ["mkv", "m3u8"],
-      "logo": "https://i.postimg.cc/CLRByKRf/corsaroviola.png",
-      "contentLanguage": ["en", "it"]
-    },
     {
       "id": "dahmermovies",
       "name": "Dahmermovies",
@@ -382,6 +368,20 @@
       "formats": ["m3u8"],
       "logo": "https://i.postimg.cc/0jMv4cQH/isaidub.png",
       "contentLanguage": ["ta"]
+    },
+    { 
+      "id": "kurage",
+      "name": "Kurage",
+      "description": "Kurage.live anime streaming with tRPC API and multi-server proxy support",
+      "version": "1.0.0",
+      "author": "Paregi12",
+      "supportedTypes": ["movie", "tv"],
+      "filename": "providers/kurage.js",
+      "enabled": true,
+      "resources": ["stream"],
+      "formats": ["mkv", "m3u8"],
+      "logo": "https://i.postimg.cc/3N2V7pHc/kurage.png",
+      "contentLanguage": ["en", "ja"]
     },   
     {
       "id": "lamovie",
