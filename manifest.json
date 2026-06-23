@@ -11,11 +11,12 @@
       "supportedTypes": ["movie", "tv"],
       "filename": "providers/allanime.js",
       "enabled": true,
+      "hasSettings": true,
       "formats": ["mp4", "mkv", "m3u8"],
       "logo": "https://i.postimg.cc/DwpqLJWV/allanime.png",
       "contentLanguage": ["en", "ja"]
     },
-    { 
+    {
       "id": "4khdhub",
       "name": "4KHDHub",
       "description": "4KHDHub direct links",
@@ -24,11 +25,12 @@
       "supportedTypes": ["movie", "tv"],
       "filename": "providers/4khdhub.js",
       "enabled": true,
+      "hasSettings": true,
       "formats": ["mp4", "m3u8"],
       "logo": "https://i.postimg.cc/DZpW6Xfb/4khdhub.png",
       "contentLanguage": ["en"]
     },
-    { 
+    {
       "id": "4khdhubnew",
       "name": "4KHDHub-NEW",
       "description": "4KHDHub- Now fetches every movie and series",
@@ -37,6 +39,7 @@
       "supportedTypes": ["movie", "tv"],
       "filename": "providers/4khdhubnew.js",
       "enabled": true,
+      "hasSettings": true,
       "formats": ["mp4", "m3u8"],
       "logo": "https://i.postimg.cc/DZpW6Xfb/4khdhub.png",
       "contentLanguage": ["en"]
@@ -50,6 +53,7 @@
       "supportedTypes": ["movie", "tv"],
       "filename": "providers/allwish.js",
       "enabled": true,
+      "hasSettings": true,
       "limited": true,
       "formats": ["mp4", "m3u8"],
       "logo": "https://i.postimg.cc/WpFW45WQ/allwish.png",
@@ -64,6 +68,7 @@
       "supportedTypes": ["movie", "tv"],
       "filename": "providers/animekai.js",
       "enabled": true,
+      "hasSettings": true,
       "limited": true,
       "formats": ["mp4", "m3u8"],
       "logo": "https://i.postimg.cc/MKJd7fy7/animekai.png",
@@ -78,6 +83,7 @@
       "supportedTypes": ["movie", "tv", "anime"],
       "filename": "providers/anikototv.js",
       "enabled": true,
+      "hasSettings": true,
       "formats": ["mp4"],
       "logo": "https://i.postimg.cc/JhL3HBR4/anikototv.png",
       "contentLanguage": ["en", "ja"]
@@ -91,6 +97,7 @@
       "supportedTypes": ["movie", "tv"],
       "filename": "providers/anidb.js",
       "enabled": true,
+      "hasSettings": true,
       "formats": ["mp4", "m3u8"],
       "logo": "https://i.postimg.cc/rmMzZ45K/anidb.png",
       "contentLanguage": ["en", "ja", "ko"]
@@ -104,9 +111,10 @@
       "supportedTypes": ["movie", "tv"],
       "filename": "providers/animepahe.js",
       "enabled": true,
+      "hasSettings": true,
       "formats": ["m3u8", "mp4"],
       "logo": "https://i.postimg.cc/c4ZBGNNs/animepahe.png",
-      "contentLanguage": ["en", "ja"]  
+      "contentLanguage": ["en", "ja"]
     },
     {
       "id": "animesalt",
@@ -117,6 +125,7 @@
       "supportedTypes": ["movie", "tv"],
       "filename": "providers/animesalt.js",
       "enabled": true,
+      "hasSettings": true,
       "formats": ["m3u8", "mp4"],
       "logo": "https://i.postimg.cc/1X24MYhg/animesalt.png",
       "contentLanguage": ["hi", "en", "ja"]
@@ -130,6 +139,7 @@
       "supportedTypes": ["movie", "tv", "anime"],
       "filename": "providers/animetsu.js",
       "enabled": true,
+      "hasSettings": true,
       "formats": ["m3u8"],
       "logo": "https://i.postimg.cc/0Q3DvLx7/animetsu.png",
       "contentLanguage": ["en", "ja"]
@@ -143,6 +153,7 @@
       "supportedTypes": ["movie", "tv"],
       "filename": "providers/animeworld.js",
       "enabled": true,
+      "hasSettings": true,
       "formats": ["m3u8"],
       "logo": "https://i.postimg.cc/wxD6rVKX/animeworld.png",
       "contentLanguage": ["hi", "en", "ja"]
@@ -156,9 +167,10 @@
       "supportedTypes": ["movie", "tv"],
       "filename": "providers/anime-sama.js",
       "enabled": true,
+      "hasSettings": true,
       "formats": ["mp4", "mkv"],
       "logo": "https://i.postimg.cc/tgYt2pYG/animesama.png",
-      "contentLanguage": ["fr"]  
+      "contentLanguage": ["fr"]
     },
     {
       "id": "allmovieland",
@@ -169,9 +181,10 @@
       "supportedTypes": ["movie", "tv"],
       "filename": "providers/allmovieland.js",
       "enabled": true,
+      "hasSettings": true,
       "formats": ["m3u8"],
       "logo": "https://i.postimg.cc/hhWqkVQs/allmovieland.png",
-      "contentLanguage": ["en", "hi", "ta", "te"]  
+      "contentLanguage": ["en", "hi", "ta", "te"]
     },
     {
       "id": "castle",
@@ -182,6 +195,7 @@
       "supportedTypes": ["movie", "tv"],
       "filename": "providers/castle.js",
       "enabled": true,
+      "hasSettings": true,
       "formats": ["mp4", "m3u8"],
       "logo": "https://i.postimg.cc/0NvGzFyK/castle.png",
       "contentLanguage": ["en"]
@@ -195,6 +209,7 @@
       "supportedTypes": ["movie", "tv"],
       "filename": "providers/cineby.js",
       "enabled": true,
+      "hasSettings": true,
       "formats": ["m3u8"],
       "logo": "https://i.postimg.cc/dV1HWbqX/cineby.png",
       "contentLanguage": ["ar", "en"]
@@ -208,6 +223,7 @@
       "supportedTypes": ["movie", "tv"],
       "filename": "providers/cinefreak.js",
       "enabled": true,
+      "hasSettings": true,
       "formats": ["mkv", "mp4"],
       "logo": "https://i.postimg.cc/rpDB2284/cinefreak.png",
       "contentLanguage": ["en", "hi"]
@@ -221,6 +237,7 @@
       "supportedTypes": ["movie", "tv"],
       "filename": "providers/cinemm.js",
       "enabled": true,
+      "hasSettings": true,
       "formats": ["mp4", "mkv"],
       "logo": "https://i.postimg.cc/GtQX10hd/cinemm.png",
       "contentLanguage": ["en"]
@@ -234,6 +251,7 @@
       "supportedTypes": ["movie", "tv"],
       "filename": "providers/cinemacity.js",
       "enabled": true,
+      "hasSettings": true,
       "formats": ["mp4", "m3u8"],
       "logo": "https://i.postimg.cc/XYjKhS3b/cinemacity.png",
       "contentLanguage": ["en", "hi", "ar"]
@@ -247,9 +265,10 @@
       "supportedTypes": ["movie", "tv"],
       "filename": "providers/dahmermovies.js",
       "enabled": true,
+      "hasSettings": true,
       "formats": ["mp4", "mkv", "m3u8"],
       "logo": "https://i.postimg.cc/hGt3dV6Z/dhamermovies.png",
-      "contentLanguage": ["en"] 
+      "contentLanguage": ["en"]
     },
     {
       "id": "dahmermovies-tv",
@@ -260,6 +279,7 @@
       "supportedTypes": ["movie", "tv"],
       "filename": "providers/dahmermovies-4k.js",
       "enabled": true,
+      "hasSettings": true,
       "formats": ["mp4", "mkv", "m3u8"],
       "logo": "https://i.postimg.cc/hGt3dV6Z/dhamermovies.png",
       "contentLanguage": ["en"]
@@ -273,6 +293,7 @@
       "supportedTypes": ["movie", "tv"],
       "filename": "providers/dooflix.js",
       "enabled": true,
+      "hasSettings": true,
       "formats": ["mp4", "m3u8"],
       "logo": "https://i.postimg.cc/59H1DmRk/dooflix.png",
       "contentLanguage": ["en", "es"]
@@ -286,6 +307,7 @@
       "supportedTypes": ["movie", "tv"],
       "filename": "providers/fibwatch.js",
       "enabled": true,
+      "hasSettings": true,
       "formats": ["mkv", "m3u8"],
       "logo": "https://i.postimg.cc/sfLR6dMm/fibwatch.png",
       "contentLanguage": ["en", "hi"]
@@ -299,6 +321,7 @@
       "supportedTypes": ["movie"],
       "filename": "providers/goatapi.js",
       "enabled": true,
+      "hasSettings": true,
       "formats": ["mp4", "mkv", "m3u8"],
       "logo": "https://i.postimg.cc/d1vkPZpY/goatapi.png",
       "contentLanguage": ["en"]
@@ -312,6 +335,7 @@
       "supportedTypes": ["movie", "tv"],
       "filename": "providers/hdhub4u.js",
       "enabled": true,
+      "hasSettings": true,
       "formats": ["mp4", "m3u8"],
       "logo": "https://i.postimg.cc/mryRTf0R/hdhub4u.png",
       "contentLanguage": ["en"]
@@ -339,6 +363,7 @@
       "supportedTypes": ["movie", "tv"],
       "filename": "providers/hindmoviez.js",
       "enabled": true,
+      "hasSettings": true,
       "formats": ["mp4", "mkv", "m3u8"],
       "logo": "https://i.postimg.cc/5t55Csm4/hindmoviez.png",
       "contentLanguage": ["en", "hi"]
@@ -352,6 +377,7 @@
       "supportedTypes": ["movie"],
       "filename": "providers/hdmovie2.js",
       "enabled": true,
+      "hasSettings": true,
       "formats": ["m3u8"],
       "logo": "https://i.postimg.cc/bJnfnzHS/hdmovie2.png",
       "contentLanguage": ["hi", "en"]
@@ -365,11 +391,12 @@
       "supportedTypes": ["movie"],
       "filename": "providers/isaidub.js",
       "enabled": true,
+      "hasSettings": true,
       "formats": ["m3u8"],
       "logo": "https://i.postimg.cc/0jMv4cQH/isaidub.png",
       "contentLanguage": ["ta"]
     },
-    { 
+    {
       "id": "kurage",
       "name": "Kurage",
       "description": "Kurage.live anime streaming with tRPC API and multi-server proxy support",
@@ -378,11 +405,12 @@
       "supportedTypes": ["movie", "tv"],
       "filename": "providers/kurage.js",
       "enabled": true,
+      "hasSettings": true,
       "resources": ["stream"],
       "formats": ["mkv", "m3u8"],
       "logo": "https://i.postimg.cc/3N2V7pHc/kurage.png",
       "contentLanguage": ["en", "ja"]
-    },   
+    },
     {
       "id": "lamovie",
       "name": "LA.Movie",
@@ -392,6 +420,7 @@
       "supportedTypes": ["movie", "tv"],
       "filename": "providers/lamovie.js",
       "enabled": true,
+      "hasSettings": true,
       "formats": ["mp4", "m3u8"],
       "logo": "https://i.postimg.cc/SsgH2gcK/lamovie.png",
       "contentLanguage": ["en", "es"]
@@ -405,6 +434,7 @@
       "supportedTypes": ["movie", "tv"],
       "filename": "providers/lordflix.js",
       "enabled": true,
+      "hasSettings": true,
       "formats": ["m3u8"],
       "logo": "https://i.postimg.cc/vZgHT15q/lordflix.png",
       "contentLanguage": ["en"],
@@ -419,6 +449,7 @@
       "supportedTypes": ["movie", "tv"],
       "filename": "providers/moviebox.js",
       "enabled": true,
+      "hasSettings": true,
       "formats": ["mp4", "m3u8"],
       "logo": "https://i.postimg.cc/TPwkfqHh/moviebox.png",
       "contentLanguage": ["en", "hi", "ta", "te"]
@@ -432,9 +463,10 @@
       "supportedTypes": ["movie", "tv"],
       "filename": "providers/movieblast.js",
       "enabled": true,
+      "hasSettings": true,
       "formats": ["mp4", "mkv", "m3u8"],
       "logo": "https://i.postimg.cc/qqkLSyhN/movieblast.png",
-      "contentLanguage": ["en", "hi", "ta", "te"]  
+      "contentLanguage": ["en", "hi", "ta", "te"]
     },
     {
       "id": "moviesdrive",
@@ -445,6 +477,7 @@
       "supportedTypes": ["movie", "tv"],
       "filename": "providers/moviesdrive.js",
       "enabled": true,
+      "hasSettings": true,
       "formats": ["mp4", "mkv", "m3u8"],
       "logo": "https://i.postimg.cc/bwDbhq9q/moviesdrive.png",
       "contentLanguage": ["en", "hi"]
@@ -458,6 +491,7 @@
       "supportedTypes": ["movie", "tv"],
       "filename": "providers/moviesmod.js",
       "enabled": true,
+      "hasSettings": true,
       "formats": ["mp4", "m3u8", "mkv"],
       "logo": "https://i.postimg.cc/YqWDJtWW/moviesmod.png",
       "contentLanguage": ["en"]
@@ -471,6 +505,7 @@
       "supportedTypes": ["movie"],
       "filename": "providers/movies4u.js",
       "enabled": true,
+      "hasSettings": true,
       "formats": ["mp4", "m3u8"],
       "logo": "https://i.postimg.cc/J0QG1QhQ/movies4u.jpg",
       "contentLanguage": ["en", "hi", "ta"]
@@ -484,6 +519,7 @@
       "supportedTypes": ["movie", "tv"],
       "filename": "providers/movix.js",
       "enabled": true,
+      "hasSettings": true,
       "formats": ["mp4", "m3u8"],
       "logo": "https://i.postimg.cc/XYrPQm87/movix.png",
       "contentLanguage": ["en", "fr"]
@@ -497,6 +533,7 @@
       "supportedTypes": ["movie", "tv"],
       "filename": "providers/nakios.js",
       "enabled": true,
+      "hasSettings": true,
       "formats": ["mp4", "m3u8"],
       "logo": "https://i.postimg.cc/nLwY1pJB/nakios.png",
       "contentLanguage": ["fr", "en"]
@@ -510,6 +547,7 @@
       "supportedTypes": ["movie", "tv"],
       "filename": "providers/netmirror.js",
       "enabled": true,
+      "hasSettings": true,
       "formats": ["mp4", "m3u8", "mkv"],
       "logo": "https://i.postimg.cc/L64M3bYV/netmirror.png",
       "contentLanguage": ["en", "hi", "ta", "te"]
@@ -523,6 +561,7 @@
       "supportedTypes": ["movie", "tv"],
       "filename": "providers/notorrent.js",
       "enabled": true,
+      "hasSettings": true,
       "formats": ["mp4", "m3u8"],
       "logo": "https://i.postimg.cc/FsSpNcVP/notorrent.png",
       "contentLanguage": ["en", "es"]
@@ -536,9 +575,10 @@
       "supportedTypes": ["movie", "tv"],
       "filename": "providers/peachify.js",
       "enabled": true,
+      "hasSettings": true,
       "formats": ["m3u8", "mp4"],
       "logo": "https://i.postimg.cc/tCz8CDH3/peachify.png",
-      "contentLanguage": ["en", "hi", "te","ta", "pt"]
+      "contentLanguage": ["en", "hi", "te", "ta", "pt"]
     },
     {
       "id": "playimdb",
@@ -549,6 +589,7 @@
       "supportedTypes": ["movie", "tv"],
       "filename": "providers/playimdb.js",
       "enabled": true,
+      "hasSettings": true,
       "formats": ["mp4", "mkv", "m3u8"],
       "logo": "https://i.postimg.cc/KzjPtYWY/imdb.png",
       "contentLanguage": ["en", "hi"]
@@ -562,6 +603,7 @@
       "supportedTypes": ["movie", "tv"],
       "filename": "providers/purstream.js",
       "enabled": true,
+      "hasSettings": true,
       "formats": ["mp4", "m3u8"],
       "logo": "https://i.postimg.cc/7L5shxmC/purstream.png",
       "contentLanguage": ["en", "fr"]
@@ -575,9 +617,10 @@
       "supportedTypes": ["movie", "tv"],
       "filename": "providers/showbox.js",
       "enabled": true,
+      "hasSettings": true,
       "formats": ["mp4", "mkv", "m3u8"],
       "logo": "https://i.postimg.cc/8c5XGzsx/showbox.png",
-      "contentLanguage": ["en"] 
+      "contentLanguage": ["en"]
     },
     {
       "id": "streamflix",
@@ -588,9 +631,10 @@
       "supportedTypes": ["movie", "tv"],
       "filename": "providers/streamflix.js",
       "enabled": true,
+      "hasSettings": true,
       "formats": ["mp4", "m3u8"],
       "logo": "https://i.postimg.cc/4yVjQjpH/streamflix.png",
-      "contentLanguage": ["en", "hi", "ta"] 
+      "contentLanguage": ["en", "hi", "ta"]
     },
     {
       "id": "toflix",
@@ -601,6 +645,7 @@
       "supportedTypes": ["movie", "tv"],
       "filename": "providers/toflix.js",
       "enabled": true,
+      "hasSettings": true,
       "formats": ["mp4", "m3u8"],
       "logo": "https://i.postimg.cc/yNxJYqkv/toflix.png",
       "contentLanguage": ["en", "fr"]
@@ -614,6 +659,7 @@
       "supportedTypes": ["movie", "tv"],
       "filename": "providers/topcartoons.js",
       "enabled": true,
+      "hasSettings": true,
       "formats": ["mp4", "m3u8"],
       "logo": "https://i.postimg.cc/3xVsbwp8/topcartoons.png",
       "contentLanguage": ["en"]
@@ -627,6 +673,7 @@
       "supportedTypes": ["movie", "tv"],
       "filename": "providers/torrentio.js",
       "enabled": true,
+      "hasSettings": true,
       "formats": ["mp4", "m3u8"],
       "logo": "https://i.postimg.cc/ZRYTCy0T/torrentio.png",
       "contentLanguage": ["en", "hi"]
@@ -640,6 +687,7 @@
       "supportedTypes": ["movie", "tv"],
       "filename": "providers/multivid.js",
       "enabled": true,
+      "hasSettings": true,
       "formats": ["mp4", "m3u8"],
       "logo": "https://i.postimg.cc/brxL7qg3/multivid.png",
       "contentLanguage": ["en"]
@@ -653,9 +701,10 @@
       "supportedTypes": ["movie", "tv"],
       "filename": "providers/uhdmovies.js",
       "enabled": true,
+      "hasSettings": true,
       "formats": ["mp4", "m3u8"],
       "logo": "https://i.postimg.cc/KzDBBdbK/uhdmovies.png",
-      "contentLanguage": ["en"] 
+      "contentLanguage": ["en"]
     },
     {
       "id": "vegamovies",
@@ -666,6 +715,7 @@
       "supportedTypes": ["movie", "tv"],
       "filename": "providers/vegamovies.js",
       "enabled": true,
+      "hasSettings": true,
       "formats": ["mp4", "mkv"],
       "logo": "https://i.postimg.cc/TwYK26jn/vegamovies.png",
       "contentLanguage": ["en", "hi"]
@@ -679,6 +729,7 @@
       "supportedTypes": ["movie", "tv"],
       "filename": "providers/vidlink.js",
       "enabled": true,
+      "hasSettings": true,
       "formats": ["mp4", "m3u8"],
       "logo": "https://i.postimg.cc/RZRHQd75/vidlink.png",
       "contentLanguage": ["en"]
@@ -692,6 +743,7 @@
       "supportedTypes": ["movie", "tv"],
       "filename": "providers/videasy.js",
       "enabled": true,
+      "hasSettings": true,
       "formats": ["mp4", "m3u8"],
       "logo": "https://i.postimg.cc/7LHYMtVV/videasy.png",
       "contentLanguage": ["en"]
@@ -705,6 +757,7 @@
       "supportedTypes": ["movie", "tv"],
       "filename": "providers/vidsrc.js",
       "enabled": true,
+      "hasSettings": true,
       "formats": ["mp4", "m3u8"],
       "logo": "https://i.postimg.cc/ncMLBsLJ/vidsrc.png",
       "contentLanguage": ["en"]
@@ -718,6 +771,7 @@
       "supportedTypes": ["movie", "tv"],
       "filename": "providers/vixsrc.js",
       "enabled": true,
+      "hasSettings": true,
       "formats": ["mp4", "m3u8"],
       "logo": "https://i.postimg.cc/1tHrBvzs/vixsrc.png",
       "contentLanguage": ["en", "Ita"]
@@ -731,6 +785,7 @@
       "supportedTypes": ["movie", "tv"],
       "filename": "providers/vidfast.js",
       "enabled": true,
+      "hasSettings": true,
       "formats": ["mp4", "m3u8"],
       "logo": "https://i.postimg.cc/0Qp8PSx5/vidfast.png",
       "contentLanguage": ["en"]
@@ -744,6 +799,7 @@
       "supportedTypes": ["movie", "tv"],
       "filename": "providers/xpass.js",
       "enabled": true,
+      "hasSettings": true,
       "formats": ["mp4", "mkv", "m3u8"],
       "logo": "https://i.postimg.cc/tgqNQxdy/xpass.png",
       "contentLanguage": ["en", "hi"]
@@ -757,6 +813,7 @@
       "supportedTypes": ["movie", "tv"],
       "filename": "providers/zinkmovies.js",
       "enabled": true,
+      "hasSettings": true,
       "formats": ["mp4", "mkv", "m3u8"],
       "logo": "https://i.postimg.cc/XqCZyCgp/zinkmovies.png",
       "contentLanguage": ["en", "hi", "ta", "te"]
@@ -770,6 +827,7 @@
       "supportedTypes": ["movie", "tv"],
       "filename": "providers/onlykdrama.js",
       "enabled": true,
+      "hasSettings": true,
       "formats": ["mp4", "mkv", "m3u8"],
       "logo": "https://i.postimg.cc/dtX84Gqc/onlykdrama.jpg",
       "contentLanguage": ["ko"]
@@ -783,6 +841,7 @@
       "supportedTypes": ["movie", "tv"],
       "filename": "providers/onetouchtv.js",
       "enabled": true,
+      "hasSettings": true,
       "formats": ["mp4", "mkv", "m3u8"],
       "logo": "https://i.postimg.cc/PNns1nRL/onetouchtv.png",
       "contentLanguage": ["en", "ko", "ja", "zh"]
@@ -796,6 +855,7 @@
       "supportedTypes": ["movie", "tv"],
       "filename": "providers/kisskh.js",
       "enabled": true,
+      "hasSettings": true,
       "formats": ["mp4", "m3u8"],
       "logo": "https://i.postimg.cc/2yLnTzPP/kisskh.jpg",
       "contentLanguage": ["ko", "ch", "ja", "th"]
