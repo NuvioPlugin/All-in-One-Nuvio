@@ -421,7 +421,7 @@
       "enabled": true,
       "hasSettings": false,
       "formats": ["m3u8", "mp4", "mkv"],
-      "logo": "",
+      "logo": "https://i.postimg.cc/jSQmk9B3/ctgmovies.png",
       "contentLanguage": ["en", "hi"]
     },
     {
