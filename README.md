@@ -76,7 +76,7 @@ This project is for educational purposes only. Users are responsible for ensurin
 ## Credits
 
 A masive shoutout to all the developers who have created these plugins.
-- **Yoruix** - **Phisher98** - **Wooodyhood**
+- **Yoruix** , **Phisher98** , **Wooodyhood**
 - **Piratezoro9 (Kabir)**
 - **Abinanthankv**
 - **KennethJYS**
