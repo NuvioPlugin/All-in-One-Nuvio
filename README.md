@@ -14,7 +14,7 @@ A collection of high-quality local scrapers for the Nuvio streaming application.
 2. Go to **Settings → Local Scrapers**
 3. Add this repository URL:
    ```
-   [https://raw.githubusercontent.com/D3adlyRocket/All-in-One-Nuvio/refs/heads/main/manifest.json](https://raw.githubusercontent.com/NuvioPlugin/All-in-One-Nuvio/refs/heads/main/manifest.json)
+   https://raw.githubusercontent.com/NuvioPlugin/All-in-One-Nuvio/refs/heads/main/manifest.json)
    ```
 4. Enable the scrapers you want to use
 
