@@ -1,6 +1,6 @@
 /**
  * netmirror - Built from src/netmirror/
- * Generated: 2026-07-08T18:40:52.123Z
+ * Generated: 2026-07-13T13:46:15.289Z
  */
 var __defProp = Object.defineProperty;
 var __defProps = Object.defineProperties;
@@ -328,14 +328,17 @@ function fetchFromPlatform(platformKey, title, mediaType, season, episode) {
         return null;
       targetId = postData.main_id || contentId;
     }
-    const playlistUrl = `https://net52.cc/mobile/playlist.php?id=${targetId}&t=${encodeURIComponent(title)}&tm=${Math.floor(Date.now() / 1e3)}`;
+    const playlistUrl = `https://net52.cc${platform.playlist}?id=${targetId}&t=${encodeURIComponent(title)}&tm=${Math.floor(Date.now() / 1e3)}`;
     const playlistHeaders = {
+      "Accept": "*/*",
+      "Accept-Language": "en-IN,en-US;q=0.9,en;q=0.8",
+      "Connection": "keep-alive",
+      "Referer": `https://net52.cc/mobile/home?app=1`,
       "User-Agent": "Mozilla/5.0 (Linux; Android 13; Pixel 5 Build/TQ3A.230901.001; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/149.0.7827.91 Safari/537.36 /OS.Gatu v3.0",
-      "X-Requested-With": "app.netmirror.netmirrornew",
-      "Accept": "*/*"
+      "X-Requested-With": "app.netmirror.netmirrornew"
     };
     if (cookie) {
-      playlistHeaders["Cookie"] = `t_hash_t=${decodeURIComponent(cookie)}; ott=${platform.ott}`;
+      playlistHeaders["Cookie"] = `t_hash_t=${cookie}; ott=${platform.ott}; hd=on`;
     }
     const playlistResp = yield fetch(playlistUrl, {
       headers: playlistHeaders
@@ -353,10 +356,7 @@ function fetchFromPlatform(platformKey, title, mediaType, season, episode) {
             title: `${title} - ${source.label}`,
             url: streamUrl,
             quality,
-            headers: {
-              "Referer": `${apiBase}/mobile/home?app=1`,
-              "User-Agent": "Mozilla/5.0 (Linux; Android 13; Pixel 5 Build/TQ3A.230901.001; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/149.0.7827.91 Safari/537.36 /OS.Gatu v3.0"
-            }
+            headers: playlistHeaders
           };
         });
       }
