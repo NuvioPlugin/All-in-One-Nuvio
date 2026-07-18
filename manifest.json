@@ -197,7 +197,7 @@
       "enabled": true,
       "hasSettings": false,
       "formats": ["mp4", "mkv", "m3u8"],
-      "logo": "",
+      "logo": "https://i.postimg.cc/GmdyJCQL/bollyflix.png",
       "contentLanguage": ["en", "hi"]
     },
     {
