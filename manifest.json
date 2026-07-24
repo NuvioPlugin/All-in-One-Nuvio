@@ -591,7 +591,7 @@
       "enabled": true,
       "hasSettings": false,
       "formats": ["mp4", "m3u8"],
-      "logo": "",
+      "logo": "https://i.postimg.cc/qq6V2fTL/persian.png",
       "contentLanguage": ["en", "pe"]
     },
     {
