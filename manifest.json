@@ -581,18 +581,18 @@
       "contentLanguage": ["en", "hi", "ta", "te"]
     },
     {
-      "id": "notorrent",
-      "name": "NoTorrent",
-      "description": "Non-P2P direct resolution proxy.",
-      "version": "1.0.0",
-      "author": "Dustincos",
+      "id": "persianstremio",
+      "name": "🌸 PersianStremio",
+      "description": "",
+      "version": "1.4.0",
+      "author": "Nuvio Team",
       "supportedTypes": ["movie", "tv"],
-      "filename": "providers/notorrent.js",
+      "filename": "providers/persianstremio.js",
       "enabled": true,
-      "hasSettings": true,
+      "hasSettings": false,
       "formats": ["mp4", "m3u8"],
-      "logo": "https://i.postimg.cc/FsSpNcVP/notorrent.png",
-      "contentLanguage": ["en", "es"]
+      "logo": "",
+      "contentLanguage": ["en", "pe"]
     },
     {
       "id": "peachify",
