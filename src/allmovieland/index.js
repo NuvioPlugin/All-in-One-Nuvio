@@ -7,148 +7,216 @@ async function getStreams(tmdbId, mediaType = "movie", season = null, episode = 
     try {
         const mediaInfo = await getTMDBDetails(tmdbId, mediaType);
         console.log(`[AllMovieLand] TMDB Info: "${mediaInfo.title}" (${mediaInfo.year || "N/A"})`);
-        
-        const query = mediaInfo.title;
-        const searchUrl = `${MAIN_URL}/index.php?story=${encodeURIComponent(query)}&do=search&subaction=search`;
-        
-        const res = await fetch(searchUrl, { headers: HEADERS });
-        const html = await res.text();
-        const $ = cheerio.load(html);
-        
-        const searchResults = [];
-        $('article.short-mid').each((i, el) => {
-            const title = $(el).find('a > h3').text().trim();
-            const href = $(el).find('a').attr('href');
-            
-            // Safer year extraction: looks for 4 digits inside parentheses
-            const yearMatch = title.match(/\((\d{4})\)/);
-            const year = yearMatch ? parseInt(yearMatch[1]) : null;
 
-            searchResults.push({ title, href, year });
-        });
+        let searchResults = await searchAllMovieLand(mediaInfo.title, mediaType);
+        if ((!searchResults || searchResults.length === 0) && mediaInfo.originalTitle && mediaInfo.originalTitle !== mediaInfo.title) {
+            searchResults = await searchAllMovieLand(mediaInfo.originalTitle, mediaType);
+        }
 
-        if (searchResults.length === 0) {
+        if (!searchResults || searchResults.length === 0) {
             console.log("[AllMovieLand] No search results found.");
             return [];
         }
-        
+
         const bestMatch = findBestTitleMatch(mediaInfo, searchResults);
         if (!bestMatch) {
             console.log("[AllMovieLand] No confident match found.");
             return [];
         }
 
-        const selectedMedia = bestMatch;
-        console.log(`[AllMovieLand] Selected: "${selectedMedia.title}" (${selectedMedia.href})`);
-        
-        const docRes = await fetch(selectedMedia.href, { headers: HEADERS });
-        const docHtml = await docRes.text();
-        const doc$ = cheerio.load(docHtml);
-        
-        const tabsContent = doc$('div.tabs__content script').html() || '';
-        const playerScriptMatch = tabsContent.match(/const AwsIndStreamDomain\s*=\s*'([^']+)'/);
-        const playerDomain = playerScriptMatch ? playerScriptMatch[1].replace(/\/$/, '') : null;
-        const idMatch = tabsContent.match(/src:\s*'([^']+)'/);
-        const id = idMatch ? idMatch[1] : null;
+        console.log(`[AllMovieLand] Selected: "${bestMatch.title}" (ID: ${bestMatch.id})`);
 
-        if (!playerDomain || !id) {
-            console.log("[AllMovieLand] Could not find player domain or ID.");
-            return [];
-        }
-
-        const embedLink = `${playerDomain}/play/${id}`;
-        const embedRes = await fetch(embedLink, { headers: { ...HEADERS, Referer: selectedMedia.href } });
-        const embedHtml = await embedRes.text();
-        const embed$ = cheerio.load(embedHtml);
-        
-        const lastScript = embed$('body > script').last().html() || '';
-        const p3Match = lastScript.match(/let\s+p3\s*=\s*(\{.*\});/);
-        
-        if (!p3Match) {
-            console.log("[AllMovieLand] No p3 JSON found in embed.");
-            return [];
-        }
-
-        const json = JSON.parse(p3Match[1]);
-        let fileUrl = json.file.replace(/\\\//g, '/');
-        if (!fileUrl.startsWith('http')) fileUrl = `${playerDomain}${fileUrl}`;
-        
-        const fileRes = await fetch(fileUrl, {
-            method: 'POST',
-            headers: { ...HEADERS, 'X-CSRF-TOKEN': json.key, 'Referer': embedLink }
-        });
-        const fileText = await fileRes.text();
-        
-        let targetFiles = [];
-        const parsedData = JSON.parse(fileText.replace(/,\]/g, ']'));
-
-        if (mediaType === "movie") {
-            targetFiles = parsedData.filter(s => s && s.file);
-        } else if (mediaType === "tv") {
-            // Improved TV matching: Check for season number in title or ID
-            const seasonData = parsedData.find(s => {
-                const sTitle = s.title || "";
-                const sNumMatch = sTitle.match(/Season\s*(\d+)/i) || sTitle.match(/(\d+)\s*Season/i);
-                const sNum = sNumMatch ? parseInt(sNumMatch[1]) : null;
-                return sNum === season || s.id == season;
-            });
-
-            if (seasonData && seasonData.folder) {
-                const episodeData = seasonData.folder.find(e => {
-                    const eTitle = e.title || "";
-                    const eNumMatch = eTitle.match(/Episode\s*(\d+)/i) || eTitle.match(/(\d+)\s*Episode/i);
-                    const eNum = eNumMatch ? parseInt(eNumMatch[1]) : null;
-                    return eNum === episode || e.episode == episode;
-                });
-
-                if (episodeData && episodeData.folder) {
-                    targetFiles = episodeData.folder.filter(s => s && s.file);
-                }
+        let players = bestMatch.player;
+        if (!players || players.length === 0) {
+            const detailRes = await fetch(`${MAIN_URL}/api/v1/movies/${bestMatch.id}`, { headers: HEADERS });
+            if (detailRes.ok) {
+                const detailData = await detailRes.json();
+                players = detailData?.result?.player || [];
             }
         }
 
-        if (targetFiles.length === 0) {
-            console.log("[AllMovieLand] No streams found for the requested media.");
+        if (!players || players.length === 0) {
+            console.log("[AllMovieLand] No players found.");
             return [];
         }
 
         const streams = [];
 
-        await Promise.all(targetFiles.map(async (fileObj) => {
-            try {
-                const playlistFile = fileObj.file.replace(/^~/, '');
-                const playlistUrl = `${playerDomain}/playlist/${playlistFile}.txt`;
-                
-                const postRes = await fetch(playlistUrl, {
-                    method: 'POST',
-                    headers: { ...HEADERS, 'X-CSRF-TOKEN': json.key, 'Referer': embedLink }
-                });
-                
-                const m3u8Url = (await postRes.text()).trim();
-                
-                if (m3u8Url && m3u8Url.startsWith('http')) {
-                    const qualityStr = fileObj.title || "Unknown";
+        for (const player of players) {
+            if (!player.url) continue;
+
+            if (player.source === "m3u8") {
+                if (mediaType === "movie") {
                     streams.push({
                         name: "AllMovieLand",
-                        title: `AllMovieLand - ${qualityStr}`,
-                        url: m3u8Url,
-                        quality: qualityStr,
+                        title: `AllMovieLand - ${player.translator || "Player"} [HLS]`,
+                        url: player.url,
+                        quality: player.quality || "HD",
                         headers: {
-                            "Referer": `${playerDomain}/`,
-                            "Origin": playerDomain,
-                            "User-Agent": HEADERS["User-Agent"]
+                            "User-Agent": HEADERS["User-Agent"],
+                            "Referer": `${MAIN_URL}/`
                         },
                         provider: "allmovieland"
                     });
                 }
-            } catch (e) {
-                console.error(`[AllMovieLand] Failed to extract stream: ${e.message}`);
+            } else if (player.source === "iframe") {
+                try {
+                    const iframeRes = await fetch(player.url, {
+                        headers: {
+                            ...HEADERS,
+                            "Referer": `${MAIN_URL}/`
+                        }
+                    });
+                    if (!iframeRes.ok) continue;
+
+                    const html = await iframeRes.text();
+                    const $ = cheerio.load(html);
+                    let scriptContent = "";
+                    $("script").each((_, el) => {
+                        const h = $(el).html() || "";
+                        if (h.includes("HDVBPlayer") || h.includes("p3")) scriptContent = h;
+                    });
+
+                    if (!scriptContent) continue;
+
+                    const start = scriptContent.indexOf("{");
+                    const end = scriptContent.lastIndexOf("}");
+                    if (start === -1 || end <= start) continue;
+
+                    const meta = JSON.parse(scriptContent.substring(start, end + 1));
+                    if (!meta.key || !meta.file) continue;
+
+                    const urlObj = new URL(player.url);
+                    const baseUrl = `${urlObj.protocol}//${urlObj.host}`;
+                    const fileEndpoint = meta.file.startsWith("http") ? meta.file : `${baseUrl}${meta.file}`;
+
+                    const fileRes = await fetch(fileEndpoint, {
+                        method: "POST",
+                        headers: {
+                            ...HEADERS,
+                            "X-CSRF-TOKEN": meta.key,
+                            "Referer": player.url
+                        }
+                    });
+                    if (!fileRes.ok) continue;
+
+                    const rawText = await fileRes.text();
+                    const cleanText = rawText.replace(/\[\s*\],\s*/g, "").replace(/,\s*\[\s*\]/g, "").replace(/,\]/g, "]");
+                    const parsedData = JSON.parse(cleanText);
+
+                    if (mediaType === "movie") {
+                        const files = Array.isArray(parsedData) ? parsedData.filter(f => f && f.file) : [];
+                        for (const fileObj of files) {
+                            try {
+                                const epM3u8Url = `${baseUrl}/playlist/${fileObj.file}.txt`;
+                                const m3u8Res = await fetch(epM3u8Url, {
+                                    method: "POST",
+                                    headers: {
+                                        ...HEADERS,
+                                        "X-CSRF-TOKEN": meta.key,
+                                        "Referer": `${MAIN_URL}/`
+                                    }
+                                });
+                                if (!m3u8Res.ok) continue;
+                                const m3u8Url = (await m3u8Res.text()).trim();
+                                if (m3u8Url && m3u8Url.startsWith("http")) {
+                                    streams.push({
+                                        name: "AllMovieLand",
+                                        title: `AllMovieLand - ${fileObj.title || player.translator || "Player"}`,
+                                        url: m3u8Url,
+                                        quality: player.quality || "HD",
+                                        headers: {
+                                            "User-Agent": HEADERS["User-Agent"],
+                                            "Referer": `${baseUrl}/`,
+                                            "Origin": baseUrl
+                                        },
+                                        provider: "allmovieland"
+                                    });
+                                }
+                            } catch (e) {}
+                        }
+                    } else if (mediaType === "tv" && Array.isArray(parsedData)) {
+                        const targetSeason = parseInt(season, 10) || 1;
+                        const targetEpisode = parseInt(episode, 10) || 1;
+
+                        const sFolder = parsedData.find(s => {
+                            const sNum = (s.title && s.title.match(/Season\s*(\d+)/i)) ? parseInt(s.title.match(/Season\s*(\d+)/i)[1], 10) : parseInt(s.id, 10);
+                            return sNum === targetSeason;
+                        });
+
+                        if (sFolder && Array.isArray(sFolder.folder)) {
+                            const epFolder = sFolder.folder.find(e => {
+                                const eNum = (e.title && e.title.match(/(\d+)/)) ? parseInt(e.title.match(/(\d+)/)[1], 10) : parseInt(e.episode, 10);
+                                return eNum === targetEpisode;
+                            });
+
+                            if (epFolder && Array.isArray(epFolder.folder)) {
+                                for (const fileObj of epFolder.folder) {
+                                    if (!fileObj.file) continue;
+                                    try {
+                                        const epM3u8Url = `${baseUrl}/playlist/${fileObj.file}.txt`;
+                                        const m3u8Res = await fetch(epM3u8Url, {
+                                            method: "POST",
+                                            headers: {
+                                                ...HEADERS,
+                                                "X-CSRF-TOKEN": meta.key,
+                                                "Referer": `${MAIN_URL}/`
+                                            }
+                                        });
+                                        if (!m3u8Res.ok) continue;
+                                        const m3u8Url = (await m3u8Res.text()).trim();
+                                        if (m3u8Url && m3u8Url.startsWith("http")) {
+                                            streams.push({
+                                                name: "AllMovieLand",
+                                                title: `AllMovieLand - S${targetSeason}E${targetEpisode} (${fileObj.title || "Default"})`,
+                                                url: m3u8Url,
+                                                quality: player.quality || "HD",
+                                                headers: {
+                                                    "User-Agent": HEADERS["User-Agent"],
+                                                    "Referer": `${baseUrl}/`,
+                                                    "Origin": baseUrl
+                                                },
+                                                provider: "allmovieland"
+                                            });
+                                        }
+                                    } catch (e) {}
+                                }
+                            }
+                        }
+                    }
+                } catch (e) {
+                    console.error(`[AllMovieLand] Error parsing player iframe: ${e.message}`);
+                }
             }
-        }));
+        }
 
         return streams;
     } catch (error) {
         console.error(`[AllMovieLand] Error: ${error.message}`);
+        return [];
+    }
+}
+
+async function searchAllMovieLand(query, mediaType) {
+    try {
+        const searchUrl = `${MAIN_URL}/api/v1/new-search/movies?title=${encodeURIComponent(query.trim())}&page=1&limit=20`;
+        const res = await fetch(searchUrl, { headers: HEADERS });
+        if (!res.ok) return [];
+
+        const data = await res.json();
+        if (!data || !Array.isArray(data.results)) return [];
+
+        const expectedType = mediaType === "tv" ? "serial" : "movie";
+
+        return data.results
+            .filter(m => !m.type || m.type === expectedType || (mediaType === "tv" ? m.type === "serial" : true))
+            .map(m => ({
+                id: m.kinopoisk_id,
+                title: m.title_en || m.title_ru,
+                year: m.year,
+                player: m.player || []
+            }));
+    } catch (e) {
         return [];
     }
 }

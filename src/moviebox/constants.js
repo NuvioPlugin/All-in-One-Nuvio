@@ -1,4 +1,11 @@
 export const API_BASE = "https://api3.aoneroom.com";
+export const HOST_POOL = [
+    "https://api6.aoneroom.com",
+    "https://api5.aoneroom.com",
+    "https://api4.aoneroom.com",
+    "https://api4sg.aoneroom.com",
+    "https://api3.aoneroom.com"
+];
 export const KEY_B64_DEFAULT = "NzZpUmwwN3MweFNOOWpxbUVXQXQ3OUVCSlp1bElRSXNWNjRGWnIyTw==";
 export const KEY_B64_ALT = "WHFuMm5uTzQxL0w5Mm8xaXVYaFNMSFRiWHZZNFo1Wlo2Mm04bVNMQQ==";
 
@@ -15,12 +22,12 @@ export const BRAND_MODELS = {
 
 export const PACKAGE_INFO = {
     package_name: "com.community.mbox.in",
-    version_name: "3.0.03.0529.03",
-    version_code: 50020042
+    version_name: "4.0.02.0831.03",
+    version_code: 50020126
 };
 
 export const GLOBAL_PACKAGE_INFO = {
     package_name: "com.community.oneroom",
-    version_name: "3.0.13.0325.03",
-    version_code: 50020088
+    version_name: "4.0.02.0831.03",
+    version_code: 50020126
 };

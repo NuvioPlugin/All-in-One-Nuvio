@@ -1,4 +1,4 @@
-export const MAIN_URL = "https://new3.moviesdrives.my";
+export const MAIN_URL = "https://new3.moviesdrive.christmas";
 export const DOMAINS_URL = "https://raw.githubusercontent.com/phisher98/TVVVV/refs/heads/main/domains.json";
 
 export const HEADERS = {

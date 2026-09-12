@@ -9,10 +9,11 @@ export async function getTMDBDetails(tmdbId, mediaType) {
     });
     if (!response.ok) throw new Error(`TMDB API error: ${response.status}`);
     const data = await response.json();
-    const title = mediaType === "tv" ? data.name : data.title;
+    const title = mediaType === "tv" ? (data.name || data.original_name) : (data.title || data.original_title);
+    const originalTitle = mediaType === "tv" ? data.original_name : data.original_title;
     const releaseDate = mediaType === "tv" ? data.first_air_date : data.release_date;
     const year = releaseDate ? parseInt(releaseDate.split("-")[0]) : null;
-    return { title, year, imdbId: data.external_ids?.imdb_id || null, data };
+    return { title, originalTitle, year, imdbId: data.external_ids?.imdb_id || null, data };
 }
 
 export function normalizeTitle(title) {

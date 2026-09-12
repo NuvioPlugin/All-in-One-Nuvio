@@ -1,6 +1,6 @@
 /**
  * hindmoviez - Built from src/hindmoviez/
- * Generated: 2026-07-07T15:38:06.268Z
+ * Generated: 2026-09-12T17:16:49.672Z
  */
 var __create = Object.create;
 var __defProp = Object.defineProperty;
@@ -66,10 +66,36 @@ var __async = (__this, __arguments, generator) => {
 var import_cheerio_without_node_native = __toESM(require("cheerio-without-node-native"));
 
 // src/hindmoviez/http.js
+var DOMAINS_URL = "https://raw.githubusercontent.com/phisher98/TVVVV/refs/heads/main/domains.json";
+var DOMAIN_CACHE_TTL = 4 * 60 * 60 * 1e3;
+var MAIN_URL = "https://hindmovie.fit";
 var HEADERS = {
   "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-  "Referer": "https://hindmovie.icu/"
+  "Referer": `${MAIN_URL}/`
 };
+var domainCacheTimestamp = 0;
+function ensureDomain() {
+  return __async(this, null, function* () {
+    const now = Date.now();
+    if (now - domainCacheTimestamp < DOMAIN_CACHE_TTL)
+      return;
+    try {
+      const response = yield fetch(DOMAINS_URL, {
+        method: "GET",
+        headers: { "User-Agent": HEADERS["User-Agent"] }
+      });
+      if (response.ok) {
+        const data = yield response.json();
+        if (data && data.hindmoviez) {
+          MAIN_URL = data.hindmoviez.replace(/\/+$/, "");
+          HEADERS.Referer = `${MAIN_URL}/`;
+          domainCacheTimestamp = now;
+        }
+      }
+    } catch (e) {
+    }
+  });
+}
 function fetchText(_0) {
   return __async(this, arguments, function* (url, options = {}) {
     console.log(`[Hindmoviez] Fetching: ${url}`);
@@ -167,7 +193,6 @@ function getIndexQuality(str) {
 }
 
 // src/hindmoviez/extractor.js
-var MAIN_URL = "https://hindmovie.icu";
 var TMDB_API_KEY = "1865f43a0549ca50d341dd9ab8b29f49";
 function extractGdshine(url) {
   return __async(this, null, function* () {
@@ -270,6 +295,7 @@ function resolveDirectStreams(signedUrl) {
 function extractStreams(tmdbId, mediaType, season, episode) {
   return __async(this, null, function* () {
     try {
+      yield ensureDomain();
       const info = yield fetchJson(`https://api.themoviedb.org/3/${mediaType}/${tmdbId}?api_key=${TMDB_API_KEY}`);
       const title = info.title || info.name;
       const year = (info.release_date || info.first_air_date || "").split("-")[0];

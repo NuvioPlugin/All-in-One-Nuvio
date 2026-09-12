@@ -125,7 +125,7 @@ async function getStreamLinks(subjectId, season = 0, episode = 0, mediaTitle = "
                             quality,
                             headers: {
                                 "Referer": API_BASE,
-                                "User-Agent": `com.community.mbox.in/50020042 (Linux; U; Android 16; en_IN; MovieBox; Build/BP22.250325.006; Cronet/133.0.6876.3)`,
+                                "User-Agent": `com.community.mbox.in/50020126 (Linux; U; Android 14; en_IN; Pixel 8; Build/UD1A.230803.041; Cronet/145.0.7582.0)`,
                                 ...(stream.signCookie ? { "Cookie": stream.signCookie } : {})
                             },
                             subtitles,
@@ -151,7 +151,7 @@ async function getStreamLinks(subjectId, season = 0, episode = 0, mediaTitle = "
                                     quality,
                                     headers: {
                                         "Referer": API_BASE,
-                                        "User-Agent": `com.community.mbox.in/50020042 (Linux; U; Android 16; en_IN; MovieBox; Build/BP22.250325.006; Cronet/133.0.6876.3)`
+                                        "User-Agent": `com.community.mbox.in/50020126 (Linux; U; Android 14; en_IN; Pixel 8; Build/UD1A.230803.041; Cronet/145.0.7582.0)`
                                     },
                                     provider: "moviebox"
                                 });

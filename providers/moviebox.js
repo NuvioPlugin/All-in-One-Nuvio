@@ -1,6 +1,6 @@
 /**
  * moviebox - Built from src/moviebox/
- * Generated: 2026-07-08T18:40:52.588Z
+ * Generated: 2026-09-12T17:16:49.730Z
  */
 var __create = Object.create;
 var __defProp = Object.defineProperty;
@@ -77,8 +77,8 @@ var BRAND_MODELS = {
 };
 var PACKAGE_INFO = {
   package_name: "com.community.mbox.in",
-  version_name: "3.0.03.0529.03",
-  version_code: 50020042
+  version_name: "4.0.02.0831.03",
+  version_code: 50020126
 };
 
 // src/moviebox/utils.js
@@ -221,10 +221,10 @@ function movieBoxRequest(_0, _1) {
     const xTrSignature = generateXTrSignature(method, accept, headerContentType, url, body, false, timestamp);
     const xClientInfo = JSON.stringify(__spreadProps(__spreadValues({}, PACKAGE_INFO), {
       os: "android",
-      os_version: "16",
+      os_version: "14",
       device_id: deviceId,
-      install_store: "ps",
-      gaid: "d7578036d13336cc",
+      install_store: "official",
+      gaid: "1b2212c1-dadf-43c3-a0c8-bd6ce48ae22d",
       brand: selectedBrand.toLowerCase(),
       model: selectedModel,
       system_language: "en",
@@ -238,7 +238,7 @@ function movieBoxRequest(_0, _1) {
       "Content-Type": headerContentType,
       "x-client-token": xClientToken,
       "x-tr-signature": xTrSignature,
-      "User-Agent": `${PACKAGE_INFO.package_name}/${PACKAGE_INFO.version_code} (Linux; U; Android 16; en_IN; ${selectedModel}; Build/BP22.250325.006; Cronet/133.0.6876.3)`,
+      "User-Agent": `${PACKAGE_INFO.package_name}/${PACKAGE_INFO.version_code} (Linux; U; Android 14; en_IN; ${selectedModel}; Build/UD1A.230803.041; Cronet/145.0.7582.0)`,
       "x-client-info": xClientInfo,
       "x-client-status": "0"
     }, customHeaders);
@@ -460,7 +460,7 @@ function getStreamLinks(subjectId, season = 0, episode = 0, mediaTitle = "", med
                 quality,
                 headers: __spreadValues({
                   "Referer": API_BASE,
-                  "User-Agent": `com.community.mbox.in/50020042 (Linux; U; Android 16; en_IN; MovieBox; Build/BP22.250325.006; Cronet/133.0.6876.3)`
+                  "User-Agent": `com.community.mbox.in/50020126 (Linux; U; Android 14; en_IN; Pixel 8; Build/UD1A.230803.041; Cronet/145.0.7582.0)`
                 }, stream.signCookie ? { "Cookie": stream.signCookie } : {}),
                 subtitles,
                 provider: "moviebox"
@@ -482,7 +482,7 @@ function getStreamLinks(subjectId, season = 0, episode = 0, mediaTitle = "", med
                     quality,
                     headers: {
                       "Referer": API_BASE,
-                      "User-Agent": `com.community.mbox.in/50020042 (Linux; U; Android 16; en_IN; MovieBox; Build/BP22.250325.006; Cronet/133.0.6876.3)`
+                      "User-Agent": `com.community.mbox.in/50020126 (Linux; U; Android 14; en_IN; Pixel 8; Build/UD1A.230803.041; Cronet/145.0.7582.0)`
                     },
                     provider: "moviebox"
                   });

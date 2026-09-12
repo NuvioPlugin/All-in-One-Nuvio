@@ -148,10 +148,10 @@ export async function movieBoxRequest(method, url, body = null, customHeaders = 
     const xClientInfo = JSON.stringify({
         ...PACKAGE_INFO,
         os: "android",
-        os_version: "16",
+        os_version: "14",
         device_id: deviceId,
-        install_store: "ps",
-        gaid: "d7578036d13336cc",
+        install_store: "official",
+        gaid: "1b2212c1-dadf-43c3-a0c8-bd6ce48ae22d",
         brand: selectedBrand.toLowerCase(),
         model: selectedModel,
         system_language: "en",
@@ -166,7 +166,7 @@ export async function movieBoxRequest(method, url, body = null, customHeaders = 
         "Content-Type": headerContentType,
         "x-client-token": xClientToken,
         "x-tr-signature": xTrSignature,
-        "User-Agent": `${PACKAGE_INFO.package_name}/${PACKAGE_INFO.version_code} (Linux; U; Android 16; en_IN; ${selectedModel}; Build/BP22.250325.006; Cronet/133.0.6876.3)`,
+        "User-Agent": `${PACKAGE_INFO.package_name}/${PACKAGE_INFO.version_code} (Linux; U; Android 14; en_IN; ${selectedModel}; Build/UD1A.230803.041; Cronet/145.0.7582.0)`,
         "x-client-info": xClientInfo,
         "x-client-status": "0",
         ...customHeaders

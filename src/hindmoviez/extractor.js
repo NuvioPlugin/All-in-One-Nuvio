@@ -1,8 +1,7 @@
 import cheerio from 'cheerio-without-node-native';
-import { fetchText, fetchJson, HEADERS } from './http.js';
+import { fetchText, fetchJson, HEADERS, MAIN_URL, ensureDomain } from './http.js';
 import { cleanTitle, getSearchQuality, extractSpecs, buildExtractedTitle, signHShare, getIndexQuality } from './utils.js';
 
-const MAIN_URL = "https://hindmovie.icu";
 const TMDB_API_KEY = "1865f43a0549ca50d341dd9ab8b29f49";
 
 async function extractGdshine(url) {
@@ -105,6 +104,7 @@ async function resolveDirectStreams(signedUrl) {
 
 export async function extractStreams(tmdbId, mediaType, season, episode) {
     try {
+        await ensureDomain();
         // 1. Get info from TMDB
         const info = await fetchJson(`https://api.themoviedb.org/3/${mediaType}/${tmdbId}?api_key=${TMDB_API_KEY}`);
         const title = info.title || info.name;

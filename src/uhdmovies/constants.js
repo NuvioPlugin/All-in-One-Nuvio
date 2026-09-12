@@ -1,5 +1,5 @@
 export const DOMAINS_URL = "https://raw.githubusercontent.com/phisher98/TVVVV/refs/heads/main/domains.json";
-export const FALLBACK_DOMAIN = "https://uhdmovies.pink";
+export const FALLBACK_DOMAIN = "https://uhdmovies.autos";
 
 export const TMDB_API_KEY = "1865f43a0549ca50d341dd9ab8b29f49";
 export const TMDB_BASE_URL = "https://api.themoviedb.org/3";
