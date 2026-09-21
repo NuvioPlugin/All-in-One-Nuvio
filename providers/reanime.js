@@ -1,6 +1,6 @@
 /**
  * reanime - Built from src/reanime/
- * Generated: 2026-09-21T12:56:08.344Z
+ * Generated: 2026-09-21T13:43:14.525Z
  */
 var __create = Object.create;
 var __defProp = Object.defineProperty;
@@ -73,7 +73,6 @@ var REANIME_DOMAINS = [
 ];
 var REANIME_BASE = "https://reanime.to";
 var FLIXCLOUD_BASE = "https://flixcloud.cc";
-var ENC_DEC_BASE = "https://enc-dec.app";
 var TMDB_API_KEY = "439c478a771f35c05022f9feabcca01c";
 var ANILIST_URL = "https://graphql.anilist.co";
 var ARM_BASE = "https://arm.haglund.dev/api/v2";
@@ -420,11 +419,11 @@ function getFlixEmbeds(slug, episodeNumber, language, anilistId) {
           headers: { "Referer": absolutize(watchPath) }
         });
         if (json.success && Array.isArray(json.servers) && json.servers.length > 0) {
-          const filtered = json.servers.filter((s) => !language || !s.dataType || s.dataType === language);
+          const filtered = language ? json.servers.filter((s) => s.dataType && s.dataType.toLowerCase() === language.toLowerCase()) : json.servers;
           return {
             watchUrl: absolutize(watchPath),
-            servers: filtered.length > 0 ? filtered : json.servers,
-            embeds: (filtered.length > 0 ? filtered : json.servers).map((s) => s.dataLink).filter(Boolean)
+            servers: filtered,
+            embeds: filtered.map((s) => s.dataLink).filter(Boolean)
           };
         }
       } catch (_) {
@@ -441,11 +440,11 @@ function getFlixEmbeds(slug, episodeNumber, language, anilistId) {
             headers: { "Referer": absolutize(watchPath) }
           });
           if (json.success && Array.isArray(json.servers) && json.servers.length > 0) {
-            const filtered = json.servers.filter((s) => !language || !s.dataType || s.dataType === language);
+            const filtered = language ? json.servers.filter((s) => s.dataType && s.dataType.toLowerCase() === language.toLowerCase()) : json.servers;
             return {
               watchUrl: absolutize(watchPath),
-              servers: filtered.length > 0 ? filtered : json.servers,
-              embeds: (filtered.length > 0 ? filtered : json.servers).map((s) => s.dataLink).filter(Boolean)
+              servers: filtered,
+              embeds: filtered.map((s) => s.dataLink).filter(Boolean)
             };
           }
         }
@@ -461,11 +460,11 @@ function getFlixEmbeds(slug, episodeNumber, language, anilistId) {
             headers: { "Referer": absolutize(watchPath) }
           });
           if (json.success && Array.isArray(json.servers) && json.servers.length > 0) {
-            const filtered = json.servers.filter((s) => !language || !s.dataType || s.dataType === language);
+            const filtered = language ? json.servers.filter((s) => s.dataType && s.dataType.toLowerCase() === language.toLowerCase()) : json.servers;
             return {
               watchUrl: absolutize(watchPath),
-              servers: filtered.length > 0 ? filtered : json.servers,
-              embeds: (filtered.length > 0 ? filtered : json.servers).map((s) => s.dataLink).filter(Boolean)
+              servers: filtered,
+              embeds: filtered.map((s) => s.dataLink).filter(Boolean)
             };
           }
         }
@@ -477,32 +476,6 @@ function getFlixEmbeds(slug, episodeNumber, language, anilistId) {
 }
 
 // src/reanime/flixcloud.js
-function getUrlOrigin(url) {
-  if (!url)
-    return FLIXCLOUD_BASE;
-  const match = url.match(/^(https?:\/\/[^\/]+)/);
-  return match ? match[1] : FLIXCLOUD_BASE;
-}
-function normalizeFlixEmbedUrl(url) {
-  let finalUrl = url.startsWith("http") ? url : `${FLIXCLOUD_BASE}${url.startsWith("/") ? "" : "/"}${url}`;
-  finalUrl = finalUrl.replace(/[?&]v=[^&]+/, "").replace(/[?&]kuudere_ts=[^&]+/, "");
-  const separator = finalUrl.includes("?") ? "&" : "?";
-  return `${finalUrl}${separator}v=1&autoPlay=true&skI=false&skO=false&kuudere_ts=${Date.now()}`;
-}
-function json5ToJson(json5) {
-  return json5.replace(/([{,]\s*)([\w_]+)(\s*:)/g, '$1"$2"$3').replace(/,\s*([}\]])/g, "$1").replace(/:\s*undefined\b/g, ": null");
-}
-function parseSsrData(html) {
-  const dataMatch = html.match(new RegExp('type:\\s*"data",\\s*data:\\s*(\\{.*?\\})\\s*,\\s*uses:', "s"));
-  if (dataMatch) {
-    try {
-      const rawJson = json5ToJson(dataMatch[1]);
-      return JSON.parse(rawJson);
-    } catch (_) {
-    }
-  }
-  throw new Error("Failed to extract FlixCloud SSR data");
-}
 function extractFlixCloudDownload(embedUrl) {
   return __async(this, null, function* () {
     try {
@@ -523,36 +496,34 @@ function extractFlixCloudDownload(embedUrl) {
       const dataBody = yield res.text();
       const fileIdMatch = dataBody.match(/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i);
       const tokenMatch = dataBody.match(/eyJ[\w-]+\.[\w-]+\.[\w-]+/);
-      const baseMatch = dataBody.match(/https:\/\/fetch\d*\.flixcloud\.cc/);
+      const baseMatch = dataBody.match(/https:\/\/[a-z0-9-]+\.flixcloud\.cc/i);
       const resolutionMatch = dataBody.match(/(\d{3,4}p)/);
+      const sizeMatch = dataBody.match(/"(\d+(?:\.\d+)?\s*[KMG]B)"/i);
       const fileId = fileIdMatch ? fileIdMatch[0] : null;
       const token = tokenMatch ? tokenMatch[0] : null;
       const base = baseMatch ? baseMatch[0] : FLIXCLOUD_BASE;
       const resolution = resolutionMatch ? resolutionMatch[1] : null;
+      const size = sizeMatch ? sizeMatch[1] : "Unknown";
       if (!fileId || !token)
         return null;
       let ready = false;
-      for (let attempts = 0; !ready && attempts < 2; attempts++) {
-        try {
-          const progRes = yield fetch(`${base}/download/${fileId}/progress?token=${token}`, {
-            headers: dlHeaders
-          });
-          if (progRes.ok) {
-            const text = yield progRes.text();
-            if (text.includes('"status":"ready"') || text.includes('"ready"')) {
-              ready = true;
-              break;
-            }
-            if (text.includes('"status":"failed"'))
-              break;
+      try {
+        const progRes = yield fetch(`${base}/download/${fileId}/progress?token=${token}`, {
+          headers: dlHeaders
+        });
+        if (progRes.ok) {
+          const text = yield progRes.text();
+          if (text.includes('"status":"ready"') || text.includes('"ready"')) {
+            ready = true;
           }
-        } catch (_) {
         }
+      } catch (_) {
       }
       const fileUrl = `${base}/download/${fileId}?token=${token}`;
       return {
         url: fileUrl,
         quality: resolution || "1080p",
+        size,
         type: "mkv",
         headers: dlHeaders,
         ready
@@ -560,101 +531,6 @@ function extractFlixCloudDownload(embedUrl) {
     } catch (_) {
       return null;
     }
-  });
-}
-function extractFlixCloud(embedUrl, referer) {
-  return __async(this, null, function* () {
-    var _a, _b, _c, _d;
-    const pageUrl = normalizeFlixEmbedUrl(embedUrl);
-    const origin = getUrlOrigin(pageUrl);
-    const response = yield fetch(pageUrl, {
-      headers: {
-        "User-Agent": USER_AGENT,
-        "Accept": "*/*",
-        "Origin": origin,
-        "Referer": `${FLIXCLOUD_BASE}/`
-      }
-    });
-    if (!response.ok)
-      throw new Error(`FlixCloud embed HTTP ${response.status}`);
-    const html = yield response.text();
-    const data = parseSsrData(html);
-    const rawSubtitles = Array.isArray(data.subtitles) ? data.subtitles : [];
-    const subtitles = rawSubtitles.map((sub) => ({
-      url: sub.url,
-      language: sub.language || sub.lang || "Unknown",
-      format: sub.format || (sub.url.endsWith(".ass") ? "ass" : sub.url.endsWith(".vtt") ? "vtt" : "srt"),
-      default: !!sub.default,
-      headers: {
-        "Referer": `${FLIXCLOUD_BASE}/`,
-        "Origin": FLIXCLOUD_BASE
-      }
-    }));
-    const cleanData = Object.assign({}, data);
-    delete cleanData.subtitles;
-    delete cleanData.intro_chapter;
-    delete cleanData.outro_chapter;
-    const resolveResponse = yield fetch(`${ENC_DEC_BASE}/api/dec-flixcloud?type=token`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Accept": "*/*",
-        "User-Agent": USER_AGENT
-      },
-      body: JSON.stringify({ data: cleanData })
-    });
-    if (!resolveResponse.ok)
-      throw new Error(`Token API HTTP ${resolveResponse.status}`);
-    const resolveJson = yield resolveResponse.json();
-    const result = resolveJson.result || resolveJson;
-    const token = result.token || result.context && result.context.token;
-    const context = result.context || result;
-    if (!token)
-      throw new Error("Missing token in resolve response");
-    const tokenResponse = yield fetch(`${origin}/api/m3u8/${token}`, {
-      headers: {
-        "User-Agent": USER_AGENT,
-        "Origin": origin,
-        "Referer": `${FLIXCLOUD_BASE}/`
-      }
-    });
-    if (!tokenResponse.ok)
-      throw new Error(`Token authorization HTTP ${tokenResponse.status}`);
-    const tokenJson = yield tokenResponse.json();
-    const decryptResponse = yield fetch(`${ENC_DEC_BASE}/api/dec-flixcloud?type=stream`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Accept": "*/*",
-        "User-Agent": USER_AGENT
-      },
-      body: JSON.stringify({
-        data: {
-          context,
-          stream_response: tokenJson
-        }
-      })
-    });
-    if (!decryptResponse.ok)
-      throw new Error(`Stream decrypt HTTP ${decryptResponse.status}`);
-    const decryptJson = yield decryptResponse.json();
-    const stream = ((_a = decryptJson.result) == null ? void 0 : _a.stream) || ((_b = decryptJson.result) == null ? void 0 : _b.url) || decryptJson.result;
-    if (!stream || typeof stream !== "string") {
-      throw new Error("Invalid stream returned from decrypt API");
-    }
-    const wPayload = ((_d = (_c = decryptJson.result) == null ? void 0 : _c.context) == null ? void 0 : _d.w_payload) || (context == null ? void 0 : context.w_payload) || "";
-    const cleanStream = stream.replace(/\\\//g, "/").replace(/&amp;/g, "&").trim();
-    const parseUrl = `${ENC_DEC_BASE}/api/parse-flixcloud?url=${encodeURIComponent(cleanStream)}&w_payload=${encodeURIComponent(wPayload)}`;
-    return {
-      url: parseUrl,
-      videoId: data.video_id,
-      title: data.video_title,
-      subtitles,
-      headers: {
-        "Referer": `${FLIXCLOUD_BASE}/`,
-        "User-Agent": USER_AGENT
-      }
-    };
   });
 }
 
@@ -740,6 +616,7 @@ function getStreams(tmdbId, mediaType = "tv", season = null, episode = null) {
         return [];
       const streams = [];
       const seen = /* @__PURE__ */ new Set();
+      const tasks = [];
       for (const language of ["sub", "dub"]) {
         const serverList = serversByLang[language] || [];
         for (let i = 0; i < serverList.length; i++) {
@@ -751,41 +628,32 @@ function getStreams(tmdbId, mediaType = "tv", season = null, episode = null) {
           const langUpper = language.toUpperCase();
           const displayTitle = searchTitle || "Anime";
           const streamTitle = mediaType === "movie" ? `${displayTitle} (${langUpper})` : `${displayTitle} - Episode ${episodeNumber} (${langUpper})`;
-          try {
-            const directDl = yield extractFlixCloudDownload(dataLink);
-            if (directDl && directDl.url && !seen.has(directDl.url)) {
-              seen.add(directDl.url);
-              streams.push({
-                name: `Reanime [${langUpper}] ${serverName} Download (${directDl.quality || "MKV"})`,
-                title: streamTitle,
-                url: directDl.url,
-                quality: directDl.quality || "1080p",
-                size: "Unknown",
-                headers: directDl.headers,
-                provider: "reanime",
-                type: "mkv"
-              });
+          tasks.push((() => __async(this, null, function* () {
+            try {
+              const directDl = yield extractFlixCloudDownload(dataLink);
+              if (directDl && directDl.url) {
+                return {
+                  name: `Reanime [${langUpper}] ${serverName} (${directDl.quality || "1080p"})`,
+                  title: streamTitle,
+                  url: directDl.url,
+                  quality: directDl.quality || "1080p",
+                  size: directDl.size || "Unknown",
+                  headers: directDl.headers,
+                  provider: "reanime",
+                  type: "mkv"
+                };
+              }
+            } catch (_) {
             }
-          } catch (_) {
-          }
-          try {
-            const extracted = yield extractFlixCloud(dataLink, watchUrl);
-            if (extracted && extracted.url && !seen.has(extracted.url)) {
-              seen.add(extracted.url);
-              streams.push({
-                name: `Reanime [${langUpper}] ${serverName} (HLS Auto)`,
-                title: streamTitle,
-                url: extracted.url,
-                quality: "Auto",
-                size: "Unknown",
-                headers: extracted.headers,
-                provider: "reanime",
-                type: "m3u8",
-                subtitles: extracted.subtitles || []
-              });
-            }
-          } catch (_) {
-          }
+            return null;
+          }))());
+        }
+      }
+      const results = yield Promise.all(tasks);
+      for (const res of results) {
+        if (res && res.url && !seen.has(res.name)) {
+          seen.add(res.name);
+          streams.push(res);
         }
       }
       const qualityRank = {
