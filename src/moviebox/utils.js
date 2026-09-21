@@ -1,5 +1,5 @@
 import CryptoJS from 'crypto-js';
-import { API_BASE, KEY_B64_DEFAULT, KEY_B64_ALT, BRAND_MODELS, PACKAGE_INFO, TMDB_BASE_URL, TMDB_API_KEY } from './constants.js';
+import { API_BASE, TOKEN_URL, KEY_B64_DEFAULT, KEY_B64_ALT, BRAND_MODELS, PACKAGE_INFO, TMDB_BASE_URL, TMDB_API_KEY } from './constants.js';
 
 const SECRET_KEY_DEFAULT = CryptoJS.enc.Base64.parse(
     CryptoJS.enc.Base64.parse(KEY_B64_DEFAULT).toString(CryptoJS.enc.Utf8)
@@ -40,7 +40,7 @@ export async function getCachedToken() {
     if (isTokenValid(bearerToken)) return bearerToken;
 
     console.log("[MovieBox] Fetching fresh anonymous token...");
-    const url = `${API_BASE}/wefeed-mobile-bff/tab/ranking-list?tabId=0&categoryType=4516404531735022304&page=1&perPage=1`;
+    const url = TOKEN_URL;
     const res = await movieBoxRequest("GET", url, null, {}, true);
     if (res && res.headers) {
         const xUser = res.headers.get("x-user");
@@ -286,3 +286,50 @@ export function getFormatType(url) {
     if (u.includes(".mkv")) return "MKV";
     return "VIDEO";
 }
+
+export function extractPolicyResource(signCookie) {
+    if (!signCookie || typeof signCookie !== 'string') return null;
+
+    const edgeMatch = signCookie.match(/Edge-Cache-Cookie=urlprefix=([^:;\s]+)/);
+    if (edgeMatch) {
+        try {
+            let std = edgeMatch[1].replace(/_/g, '/').replace(/-/g, '+');
+            const rem = (4 - (std.length % 4)) % 4;
+            if (rem > 0) std += '='.repeat(rem);
+            const decoded = CryptoJS.enc.Base64.parse(std).toString(CryptoJS.enc.Utf8).replace(/\/+$/, '');
+            if (decoded) return `${decoded}/index.mpd`;
+        } catch (_) {}
+    }
+
+    const cfMatch = signCookie.match(/CloudFront-Policy=([^;]+)/);
+    if (cfMatch) {
+        try {
+            const policyRaw = cfMatch[1];
+            let cfB64 = policyRaw.replace(/-/g, '+').replace(/~/g, '/').replace(/_/g, '=');
+            const rem = cfB64.length % 4;
+            if (rem > 0) cfB64 += '='.repeat(rem);
+
+            let decodedJson = null;
+            try {
+                decodedJson = CryptoJS.enc.Base64.parse(cfB64).toString(CryptoJS.enc.Utf8);
+            } catch (_) {
+                let stdB64 = policyRaw.replace(/-/g, '+').replace(/_/g, '/');
+                const rem2 = stdB64.length % 4;
+                if (rem2 > 0) stdB64 += '='.repeat(rem2);
+                decodedJson = CryptoJS.enc.Base64.parse(stdB64).toString(CryptoJS.enc.Utf8);
+            }
+
+            if (decodedJson) {
+                const root = JSON.parse(decodedJson);
+                const resource = root?.Statement?.[0]?.Resource;
+                if (resource && typeof resource === 'string') {
+                    const trimmed = resource.replace(/[\*\/]+$/, '');
+                    return trimmed.toLowerCase().endsWith('.mpd') ? trimmed : `${trimmed}/index.mpd`;
+                }
+            }
+        } catch (_) {}
+    }
+
+    return null;
+}
+
