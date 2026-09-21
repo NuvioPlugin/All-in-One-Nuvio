@@ -861,6 +861,20 @@
       "contentLanguage": ["ko", "ch", "ja", "th"]
     },
     {
+      "id": "reanime",
+      "name": "Reanime",
+      "description": "Reanime anime streaming with automated AniList mapping and subtitle support",
+      "version": "1.0.0",
+      "author": "Nuvio Team",
+      "supportedTypes": ["movie", "tv"],
+      "filename": "providers/reanime.js",
+      "enabled": true,
+      "hasSettings": false,
+      "formats": ["m3u8"],
+      "logo": "https://www.google.com/s2/favicons?domain=reanime.to&sz=128",
+      "contentLanguage": ["en"]
+    },
+    {
       "id": "mapple",
       "name": "Mapple",
       "description": "Mapple multi-hoster movies and TV streaming with PoW session verification and direct HLS streams",
