@@ -16,6 +16,9 @@ async function getStreams(tmdbId, mediaType = "tv", season = null, episode = nul
             try {
                 const syncInfo = await getSyncInfo(tmdbId, mediaType, season, episodeNumber);
                 searchTitle = syncInfo.title;
+                if (syncInfo.releaseDate) {
+                    searchYear = syncInfo.releaseDate.substring(0, 4);
+                }
 
                 const syncResult = await resolveByDate(syncInfo.releaseDate, syncInfo.title, episodeNumber, syncInfo.episodeTitle, syncInfo.dayIndex);
                 if (syncResult && syncResult.alId) {
@@ -25,11 +28,11 @@ async function getStreams(tmdbId, mediaType = "tv", season = null, episode = nul
                 }
             } catch (_) {}
 
-            if (!alId && !searchTitle) {
+            if (!searchTitle || !searchYear) {
                 try {
                     const tmdb = await getTmdbInfo(tmdbId, mediaType);
-                    searchTitle = tmdb.title;
-                    searchYear = tmdb.year;
+                    if (!searchTitle) searchTitle = tmdb.title;
+                    if (!searchYear) searchYear = tmdb.year;
                 } catch (_) {}
             }
         }
@@ -104,6 +107,7 @@ async function getStreams(tmdbId, mediaType = "tv", season = null, episode = nul
                             title: streamTitle,
                             url: directDl.url,
                             quality: directDl.quality || "1080p",
+                            size: "Unknown",
                             headers: directDl.headers,
                             provider: "reanime",
                             type: "mkv"
@@ -121,6 +125,7 @@ async function getStreams(tmdbId, mediaType = "tv", season = null, episode = nul
                             title: streamTitle,
                             url: extracted.url,
                             quality: "Auto",
+                            size: "Unknown",
                             headers: extracted.headers,
                             provider: "reanime",
                             type: "m3u8",
@@ -130,6 +135,24 @@ async function getStreams(tmdbId, mediaType = "tv", season = null, episode = nul
                 } catch (_) {}
             }
         }
+
+        const qualityRank = {
+            'auto': 4000,
+            'adaptive': 4000,
+            '2160p': 2160,
+            '4k': 2160,
+            '1080p': 1080,
+            '720p': 720,
+            '480p': 480,
+            '360p': 360,
+            'unknown': 0
+        };
+
+        streams.sort((a, b) => {
+            const qa = qualityRank[a.quality?.toLowerCase()] || 0;
+            const qb = qualityRank[b.quality?.toLowerCase()] || 0;
+            return qb - qa;
+        });
 
         return streams;
     } catch (error) {

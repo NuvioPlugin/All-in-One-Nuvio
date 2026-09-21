@@ -1,6 +1,6 @@
 /**
  * reanime - Built from src/reanime/
- * Generated: 2026-09-01T12:42:26.629Z
+ * Generated: 2026-09-21T12:56:08.344Z
  */
 var __create = Object.create;
 var __defProp = Object.defineProperty;
@@ -109,9 +109,7 @@ function fetchText(_0) {
     for (const tryUrl of urlsToTry) {
       try {
         const response = yield fetch(tryUrl, __spreadProps(__spreadValues({}, options), {
-          headers: __spreadValues(__spreadValues({}, HEADERS), options.headers || {}),
-          cfKiller: true,
-          skipSizeCheck: true
+          headers: __spreadValues(__spreadValues({}, HEADERS), options.headers || {})
         }));
         if (response.ok) {
           if (!isAbsolute) {
@@ -150,15 +148,15 @@ function getTmdbInfo(tmdbId, mediaType) {
         year: ((data.first_air_date || data.release_date || "").match(/\d{4}/) || [null])[0],
         imdbId: data.external_ids && data.external_ids.imdb_id
       };
-    } catch (e) {
+    } catch (_) {
       return { title: "", year: null, imdbId: null };
     }
   });
 }
 function getAnilistInfo(alId) {
   return __async(this, null, function* () {
-    var _a, _b, _c, _d;
-    const query = "query($id:Int){Media(id:$id){id title{english romaji} startDate{year}}}";
+    var _a, _b, _c, _d, _e;
+    const query = "query($id:Int){Media(id:$id){id title{english romaji native} startDate{year}}}";
     try {
       const json = yield fetchJson(ANILIST_URL, {
         method: "POST",
@@ -169,10 +167,10 @@ function getAnilistInfo(alId) {
       if (!media)
         return { title: "", year: null };
       return {
-        title: ((_b = media.title) == null ? void 0 : _b.english) || ((_c = media.title) == null ? void 0 : _c.romaji) || "",
-        year: ((_d = media.startDate) == null ? void 0 : _d.year) || null
+        title: ((_b = media.title) == null ? void 0 : _b.english) || ((_c = media.title) == null ? void 0 : _c.romaji) || ((_d = media.title) == null ? void 0 : _d.native) || "",
+        year: ((_e = media.startDate) == null ? void 0 : _e.year) || null
       };
-    } catch (e) {
+    } catch (_) {
       return { title: "", year: null };
     }
   });
@@ -197,7 +195,7 @@ function getSyncInfo(id, mediaType, season, episode) {
         const targetDate = target.released.split("T")[0];
         const dayIndex = videos.filter((v) => v.season == season && v.released && v.released.split("T")[0] === targetDate && parseInt(v.episode) < parseInt(episode)).length + 1;
         return { date: targetDate, title: target.name || null, dayIndex };
-      } catch (e) {
+      } catch (_) {
         return { date: null, title: null, dayIndex: 1 };
       }
     });
@@ -215,7 +213,7 @@ function getSyncInfo(id, mediaType, season, episode) {
       try {
         const armData = yield fetchJson(`${ARM_BASE}/themoviedb?id=${id}`);
         imdbId = Array.isArray(armData) && armData.length > 0 ? armData[0].imdb : null;
-      } catch (e) {
+      } catch (_) {
       }
     }
     if (!imdbId)
@@ -242,7 +240,7 @@ function resolveByDate(releaseDateStr, showTitle, originalEpisode, episodeTitle,
     var _a, _b;
     if (!releaseDateStr || !/^\d{4}-\d{2}-\d{2}/.test(releaseDateStr))
       return null;
-    const query = "query($search:String){Page(perPage:20){media(search:$search,type:ANIME){id type format title{romaji english}startDate{year month day}endDate{year month day}episodes streamingEpisodes{title}}}}";
+    const query = "query($search:String){Page(perPage:20){media(search:$search,type:ANIME){id type format title{romaji english native}startDate{year month day}endDate{year month day}episodes streamingEpisodes{title}}}}";
     try {
       const json = yield fetchJson(ANILIST_URL, {
         method: "POST",
@@ -292,11 +290,10 @@ function resolveByDate(releaseDateStr, showTitle, originalEpisode, episodeTitle,
               }
             }
           }
-          return { alId: anime.id, episode: episodeNum, title: anime.title.english || anime.title.romaji };
+          return { alId: anime.id, episode: episodeNum, title: anime.title.english || anime.title.romaji || anime.title.native };
         }
       }
-    } catch (e) {
-      console.error(`[AniList] Search error: ${e.message}`);
+    } catch (_) {
     }
     return null;
   });
@@ -358,18 +355,37 @@ function searchReanimeAnime(query, year, targetAnilistId = null) {
           const list = json.results || json.data || json.anime || (Array.isArray(json) ? json : null);
           if (Array.isArray(list)) {
             list.forEach((item) => {
-              var _a, _b, _c;
               const rawSlug = item.anime_id || item.slug || item.id || item.url;
               if (rawSlug) {
                 const cleanSlug = String(rawSlug).replace(/-[a-z0-9]{6}$/, "");
-                const rawTitle = typeof item.title === "object" ? ((_a = item.title) == null ? void 0 : _a.english) || ((_b = item.title) == null ? void 0 : _b.romaji) || ((_c = item.title) == null ? void 0 : _c.native) || cleanSlug : item.title || item.name || cleanSlug;
+                const titles = [];
+                if (typeof item.title === "object" && item.title) {
+                  if (item.title.english)
+                    titles.push(item.title.english);
+                  if (item.title.romaji)
+                    titles.push(item.title.romaji);
+                  if (item.title.native)
+                    titles.push(item.title.native);
+                } else if (item.title) {
+                  titles.push(item.title);
+                }
+                if (item.name)
+                  titles.push(item.name);
+                if (titles.length === 0)
+                  titles.push(cleanSlug);
                 const alId = extractAnilistId(item);
+                let bestScore = 0;
+                for (const t of titles) {
+                  const sc = scoreCandidate(t, query, year, targetAnilistId, alId);
+                  if (sc > bestScore)
+                    bestScore = sc;
+                }
                 candidates.push({
                   slug: String(rawSlug),
                   cleanSlug,
-                  title: rawTitle,
+                  title: titles[0],
                   anilistId: alId,
-                  score: scoreCandidate(rawTitle, query, year, targetAnilistId, alId)
+                  score: bestScore
                 });
               }
             });
@@ -416,6 +432,26 @@ function getFlixEmbeds(slug, episodeNumber, language, anilistId) {
     }
     if (slug) {
       try {
+        const animeApiUrl = `/api/v1/anime/${slug}`;
+        const animeData = yield fetchJson(animeApiUrl);
+        const alId = animeData == null ? void 0 : animeData.anilist_id;
+        if (alId) {
+          const flixUrl = `/api/flix/${alId}/${episodeNumber}`;
+          const json = yield fetchJson(flixUrl, {
+            headers: { "Referer": absolutize(watchPath) }
+          });
+          if (json.success && Array.isArray(json.servers) && json.servers.length > 0) {
+            const filtered = json.servers.filter((s) => !language || !s.dataType || s.dataType === language);
+            return {
+              watchUrl: absolutize(watchPath),
+              servers: filtered.length > 0 ? filtered : json.servers,
+              embeds: (filtered.length > 0 ? filtered : json.servers).map((s) => s.dataLink).filter(Boolean)
+            };
+          }
+        }
+      } catch (_) {
+      }
+      try {
         const html = yield fetchText(`/anime/${slug}?_ep=${episodeNumber}`);
         const anilistMatch = html.match(/anilist_id:\s*(\d+)/);
         if (anilistMatch) {
@@ -447,37 +483,6 @@ function getUrlOrigin(url) {
   const match = url.match(/^(https?:\/\/[^\/]+)/);
   return match ? match[1] : FLIXCLOUD_BASE;
 }
-function safeAtob(str) {
-  if (typeof atob === "function")
-    return atob(str);
-  const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=";
-  let output = "";
-  str = String(str).replace(/=+$/, "");
-  for (let bc = 0, bs, buffer, idx = 0; buffer = str.charAt(idx++); ~buffer && (bs = bc % 4 ? bs * 64 + buffer : buffer, bc++ % 4) ? output += String.fromCharCode(255 & bs >> (-2 * bc & 6)) : 0) {
-    buffer = chars.indexOf(buffer);
-  }
-  return output;
-}
-function parseBytes(val) {
-  if (!val)
-    return new Uint8Array(0);
-  if (/^[0-9a-f]+$/i.test(val) && val.length % 2 === 0) {
-    const out = new Uint8Array(val.length / 2);
-    for (let i = 0; i < val.length; i += 2) {
-      out[i / 2] = parseInt(val.substring(i, i + 2), 16);
-    }
-    return out;
-  }
-  try {
-    const bin = safeAtob(val);
-    const out = new Uint8Array(bin.length);
-    for (let i = 0; i < bin.length; i++)
-      out[i] = bin.charCodeAt(i);
-    return out;
-  } catch (e) {
-    return new Uint8Array(0);
-  }
-}
 function normalizeFlixEmbedUrl(url) {
   let finalUrl = url.startsWith("http") ? url : `${FLIXCLOUD_BASE}${url.startsWith("/") ? "" : "/"}${url}`;
   finalUrl = finalUrl.replace(/[?&]v=[^&]+/, "").replace(/[?&]kuudere_ts=[^&]+/, "");
@@ -487,58 +492,13 @@ function normalizeFlixEmbedUrl(url) {
 function json5ToJson(json5) {
   return json5.replace(/([{,]\s*)([\w_]+)(\s*:)/g, '$1"$2"$3').replace(/,\s*([}\]])/g, "$1").replace(/:\s*undefined\b/g, ": null");
 }
-function extractBalancedObject(source, startIdx) {
-  const start = source.indexOf("{", startIdx);
-  if (start < 0)
-    return null;
-  let depth = 0, quote = null, escape = false;
-  for (let i = start; i < source.length; i++) {
-    const ch = source[i];
-    if (quote) {
-      if (escape)
-        escape = false;
-      else if (ch === "\\")
-        escape = true;
-      else if (ch === quote)
-        quote = null;
-      continue;
-    }
-    if (ch === '"' || ch === "'") {
-      quote = ch;
-    } else if (ch === "{") {
-      depth++;
-    } else if (ch === "}") {
-      depth--;
-      if (depth === 0)
-        return source.substring(start, i + 1);
-    }
-  }
-  return null;
-}
 function parseSsrData(html) {
   const dataMatch = html.match(new RegExp('type:\\s*"data",\\s*data:\\s*(\\{.*?\\})\\s*,\\s*uses:', "s"));
   if (dataMatch) {
     try {
       const rawJson = json5ToJson(dataMatch[1]);
       return JSON.parse(rawJson);
-    } catch (e) {
-    }
-  }
-  const marker = "obfuscation_seed";
-  const markerIdx = html.indexOf(marker);
-  if (markerIdx >= 0) {
-    let dataIdx = html.lastIndexOf("{", markerIdx);
-    while (dataIdx >= 0) {
-      const obj = extractBalancedObject(html, dataIdx);
-      if (obj && obj.includes(marker)) {
-        try {
-          const jsonText = json5ToJson(obj);
-          const parsed = JSON.parse(jsonText);
-          return parsed.data || parsed;
-        } catch (e) {
-        }
-      }
-      dataIdx = html.lastIndexOf("{", dataIdx - 1);
+    } catch (_) {
     }
   }
   throw new Error("Failed to extract FlixCloud SSR data");
@@ -556,9 +516,7 @@ function extractFlixCloudDownload(embedUrl) {
         "User-Agent": USER_AGENT
       };
       const res = yield fetch(`${FLIXCLOUD_BASE}/d/${aid}/__data.json`, {
-        headers: dlHeaders,
-        cfKiller: true,
-        skipSizeCheck: true
+        headers: dlHeaders
       });
       if (!res.ok)
         return null;
@@ -577,9 +535,7 @@ function extractFlixCloudDownload(embedUrl) {
       for (let attempts = 0; !ready && attempts < 2; attempts++) {
         try {
           const progRes = yield fetch(`${base}/download/${fileId}/progress?token=${token}`, {
-            headers: dlHeaders,
-            cfKiller: true,
-            skipSizeCheck: true
+            headers: dlHeaders
           });
           if (progRes.ok) {
             const text = yield progRes.text();
@@ -598,7 +554,8 @@ function extractFlixCloudDownload(embedUrl) {
         url: fileUrl,
         quality: resolution || "1080p",
         type: "mkv",
-        headers: dlHeaders
+        headers: dlHeaders,
+        ready
       };
     } catch (_) {
       return null;
@@ -607,6 +564,7 @@ function extractFlixCloudDownload(embedUrl) {
 }
 function extractFlixCloud(embedUrl, referer) {
   return __async(this, null, function* () {
+    var _a, _b, _c, _d;
     const pageUrl = normalizeFlixEmbedUrl(embedUrl);
     const origin = getUrlOrigin(pageUrl);
     const response = yield fetch(pageUrl, {
@@ -615,9 +573,7 @@ function extractFlixCloud(embedUrl, referer) {
         "Accept": "*/*",
         "Origin": origin,
         "Referer": `${FLIXCLOUD_BASE}/`
-      },
-      cfKiller: true,
-      skipSizeCheck: true
+      }
     });
     if (!response.ok)
       throw new Error(`FlixCloud embed HTTP ${response.status}`);
@@ -628,79 +584,12 @@ function extractFlixCloud(embedUrl, referer) {
       url: sub.url,
       language: sub.language || sub.lang || "Unknown",
       format: sub.format || (sub.url.endsWith(".ass") ? "ass" : sub.url.endsWith(".vtt") ? "vtt" : "srt"),
-      default: !!sub.default
-    }));
-    try {
-      const remoteStream = yield decryptFlixCloudRemote(data, origin);
-      return {
-        url: remoteStream.streamUrl,
-        videoId: data.video_id,
-        title: data.video_title,
-        subtitles,
-        headers: {
-          "Referer": `${FLIXCLOUD_BASE}/`,
-          "User-Agent": USER_AGENT
-        }
-      };
-    } catch (remoteError) {
-      console.warn(`[FlixCloud] Remote decryption error: ${remoteError.message}. Trying local fallback.`);
-    }
-    const seed = data.obfuscation_seed;
-    const obfuscated = data.obfuscated_crypto_data;
-    const wPayload = data.w_payload;
-    if (!seed || !obfuscated || !wPayload) {
-      throw new Error("FlixCloud crypto payload missing");
-    }
-    const fields = yield deriveFieldMap(seed);
-    const cryptoParts = extractObfuscatedCryptoData(obfuscated, fields);
-    const frag2Val = data[fields.keyFrag2Field];
-    const tokenRef = data[fields.tokenField];
-    if (!frag2Val || !tokenRef) {
-      throw new Error("FlixCloud token fields missing");
-    }
-    const tokenResponse = yield fetch(`${origin}/api/m3u8/${tokenRef}`, {
-      headers: {
-        "User-Agent": USER_AGENT,
-        "Origin": origin,
-        "Referer": `${FLIXCLOUD_BASE}/`
-      },
-      cfKiller: true,
-      skipSizeCheck: true
-    });
-    if (!tokenResponse.ok)
-      throw new Error(`FlixCloud token HTTP ${tokenResponse.status}`);
-    const tokenJson = yield tokenResponse.json();
-    const videoKey = (yield sha256Hex(tokenRef + "vid")).substring(0, 10);
-    const keyKey = (yield sha256Hex(tokenRef + "key")).substring(0, 10);
-    const encryptedUrlB64 = tokenJson[videoKey];
-    const tokenKeyVal = tokenJson[keyKey];
-    if (!encryptedUrlB64 || !tokenKeyVal) {
-      throw new Error("FlixCloud token response incomplete");
-    }
-    const wasmKey = yield _runInterpretedWasmTransform(
-      wPayload,
-      parseBytes(cryptoParts.frag1B64),
-      parseBytes(frag2Val),
-      parseBytes(tokenKeyVal),
-      parseInt(seed.substring(0, 8), 16)
-    );
-    const streamUrl = yield decryptAesCbcUrl(wasmKey, cryptoParts.ivB64, encryptedUrlB64, seed);
-    const cleanStreamUrl = streamUrl.replace(/\\\//g, "/").replace(/&amp;/g, "&").trim();
-    return {
-      url: cleanStreamUrl,
-      videoId: data.video_id,
-      title: data.video_title,
-      subtitles,
+      default: !!sub.default,
       headers: {
         "Referer": `${FLIXCLOUD_BASE}/`,
-        "User-Agent": USER_AGENT
+        "Origin": FLIXCLOUD_BASE
       }
-    };
-  });
-}
-function decryptFlixCloudRemote(data, origin) {
-  return __async(this, null, function* () {
-    var _a, _b, _c, _d;
+    }));
     const cleanData = Object.assign({}, data);
     delete cleanData.subtitles;
     delete cleanData.intro_chapter;
@@ -727,9 +616,7 @@ function decryptFlixCloudRemote(data, origin) {
         "User-Agent": USER_AGENT,
         "Origin": origin,
         "Referer": `${FLIXCLOUD_BASE}/`
-      },
-      cfKiller: true,
-      skipSizeCheck: true
+      }
     });
     if (!tokenResponse.ok)
       throw new Error(`Token authorization HTTP ${tokenResponse.status}`);
@@ -759,316 +646,15 @@ function decryptFlixCloudRemote(data, origin) {
     const cleanStream = stream.replace(/\\\//g, "/").replace(/&amp;/g, "&").trim();
     const parseUrl = `${ENC_DEC_BASE}/api/parse-flixcloud?url=${encodeURIComponent(cleanStream)}&w_payload=${encodeURIComponent(wPayload)}`;
     return {
-      streamUrl: parseUrl,
-      rawStreamUrl: cleanStream
+      url: parseUrl,
+      videoId: data.video_id,
+      title: data.video_title,
+      subtitles,
+      headers: {
+        "Referer": `${FLIXCLOUD_BASE}/`,
+        "User-Agent": USER_AGENT
+      }
     };
-  });
-}
-function deriveFieldMap(seed) {
-  return __async(this, null, function* () {
-    let first = seed;
-    for (let i = 0; i < 3; i++)
-      first = yield sha256Hex(first + String(i));
-    let second = first;
-    for (let i = 0; i < 3; i++)
-      second = yield sha256Hex(second + String(i));
-    return {
-      keyField: `kf_${first.substring(8, 16)}`,
-      ivField: `ivf_${first.substring(16, 24)}`,
-      containerName: `cd_${first.substring(24, 32)}`,
-      arrayName: `ad_${first.substring(32, 40)}`,
-      objectName: `od_${first.substring(40, 48)}`,
-      tokenField: `${first.substring(48, 64)}_${first.substring(56, 64)}`,
-      keyFrag2Field: `${second.substring(0, 16)}_${second.substring(16, 24)}`
-    };
-  });
-}
-function extractObfuscatedCryptoData(data, fields) {
-  var _a;
-  const container = data[fields.containerName];
-  const arr = container == null ? void 0 : container[fields.arrayName];
-  const obj = (_a = arr == null ? void 0 : arr[0]) == null ? void 0 : _a[fields.objectName];
-  if (!obj)
-    throw new Error("Invalid FlixCloud crypto data structure");
-  return { frag1B64: obj[fields.keyField], ivB64: obj[fields.ivField] };
-}
-function _runInterpretedWasmTransform(payloadB64, frag1, frag2, tokenKey, seedInt) {
-  return __async(this, null, function* () {
-    const wasmBytes = parseBytes(payloadB64);
-    const bodies = _wasmFunctionBodies(wasmBytes);
-    const len = frag1.length;
-    const memory = new Uint8Array(4096 + len * 4);
-    const p1 = 1e3, p2 = p1 + len, p3 = p2 + len, out = p3 + len;
-    memory.set(frag1, p1);
-    memory.set(frag2, p2);
-    memory.set(tokenKey, p3);
-    const ok = _executeWasmBody(bodies[1], [p1, p2, p3, out, len], [seedInt], memory);
-    if (!ok)
-      throw new Error("WASM execution failed");
-    return memory.subarray(out, out + len);
-  });
-}
-function _wasmFunctionBodies(bytes) {
-  const bodies = [];
-  let cursor = 8;
-  const readUleb = () => {
-    let res = 0, shift = 0;
-    while (cursor < bytes.length) {
-      const b = bytes[cursor++];
-      res |= (b & 127) << shift;
-      if ((b & 128) === 0)
-        break;
-      shift += 7;
-    }
-    return res;
-  };
-  while (cursor < bytes.length) {
-    const id = bytes[cursor++];
-    const size = readUleb();
-    const end = cursor + size;
-    if (id === 10) {
-      const count = readUleb();
-      for (let i = 0; i < count; i++) {
-        const bSize = readUleb();
-        bodies.push(bytes.subarray(cursor, cursor + bSize));
-        cursor += bSize;
-      }
-      break;
-    }
-    cursor = end;
-  }
-  return bodies;
-}
-function _executeWasmBody(body, params, globals, memory) {
-  let pc = 0;
-  const readUleb = () => {
-    let res = 0, shift = 0;
-    while (pc < body.length) {
-      const b = body[pc++];
-      res |= (b & 127) << shift;
-      if ((b & 128) === 0)
-        break;
-      shift += 7;
-    }
-    return res;
-  };
-  const readSleb = () => {
-    let res = 0, shift = 0, b = 0;
-    do {
-      b = body[pc++];
-      res |= (b & 127) << shift;
-      shift += 7;
-    } while ((b & 128) !== 0);
-    if (shift < 32 && (b & 64) !== 0)
-      res |= ~0 << shift;
-    return res | 0;
-  };
-  const locals = params.slice();
-  const lCount = readUleb();
-  for (let i = 0; i < lCount; i++) {
-    const c = readUleb();
-    pc++;
-    for (let j = 0; j < c; j++)
-      locals.push(0);
-  }
-  const blockEnds = _wasmBlockEnds(body, pc);
-  const stack = [], cStack = [];
-  let steps = 0;
-  const branch = (depth) => {
-    const idx = cStack.length - 1 - depth;
-    if (idx < 0)
-      return false;
-    const frame = cStack[idx];
-    if (frame.isLoop) {
-      cStack.length = idx + 1;
-      pc = frame.startPc;
-    } else {
-      cStack.length = idx;
-      pc = frame.endPc + 1;
-    }
-    return true;
-  };
-  while (pc < body.length && steps++ < 1e6) {
-    const opPc = pc, op = body[pc++];
-    switch (op) {
-      case 2:
-      case 3:
-        pc++;
-        cStack.push({ isLoop: op === 3, startPc: pc, endPc: blockEnds.get(opPc) });
-        break;
-      case 11:
-        if (cStack.length === 0)
-          return true;
-        cStack.pop();
-        break;
-      case 12:
-        if (!branch(readUleb()))
-          return false;
-        break;
-      case 13: {
-        const d = readUleb();
-        if (stack.pop() !== 0)
-          branch(d);
-        break;
-      }
-      case 32:
-        stack.push(locals[readUleb()] | 0);
-        break;
-      case 33:
-        locals[readUleb()] = stack.pop() || 0;
-        break;
-      case 35:
-        stack.push(globals[readUleb()] | 0);
-        break;
-      case 65:
-        stack.push(readSleb());
-        break;
-      case 45: {
-        readUleb();
-        const off = readUleb();
-        const addr = (stack.pop() || 0) + off;
-        stack.push(memory[addr] || 0);
-        break;
-      }
-      case 58: {
-        readUleb();
-        const off = readUleb();
-        const val = stack.pop() || 0;
-        const addr = (stack.pop() || 0) + off;
-        memory[addr] = val & 255;
-        break;
-      }
-      case 69:
-        stack.push((stack.pop() || 0) === 0 ? 1 : 0);
-        break;
-      case 79: {
-        const r = (stack.pop() || 0) >>> 0, l = (stack.pop() || 0) >>> 0;
-        stack.push(l >= r ? 1 : 0);
-        break;
-      }
-      case 106: {
-        const r = stack.pop() || 0, l = stack.pop() || 0;
-        stack.push(l + r | 0);
-        break;
-      }
-      case 107: {
-        const r = stack.pop() || 0, l = stack.pop() || 0;
-        stack.push(l - r | 0);
-        break;
-      }
-      case 108: {
-        const r = stack.pop() || 0, l = stack.pop() || 0;
-        stack.push(Math.imul(l, r));
-        break;
-      }
-      case 113: {
-        const r = stack.pop() || 0, l = stack.pop() || 0;
-        stack.push(l & r);
-        break;
-      }
-      case 114: {
-        const r = stack.pop() || 0, l = stack.pop() || 0;
-        stack.push(l | r);
-        break;
-      }
-      case 115: {
-        const r = stack.pop() || 0, l = stack.pop() || 0;
-        stack.push(l ^ r);
-        break;
-      }
-      case 116: {
-        const s = (stack.pop() || 0) & 31, v = stack.pop() || 0;
-        stack.push(v << s);
-        break;
-      }
-      case 118: {
-        const s = (stack.pop() || 0) & 31, v = stack.pop() || 0;
-        stack.push(v >>> s);
-        break;
-      }
-    }
-  }
-  return true;
-}
-function _wasmBlockEnds(body, start) {
-  const ends = /* @__PURE__ */ new Map(), stack = [];
-  let pc = start;
-  const readUleb = () => {
-    while (pc < body.length && (body[pc++] & 128) !== 0) {
-    }
-  };
-  while (pc < body.length) {
-    const opPc = pc, op = body[pc++];
-    switch (op) {
-      case 2:
-      case 3:
-        pc++;
-        stack.push(opPc);
-        break;
-      case 11:
-        if (stack.length > 0)
-          ends.set(stack.pop(), opPc);
-        break;
-      case 12:
-      case 13:
-      case 32:
-      case 33:
-      case 35:
-      case 65:
-        readUleb();
-        break;
-      case 45:
-      case 58:
-        readUleb();
-        readUleb();
-        break;
-    }
-  }
-  return ends;
-}
-function uint8ArrayToWordArray(arr) {
-  const CryptoJS = require("crypto-js");
-  const words = [];
-  for (let i = 0; i < arr.length; i++) {
-    words[i >>> 2] |= (arr[i] & 255) << 24 - i % 4 * 8;
-  }
-  return CryptoJS.lib.WordArray.create(words, arr.length);
-}
-function decryptAesCbcUrl(rawKey, ivVal, cipherB64, seed) {
-  return __async(this, null, function* () {
-    let CryptoJS = null;
-    try {
-      CryptoJS = require("crypto-js");
-    } catch (e) {
-    }
-    if (CryptoJS && CryptoJS.AES && typeof CryptoJS.AES.decrypt === "function") {
-      try {
-        const salt = CryptoJS.enc.Utf8.parse(seed);
-        const passphrase = uint8ArrayToWordArray(rawKey);
-        const iv = uint8ArrayToWordArray(parseBytes(ivVal));
-        const derivedKey = CryptoJS.PBKDF2(passphrase, salt, { keySize: 256 / 32, iterations: 1e3, hasher: CryptoJS.algo.SHA256 });
-        const keyBytes = new Uint8Array(32);
-        for (let i = 0; i < 32; i++) {
-          keyBytes[i] = derivedKey.words[i >>> 2] >>> 24 - i % 4 * 8 & 255;
-        }
-        for (let i = 0; i < 32; i++) {
-          keyBytes[i] ^= seed.charCodeAt(i % seed.length);
-        }
-        const finalKey = CryptoJS.SHA256(uint8ArrayToWordArray(keyBytes));
-        const decrypted = CryptoJS.AES.decrypt(cipherB64, finalKey, { iv, mode: CryptoJS.mode.CBC, padding: CryptoJS.pad.Pkcs7 });
-        const result = decrypted.toString(CryptoJS.enc.Utf8);
-        if (result)
-          return result.trim();
-      } catch (e) {
-      }
-    }
-    throw new Error("Local decryption failed");
-  });
-}
-function sha256Hex(text) {
-  return __async(this, null, function* () {
-    const CryptoJS = require("crypto-js");
-    return CryptoJS.SHA256(text).toString(CryptoJS.enc.Hex);
   });
 }
 
@@ -1088,6 +674,9 @@ function getStreams(tmdbId, mediaType = "tv", season = null, episode = null) {
         try {
           const syncInfo = yield getSyncInfo(tmdbId, mediaType, season, episodeNumber);
           searchTitle = syncInfo.title;
+          if (syncInfo.releaseDate) {
+            searchYear = syncInfo.releaseDate.substring(0, 4);
+          }
           const syncResult = yield resolveByDate(syncInfo.releaseDate, syncInfo.title, episodeNumber, syncInfo.episodeTitle, syncInfo.dayIndex);
           if (syncResult && syncResult.alId) {
             alId = String(syncResult.alId);
@@ -1096,11 +685,13 @@ function getStreams(tmdbId, mediaType = "tv", season = null, episode = null) {
           }
         } catch (_) {
         }
-        if (!alId && !searchTitle) {
+        if (!searchTitle || !searchYear) {
           try {
             const tmdb = yield getTmdbInfo(tmdbId, mediaType);
-            searchTitle = tmdb.title;
-            searchYear = tmdb.year;
+            if (!searchTitle)
+              searchTitle = tmdb.title;
+            if (!searchYear)
+              searchYear = tmdb.year;
           } catch (_) {
           }
         }
@@ -1169,6 +760,7 @@ function getStreams(tmdbId, mediaType = "tv", season = null, episode = null) {
                 title: streamTitle,
                 url: directDl.url,
                 quality: directDl.quality || "1080p",
+                size: "Unknown",
                 headers: directDl.headers,
                 provider: "reanime",
                 type: "mkv"
@@ -1185,6 +777,7 @@ function getStreams(tmdbId, mediaType = "tv", season = null, episode = null) {
                 title: streamTitle,
                 url: extracted.url,
                 quality: "Auto",
+                size: "Unknown",
                 headers: extracted.headers,
                 provider: "reanime",
                 type: "m3u8",
@@ -1195,6 +788,23 @@ function getStreams(tmdbId, mediaType = "tv", season = null, episode = null) {
           }
         }
       }
+      const qualityRank = {
+        "auto": 4e3,
+        "adaptive": 4e3,
+        "2160p": 2160,
+        "4k": 2160,
+        "1080p": 1080,
+        "720p": 720,
+        "480p": 480,
+        "360p": 360,
+        "unknown": 0
+      };
+      streams.sort((a, b) => {
+        var _a, _b;
+        const qa = qualityRank[(_a = a.quality) == null ? void 0 : _a.toLowerCase()] || 0;
+        const qb = qualityRank[(_b = b.quality) == null ? void 0 : _b.toLowerCase()] || 0;
+        return qb - qa;
+      });
       return streams;
     } catch (error) {
       console.error(`[Reanime] Error: ${error.message}`);

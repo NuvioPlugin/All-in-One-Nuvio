@@ -22,9 +22,7 @@ export async function fetchText(url, options = {}) {
                 headers: {
                     ...HEADERS,
                     ...(options.headers || {})
-                },
-                cfKiller: true,
-                skipSizeCheck: true
+                }
             });
             if (response.ok) {
                 if (!isAbsolute) {
@@ -62,13 +60,13 @@ export async function getTmdbInfo(tmdbId, mediaType) {
             year: ((data.first_air_date || data.release_date || "").match(/\d{4}/) || [null])[0],
             imdbId: data.external_ids && data.external_ids.imdb_id
         };
-    } catch (e) {
+    } catch (_) {
         return { title: "", year: null, imdbId: null };
     }
 }
 
 export async function getAnilistInfo(alId) {
-    const query = 'query($id:Int){Media(id:$id){id title{english romaji} startDate{year}}}';
+    const query = 'query($id:Int){Media(id:$id){id title{english romaji native} startDate{year}}}';
     try {
         const json = await fetchJson(ANILIST_URL, {
             method: 'POST',
@@ -78,10 +76,10 @@ export async function getAnilistInfo(alId) {
         const media = json.data?.Media;
         if (!media) return { title: "", year: null };
         return {
-            title: media.title?.english || media.title?.romaji || "",
+            title: media.title?.english || media.title?.romaji || media.title?.native || "",
             year: media.startDate?.year || null
         };
-    } catch (e) {
+    } catch (_) {
         return { title: "", year: null };
     }
 }
@@ -97,7 +95,7 @@ export async function getSyncInfo(id, mediaType, season, episode) {
             const meta = data.meta;
             if (!meta) throw new Error('No Cinemeta metadata');
             if (mediaType === 'movie') return { date: meta.released ? meta.released.split('T')[0] : null, title: meta.name, dayIndex: 1 };
-            
+
             const videos = meta.videos || [];
             const target = videos.find(v => v.season == season && v.episode == episode);
             if (!target || !target.released) return { date: null, title: null, dayIndex: 1 };
@@ -106,7 +104,7 @@ export async function getSyncInfo(id, mediaType, season, episode) {
             const dayIndex = videos.filter(v => v.season == season && v.released && v.released.split('T')[0] === targetDate && parseInt(v.episode) < parseInt(episode)).length + 1;
 
             return { date: targetDate, title: target.name || null, dayIndex };
-        } catch (e) {
+        } catch (_) {
             return { date: null, title: null, dayIndex: 1 };
         }
     };
@@ -127,11 +125,11 @@ export async function getSyncInfo(id, mediaType, season, episode) {
         try {
             const armData = await fetchJson(`${ARM_BASE}/themoviedb?id=${id}`);
             imdbId = (Array.isArray(armData) && armData.length > 0) ? armData[0].imdb : null;
-        } catch (e) {}
+        } catch (_) {}
     }
 
     if (!imdbId) throw new Error(`No IMDb ID found for TMDB ${id}`);
-    
+
     const cMeta = await getCinemetaInfo(imdbId);
     let finalDate = cMeta.date;
     if (mediaType === 'movie' && details.release_date) finalDate = details.release_date;
@@ -152,8 +150,8 @@ export async function getSyncInfo(id, mediaType, season, episode) {
 export async function resolveByDate(releaseDateStr, showTitle, originalEpisode, episodeTitle, dayIndex) {
     if (!releaseDateStr || !/^\d{4}-\d{2}-\d{2}/.test(releaseDateStr)) return null;
 
-    const query = 'query($search:String){Page(perPage:20){media(search:$search,type:ANIME){id type format title{romaji english}startDate{year month day}endDate{year month day}episodes streamingEpisodes{title}}}}';
-    
+    const query = 'query($search:String){Page(perPage:20){media(search:$search,type:ANIME){id type format title{romaji english native}startDate{year month day}endDate{year month day}episodes streamingEpisodes{title}}}}';
+
     try {
         const json = await fetchJson(ANILIST_URL, {
             method: 'POST',
@@ -194,7 +192,7 @@ export async function resolveByDate(releaseDateStr, showTitle, originalEpisode, 
             if (isMatch) {
                 const isTV = anime.format !== 'MOVIE' && anime.format !== 'SPECIAL' && anime.episodes !== 1;
                 let episodeNum = (isTV && originalEpisode) ? originalEpisode : (dayIndex || 1);
-                
+
                 const episodes = anime.streamingEpisodes || [];
                 if (episodes.length > 1 && episodeTitle) {
                     const cleanTarget = episodeTitle.toLowerCase().replace(/[^a-z0-9]/g, '');
@@ -206,12 +204,10 @@ export async function resolveByDate(releaseDateStr, showTitle, originalEpisode, 
                         }
                     }
                 }
-                return { alId: anime.id, episode: episodeNum, title: anime.title.english || anime.title.romaji };
+                return { alId: anime.id, episode: episodeNum, title: anime.title.english || anime.title.romaji || anime.title.native };
             }
         }
-    } catch (e) {
-        console.error(`[AniList] Search error: ${e.message}`);
-    }
+    } catch (_) {}
     return null;
 }
 
@@ -275,16 +271,30 @@ export async function searchReanimeAnime(query, year, targetAnilistId = null) {
                         const rawSlug = item.anime_id || item.slug || item.id || item.url;
                         if (rawSlug) {
                             const cleanSlug = String(rawSlug).replace(/-[a-z0-9]{6}$/, '');
-                            const rawTitle = typeof item.title === 'object'
-                                ? (item.title?.english || item.title?.romaji || item.title?.native || cleanSlug)
-                                : (item.title || item.name || cleanSlug);
+                            const titles = [];
+                            if (typeof item.title === 'object' && item.title) {
+                                if (item.title.english) titles.push(item.title.english);
+                                if (item.title.romaji) titles.push(item.title.romaji);
+                                if (item.title.native) titles.push(item.title.native);
+                            } else if (item.title) {
+                                titles.push(item.title);
+                            }
+                            if (item.name) titles.push(item.name);
+                            if (titles.length === 0) titles.push(cleanSlug);
+
                             const alId = extractAnilistId(item);
+                            let bestScore = 0;
+                            for (const t of titles) {
+                                const sc = scoreCandidate(t, query, year, targetAnilistId, alId);
+                                if (sc > bestScore) bestScore = sc;
+                            }
+
                             candidates.push({
                                 slug: String(rawSlug),
                                 cleanSlug: cleanSlug,
-                                title: rawTitle,
+                                title: titles[0],
                                 anilistId: alId,
-                                score: scoreCandidate(rawTitle, query, year, targetAnilistId, alId)
+                                score: bestScore
                             });
                         }
                     });
@@ -328,6 +338,26 @@ export async function getFlixEmbeds(slug, episodeNumber, language, anilistId) {
     }
 
     if (slug) {
+        try {
+            const animeApiUrl = `/api/v1/anime/${slug}`;
+            const animeData = await fetchJson(animeApiUrl);
+            const alId = animeData?.anilist_id;
+            if (alId) {
+                const flixUrl = `/api/flix/${alId}/${episodeNumber}`;
+                const json = await fetchJson(flixUrl, {
+                    headers: { "Referer": absolutize(watchPath) }
+                });
+                if (json.success && Array.isArray(json.servers) && json.servers.length > 0) {
+                    const filtered = json.servers.filter(s => !language || !s.dataType || s.dataType === language);
+                    return {
+                        watchUrl: absolutize(watchPath),
+                        servers: filtered.length > 0 ? filtered : json.servers,
+                        embeds: (filtered.length > 0 ? filtered : json.servers).map(s => s.dataLink).filter(Boolean)
+                    };
+                }
+            }
+        } catch (_) {}
+
         try {
             const html = await fetchText(`/anime/${slug}?_ep=${episodeNumber}`);
             const anilistMatch = html.match(/anilist_id:\s*(\d+)/);
