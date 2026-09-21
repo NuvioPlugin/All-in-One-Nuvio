@@ -859,6 +859,20 @@
       "formats": ["mp4", "m3u8"],
       "logo": "https://i.postimg.cc/2yLnTzPP/kisskh.jpg",
       "contentLanguage": ["ko", "ch", "ja", "th"]
+    },
+    {
+      "id": "mapple",
+      "name": "Mapple",
+      "description": "Mapple multi-hoster movies and TV streaming with PoW session verification and direct HLS streams",
+      "version": "1.0.0",
+      "author": "Nuvio Team",
+      "supportedTypes": ["movie", "tv"],
+      "filename": "providers/mapple.js",
+      "enabled": true,
+      "hasSettings": false,
+      "formats": ["m3u8"],
+      "logo": "https://www.google.com/s2/favicons?domain=mapple.fun&sz=128",
+      "contentLanguage": ["en"]
     }
   ]
 }
