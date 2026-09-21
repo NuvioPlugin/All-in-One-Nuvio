@@ -327,11 +327,13 @@ export async function getFlixEmbeds(slug, episodeNumber, language, anilistId) {
                 headers: { "Referer": absolutize(watchPath) }
             });
             if (json.success && Array.isArray(json.servers) && json.servers.length > 0) {
-                const filtered = json.servers.filter(s => !language || !s.dataType || s.dataType === language);
+                const filtered = language
+                    ? json.servers.filter(s => s.dataType && s.dataType.toLowerCase() === language.toLowerCase())
+                    : json.servers;
                 return {
                     watchUrl: absolutize(watchPath),
-                    servers: filtered.length > 0 ? filtered : json.servers,
-                    embeds: (filtered.length > 0 ? filtered : json.servers).map(s => s.dataLink).filter(Boolean)
+                    servers: filtered,
+                    embeds: filtered.map(s => s.dataLink).filter(Boolean)
                 };
             }
         } catch (_) {}
@@ -348,11 +350,13 @@ export async function getFlixEmbeds(slug, episodeNumber, language, anilistId) {
                     headers: { "Referer": absolutize(watchPath) }
                 });
                 if (json.success && Array.isArray(json.servers) && json.servers.length > 0) {
-                    const filtered = json.servers.filter(s => !language || !s.dataType || s.dataType === language);
+                    const filtered = language
+                        ? json.servers.filter(s => s.dataType && s.dataType.toLowerCase() === language.toLowerCase())
+                        : json.servers;
                     return {
                         watchUrl: absolutize(watchPath),
-                        servers: filtered.length > 0 ? filtered : json.servers,
-                        embeds: (filtered.length > 0 ? filtered : json.servers).map(s => s.dataLink).filter(Boolean)
+                        servers: filtered,
+                        embeds: filtered.map(s => s.dataLink).filter(Boolean)
                     };
                 }
             }
@@ -368,11 +372,13 @@ export async function getFlixEmbeds(slug, episodeNumber, language, anilistId) {
                     headers: { "Referer": absolutize(watchPath) }
                 });
                 if (json.success && Array.isArray(json.servers) && json.servers.length > 0) {
-                    const filtered = json.servers.filter(s => !language || !s.dataType || s.dataType === language);
+                    const filtered = language
+                        ? json.servers.filter(s => s.dataType && s.dataType.toLowerCase() === language.toLowerCase())
+                        : json.servers;
                     return {
                         watchUrl: absolutize(watchPath),
-                        servers: filtered.length > 0 ? filtered : json.servers,
-                        embeds: (filtered.length > 0 ? filtered : json.servers).map(s => s.dataLink).filter(Boolean)
+                        servers: filtered,
+                        embeds: filtered.map(s => s.dataLink).filter(Boolean)
                     };
                 }
             }

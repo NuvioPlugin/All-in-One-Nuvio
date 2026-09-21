@@ -1,5 +1,5 @@
 import { getFlixEmbeds, getTmdbInfo, getAnilistInfo, searchReanimeAnime, getSyncInfo, resolveByDate } from './reanime.js';
-import { extractFlixCloud, extractFlixCloudDownload } from './flixcloud.js';
+import { extractFlixCloudDownload } from './flixcloud.js';
 
 async function getStreams(tmdbId, mediaType = "tv", season = null, episode = null) {
     try {
@@ -81,6 +81,7 @@ async function getStreams(tmdbId, mediaType = "tv", season = null, episode = nul
 
         const streams = [];
         const seen = new Set();
+        const tasks = [];
 
         for (const language of ["sub", "dub"]) {
             const serverList = serversByLang[language] || [];
@@ -97,42 +98,32 @@ async function getStreams(tmdbId, mediaType = "tv", season = null, episode = nul
                     ? `${displayTitle} (${langUpper})`
                     : `${displayTitle} - Episode ${episodeNumber} (${langUpper})`;
 
-                // 1. Direct Download Stream (MKV)
-                try {
-                    const directDl = await extractFlixCloudDownload(dataLink);
-                    if (directDl && directDl.url && !seen.has(directDl.url)) {
-                        seen.add(directDl.url);
-                        streams.push({
-                            name: `Reanime [${langUpper}] ${serverName} Download (${directDl.quality || 'MKV'})`,
-                            title: streamTitle,
-                            url: directDl.url,
-                            quality: directDl.quality || "1080p",
-                            size: "Unknown",
-                            headers: directDl.headers,
-                            provider: "reanime",
-                            type: "mkv"
-                        });
-                    }
-                } catch (_) {}
+                tasks.push((async () => {
+                    try {
+                        const directDl = await extractFlixCloudDownload(dataLink);
+                        if (directDl && directDl.url) {
+                            return {
+                                name: `Reanime [${langUpper}] ${serverName} (${directDl.quality || '1080p'})`,
+                                title: streamTitle,
+                                url: directDl.url,
+                                quality: directDl.quality || "1080p",
+                                size: directDl.size || "Unknown",
+                                headers: directDl.headers,
+                                provider: "reanime",
+                                type: "mkv"
+                            };
+                        }
+                    } catch (_) {}
+                    return null;
+                })());
+            }
+        }
 
-                // 2. HLS Stream (m3u8)
-                try {
-                    const extracted = await extractFlixCloud(dataLink, watchUrl);
-                    if (extracted && extracted.url && !seen.has(extracted.url)) {
-                        seen.add(extracted.url);
-                        streams.push({
-                            name: `Reanime [${langUpper}] ${serverName} (HLS Auto)`,
-                            title: streamTitle,
-                            url: extracted.url,
-                            quality: "Auto",
-                            size: "Unknown",
-                            headers: extracted.headers,
-                            provider: "reanime",
-                            type: "m3u8",
-                            subtitles: extracted.subtitles || []
-                        });
-                    }
-                } catch (_) {}
+        const results = await Promise.all(tasks);
+        for (const res of results) {
+            if (res && res.url && !seen.has(res.name)) {
+                seen.add(res.name);
+                streams.push(res);
             }
         }
 

@@ -52,37 +52,36 @@ export async function extractFlixCloudDownload(embedUrl) {
 
         const fileIdMatch = dataBody.match(/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i);
         const tokenMatch = dataBody.match(/eyJ[\w-]+\.[\w-]+\.[\w-]+/);
-        const baseMatch = dataBody.match(/https:\/\/fetch\d*\.flixcloud\.cc/);
+        const baseMatch = dataBody.match(/https:\/\/[a-z0-9-]+\.flixcloud\.cc/i);
         const resolutionMatch = dataBody.match(/(\d{3,4}p)/);
+        const sizeMatch = dataBody.match(/"(\d+(?:\.\d+)?\s*[KMG]B)"/i);
 
         const fileId = fileIdMatch ? fileIdMatch[0] : null;
         const token = tokenMatch ? tokenMatch[0] : null;
         const base = baseMatch ? baseMatch[0] : FLIXCLOUD_BASE;
         const resolution = resolutionMatch ? resolutionMatch[1] : null;
+        const size = sizeMatch ? sizeMatch[1] : "Unknown";
 
         if (!fileId || !token) return null;
 
         let ready = false;
-        for (let attempts = 0; !ready && attempts < 2; attempts++) {
-            try {
-                const progRes = await fetch(`${base}/download/${fileId}/progress?token=${token}`, {
-                    headers: dlHeaders
-                });
-                if (progRes.ok) {
-                    const text = await progRes.text();
-                    if (text.includes('"status":"ready"') || text.includes('"ready"')) {
-                        ready = true;
-                        break;
-                    }
-                    if (text.includes('"status":"failed"')) break;
+        try {
+            const progRes = await fetch(`${base}/download/${fileId}/progress?token=${token}`, {
+                headers: dlHeaders
+            });
+            if (progRes.ok) {
+                const text = await progRes.text();
+                if (text.includes('"status":"ready"') || text.includes('"ready"')) {
+                    ready = true;
                 }
-            } catch (_) {}
-        }
+            }
+        } catch (_) {}
 
         const fileUrl = `${base}/download/${fileId}?token=${token}`;
         return {
             url: fileUrl,
             quality: resolution || "1080p",
+            size: size,
             type: "mkv",
             headers: dlHeaders,
             ready: ready
