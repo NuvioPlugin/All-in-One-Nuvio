@@ -1,6 +1,6 @@
 /**
  * hindmoviez - Built from src/hindmoviez/
- * Generated: 2026-09-12T17:16:49.672Z
+ * Generated: 2026-09-21T12:18:17.923Z
  */
 var __create = Object.create;
 var __defProp = Object.defineProperty;
@@ -68,7 +68,7 @@ var import_cheerio_without_node_native = __toESM(require("cheerio-without-node-n
 // src/hindmoviez/http.js
 var DOMAINS_URL = "https://raw.githubusercontent.com/phisher98/TVVVV/refs/heads/main/domains.json";
 var DOMAIN_CACHE_TTL = 4 * 60 * 60 * 1e3;
-var MAIN_URL = "https://hindmovie.fit";
+var MAIN_URL = "https://hindmovie.dev";
 var HEADERS = {
   "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
   "Referer": `${MAIN_URL}/`

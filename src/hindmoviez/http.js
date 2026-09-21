@@ -1,6 +1,6 @@
 export const DOMAINS_URL = "https://raw.githubusercontent.com/phisher98/TVVVV/refs/heads/main/domains.json";
 export const DOMAIN_CACHE_TTL = 4 * 60 * 60 * 1e3;
-export let MAIN_URL = "https://hindmovie.fit";
+export let MAIN_URL = "https://hindmovie.dev";
 
 export const HEADERS = {
     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",

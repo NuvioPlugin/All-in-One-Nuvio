@@ -1,6 +1,6 @@
 /**
  * uhdmovies - Built from src/uhdmovies/
- * Generated: 2026-09-12T17:16:49.873Z
+ * Generated: 2026-09-21T12:17:47.745Z
  */
 var __create = Object.create;
 var __defProp = Object.defineProperty;
@@ -67,7 +67,7 @@ var import_cheerio_without_node_native2 = __toESM(require("cheerio-without-node-
 
 // src/uhdmovies/constants.js
 var DOMAINS_URL = "https://raw.githubusercontent.com/phisher98/TVVVV/refs/heads/main/domains.json";
-var FALLBACK_DOMAIN = "https://uhdmovies.autos";
+var FALLBACK_DOMAIN = "https://uhdmovies.my";
 var TMDB_API_KEY = "1865f43a0549ca50d341dd9ab8b29f49";
 var TMDB_BASE_URL = "https://api.themoviedb.org/3";
 var HEADERS = {
