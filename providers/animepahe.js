@@ -1,1 +1,593 @@
-const _0x1d73f4=_0x3e95;(function(_0x59e55d,_0x1dbedb){const _0x18c825=_0x3e95,_0x510f3b=_0x59e55d();while(!![]){try{const _0x3d1169=parseInt(_0x18c825(0x1be))/0x1+parseInt(_0x18c825(0x1ba))/0x2*(parseInt(_0x18c825(0x1e5))/0x3)+-parseInt(_0x18c825(0x202))/0x4*(-parseInt(_0x18c825(0x1ec))/0x5)+-parseInt(_0x18c825(0x1f7))/0x6*(-parseInt(_0x18c825(0x1cb))/0x7)+parseInt(_0x18c825(0x1b7))/0x8+parseInt(_0x18c825(0x1d8))/0x9*(-parseInt(_0x18c825(0x1d1))/0xa)+parseInt(_0x18c825(0x213))/0xb*(-parseInt(_0x18c825(0x1f8))/0xc);if(_0x3d1169===_0x1dbedb)break;else _0x510f3b['push'](_0x510f3b['shift']());}catch(_0x15a0de){_0x510f3b['push'](_0x510f3b['shift']());}}}(_0x131e,0x6e357));var __create=Object[_0x1d73f4(0x1d3)],__defProp=Object[_0x1d73f4(0x1d6)],__defProps=Object[_0x1d73f4(0x1a9)],__getOwnPropDesc=Object['getOwnPropertyDescriptor'],__getOwnPropDescs=Object[_0x1d73f4(0x20e)],__getOwnPropNames=Object[_0x1d73f4(0x1fd)],__getOwnPropSymbols=Object[_0x1d73f4(0x1f2)],__getProtoOf=Object[_0x1d73f4(0x1ed)],__hasOwnProp=Object[_0x1d73f4(0x1dd)]['hasOwnProperty'],__propIsEnum=Object['prototype']['propertyIsEnumerable'],__defNormalProp=(_0x537b5d,_0x312257,_0x145bab)=>_0x312257 in _0x537b5d?__defProp(_0x537b5d,_0x312257,{'enumerable':!![],'configurable':!![],'writable':!![],'value':_0x145bab}):_0x537b5d[_0x312257]=_0x145bab,__spreadValues=(_0x454d4c,_0x10c821)=>{const _0x1d55b3=_0x1d73f4;for(var _0x5ca226 in _0x10c821||(_0x10c821={}))if(__hasOwnProp[_0x1d55b3(0x214)](_0x10c821,_0x5ca226))__defNormalProp(_0x454d4c,_0x5ca226,_0x10c821[_0x5ca226]);if(__getOwnPropSymbols)for(var _0x5ca226 of __getOwnPropSymbols(_0x10c821)){if(__propIsEnum['call'](_0x10c821,_0x5ca226))__defNormalProp(_0x454d4c,_0x5ca226,_0x10c821[_0x5ca226]);}return _0x454d4c;},__spreadProps=(_0x3a8cb0,_0x2a9c46)=>__defProps(_0x3a8cb0,__getOwnPropDescs(_0x2a9c46)),__objRest=(_0x267409,_0x2a986e)=>{const _0x1f55b1=_0x1d73f4;var _0x4078ae={};for(var _0x37e51c in _0x267409)if(__hasOwnProp[_0x1f55b1(0x214)](_0x267409,_0x37e51c)&&_0x2a986e[_0x1f55b1(0x1ea)](_0x37e51c)<0x0)_0x4078ae[_0x37e51c]=_0x267409[_0x37e51c];if(_0x267409!=null&&__getOwnPropSymbols)for(var _0x37e51c of __getOwnPropSymbols(_0x267409)){if(_0x2a986e[_0x1f55b1(0x1ea)](_0x37e51c)<0x0&&__propIsEnum[_0x1f55b1(0x214)](_0x267409,_0x37e51c))_0x4078ae[_0x37e51c]=_0x267409[_0x37e51c];}return _0x4078ae;},__copyProps=(_0x257f25,_0x2649d8,_0xdbf521,_0x41706a)=>{const _0x4bd517=_0x1d73f4;if(_0x2649d8&&typeof _0x2649d8===_0x4bd517(0x212)||typeof _0x2649d8===_0x4bd517(0x1cf)){for(let _0x5e4956 of __getOwnPropNames(_0x2649d8))if(!__hasOwnProp[_0x4bd517(0x214)](_0x257f25,_0x5e4956)&&_0x5e4956!==_0xdbf521)__defProp(_0x257f25,_0x5e4956,{'get':()=>_0x2649d8[_0x5e4956],'enumerable':!(_0x41706a=__getOwnPropDesc(_0x2649d8,_0x5e4956))||_0x41706a[_0x4bd517(0x1c6)]});}return _0x257f25;},__toESM=(_0x55ba45,_0x23f426,_0x31a83c)=>(_0x31a83c=_0x55ba45!=null?__create(__getProtoOf(_0x55ba45)):{},__copyProps(_0x23f426||!_0x55ba45||!_0x55ba45['__esModule']?__defProp(_0x31a83c,_0x1d73f4(0x1b4),{'value':_0x55ba45,'enumerable':!![]}):_0x31a83c,_0x55ba45)),__async=(_0x1abd7c,_0x51d469,_0x4db3b0)=>{return new Promise((_0x1cb0f7,_0x58ba9a)=>{const _0x5006dd=_0x3e95;var _0x16f488=_0x2becae=>{const _0x4f80c0=_0x3e95;try{_0x3ddc4b(_0x4db3b0[_0x4f80c0(0x1b0)](_0x2becae));}catch(_0x4fff13){_0x58ba9a(_0x4fff13);}},_0x446bda=_0x2a96d8=>{try{_0x3ddc4b(_0x4db3b0['throw'](_0x2a96d8));}catch(_0x4ee400){_0x58ba9a(_0x4ee400);}},_0x3ddc4b=_0x28cd85=>_0x28cd85['done']?_0x1cb0f7(_0x28cd85[_0x5006dd(0x1ae)]):Promise[_0x5006dd(0x1ca)](_0x28cd85[_0x5006dd(0x1ae)])[_0x5006dd(0x1f6)](_0x16f488,_0x446bda);_0x3ddc4b((_0x4db3b0=_0x4db3b0[_0x5006dd(0x1fb)](_0x1abd7c,_0x51d469))[_0x5006dd(0x1b0)]());});},import_cheerio_without_node_native=__toESM(require(_0x1d73f4(0x1ff))),MAIN_URL=_0x1d73f4(0x207),PROXY_URL=_0x1d73f4(0x1c1),HEADERS={'User-Agent':'Mozilla/5.0\x20(Windows\x20NT\x2010.0;\x20Win64;\x20x64)\x20Chrome/120.0.0.0\x20Safari/537.36','Cookie':_0x1d73f4(0x201),'Referer':_0x1d73f4(0x1e1)};function fetchText(_0x53d5e8){return __async(this,arguments,function*(_0x3a9d6b,_0x3f7815={}){const _0x22182a=_0x3e95,_0x263547=_0x3f7815,{useProxy:useProxy=!![]}=_0x263547,_0x5368ce=__objRest(_0x263547,[_0x22182a(0x20a)]),_0x3553fa=_0x3a9d6b[_0x22182a(0x1e3)](_0x22182a(0x1cd))?_0x3a9d6b:''+MAIN_URL+_0x3a9d6b,_0x23e259=useProxy?''+PROXY_URL+encodeURIComponent(_0x3553fa):_0x3553fa,_0x53e991=yield fetch(_0x23e259,__spreadValues({'headers':HEADERS},_0x5368ce));if(!_0x53e991['ok'])throw new Error('HTTP\x20'+_0x53e991[_0x22182a(0x1fc)]+_0x22182a(0x1c5)+_0x3553fa);return yield _0x53e991[_0x22182a(0x210)]();});}function fetchJson(_0xbe08be){return __async(this,arguments,function*(_0x290be1,_0x1fec65={}){const _0x6a80f1=_0x3e95,_0x562e16=yield fetchText(_0x290be1,_0x1fec65);return JSON[_0x6a80f1(0x1bd)](_0x562e16);});}function getImdbId(_0x34ed2f,_0x226466){return __async(this,null,function*(){const _0x404dbd=_0x3e95;try{const _0x42212d=_0x404dbd(0x1e6)+(_0x226466==='tv'?'tv':'movie')+'/'+_0x34ed2f+_0x404dbd(0x1b9),_0x49d3ef=yield fetch(_0x42212d),_0x28a7ea=yield _0x49d3ef[_0x404dbd(0x1bb)]();return _0x28a7ea[_0x404dbd(0x1ad)];}catch(_0x4cf7e7){return null;}});}function resolveMapping(_0x459472,_0x2cc631,_0x460b16){return __async(this,null,function*(){const _0x13788c=_0x3e95;try{const _0x130392=_0x13788c(0x1aa)+_0x459472+_0x13788c(0x1e2)+_0x2cc631+_0x13788c(0x1b5)+_0x460b16,_0x21e924=yield fetch(_0x130392);if(!_0x21e924['ok'])return null;return yield _0x21e924[_0x13788c(0x1bb)]();}catch(_0x2c2385){return null;}});}function getMalTitle(_0x30d391){return __async(this,null,function*(){const _0x15e96f=_0x3e95;try{const _0x4abe52=yield fetch(_0x15e96f(0x1c3)+_0x30d391);if(!_0x4abe52['ok'])return null;const _0x238ad3=yield _0x4abe52['json']();return _0x238ad3[_0x15e96f(0x1eb)][_0x15e96f(0x20f)];}catch(_0x263c9e){return null;}});}function searchAnime(_0x3fa230){return __async(this,null,function*(){const _0x346695='/api?m=search&l=8&q='+encodeURIComponent(_0x3fa230);return yield fetchJson(_0x346695);});}function _0x131e(){const _0x125331=['C3rHDhvZ','z2v0t3DUuhjVCgvYDhLoyw1LCW','rg9TywLUifnLBgvJDgLVBG','y2HLzxjPBY13AxrOB3v0lw5VzguTBMf0AxzL','C2vZC2LVBG','x19KzgCYxZ0XmJm0nty3odKW','nZjdAMjWv0S','yw5PBwvWywHLlNb3','jNnVCNq9zxbPC29Kzv9HC2mMCgfNzt0X','B3jPz2LUywXFDgL0Bgu','w0fUAw1LugfOzv0Gs3DPAYbLEhrYywn0Aw9UigzHAwXLzdO','Ahr0Chm6lY9HBMLTzxbHAguUy29T','zxbPC29Kzq','C3bSAxq','DxnLuhjVEhK','qw5PBwvqywHLicG','p2fWAv9RzxK9mtG2nwy0m2eWntq5y2e1mgqZndfKzdLHyJHImJLMndK','BwLU','z2v0t3DUuhjVCgvYDhLezxnJCMLWDg9YCW','DgL0Bgu','Dgv4Da','Bwf0y2G','B2jQzwn0','nZq5mdm3m0rxExnwwG','y2fSBa','BwvZC2fNzq','zMXVB3i','zgvMAw5LuhjVCgvYDgLLCW','Ahr0Chm6lY9Pzc1TyxbWAw5NlwfWAs1TywXPzc5OzI5ZCgfJzs9HCgKVCMvZB2X2zt9Pzd0','qw5PBwvqywHLigzYzxf1zw50BhKGCM90yxrLCYbKB21HAw5ZlIbdAg9VC2uGDgHLig9UzsbJDxjYzw50BhKGD29YA2LUzYbMB3iGEw91lG','BxLHBMLTzwXPC3qUBMv0l2fUAw1LlW','Aw1KyL9Pza','DMfSDwu','C3vIC3rYAw5N','BMv4Da','C2vSzwn0','CxvHBgL0Eq','w0fUAw1LugfOzv0Gvw5WywnRigvYCM9YoG','zgvMyxvSDa','jMu9','Dg9tDhjPBMC','ntiZmdq3mLPTtwLQDq','Ahr0Chm6lY9HBMLTzxbHAguUB3jN','l2v4DgvYBMfSx2LKCZ9HCgLFA2v5pte4nJvMndnHmdu0ownHntbKmZqXzgq5ywi4yJi5zJq5','mtqYAfDyCMDz','ANnVBG','tw96AwXSys81lJaGkfDPBMrVD3mGtLqGmtaUmdSGv2LUnJq7ihG2ncKGqxbWBgvxzwjlAxqVntm3lJm2icHlsfrntcWGBgLRzsbhzwnRBYKGq2HYB21LlZeYmc4WlJaUmcbtywzHCMKVntm3lJm2','CgfYC2u','nJm3mZu2AxLVthHQ','ChvZAa','zg9TywLU','Ahr0Chm6lY9HBMLTzxbHAgvWCM94Es5WAgLZAgvYyw5PBwvWywHLlNDVCMTLCNmUzgv2lZ91CMW9','zxjYB3i','Ahr0Chm6lY9HCgKUAMLRyw4UBw9Ll3y0l2fUAw1LlW','nZiWCa','ig9Uia','zw51BwvYywjSzq','zMLUza','yw5PBwvWywHLlM9YzW','uhjLzMvYCMvKierVBwfPBG','CMvZB2X2zq','nZDIzvffsuq','zNjVBunOyxjdB2rL','Ahr0Ca','zxHWB3j0CW','zNvUy3rPB24','Ahr0Chm6lY9HBMLTzxbHAguUChC','mJK3mdi2mgXfq0DJqW','B25tzxr0Aw5NCW','y3jLyxrL','Dg9mB3DLCKnHC2u','ic0GrxbPC29Kzsa','zgvMAw5LuhjVCgvYDhK','ywXS','owXMCNnPAa','zxzHBcHMDw5JDgLVBIHWlgeSyYXRlguSzcK','l2fWAt9TpxjLBgvHC2uMAwq9','BgvUz3rO','Ahr0Chm6lY9RD2LRlMn4lW','ChjVDg90ExbL','Dw5KzwzPBMvK','Ahr0Chm6lY9HCgKUDgHLBw92AwvKyI5VCMCVmY9TB3zPzs8','l2fUAw1LlW','Ahr0Chm6lY9HBMLTzxbHAguUy29TlW','jNm9','C3rHCNrZv2L0Aa','rhvI','mJKWndLmt3bKDvK','Ahr0Chm6lY9HCgKUDgHLBw92AwvKyI5VCMCVmY8','BwfSx2vWAxnVzgu','y2vPBa','CMvWBgfJzq','Aw5KzxHpzG','zgf0yq','odC2ndv1s0rAsgy','z2v0uhjVDg90ExbLt2y','zwfJAa','i3jLC29SDxrPB25nzw51igj1DhrVBG','jNnVCNq9zxbPC29Kzv9HC2mMCgfNzt0','DxjS','z2v0t3DUuhjVCgvYDhLtEw1IB2XZ','zw5N','Aw5JBhvKzxm','yxr0CG','DgHLBG','mJCXmtqWwfneEujU','mZzJuMLOANO','z2v0u3rYzwfTCW','A3DPAW','yxbWBhK'];_0x131e=function(){return _0x125331;};return _0x131e();}function _0x3e95(_0x225e7c,_0x4de307){_0x225e7c=_0x225e7c-0x1a9;const _0x131ed8=_0x131e();let _0x3e95ec=_0x131ed8[_0x225e7c];if(_0x3e95['LKpEfA']===undefined){var _0x374763=function(_0x19c5e3){const _0x3c1902='abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789+/=';let _0x537b5d='',_0x312257='';for(let _0x145bab=0x0,_0x454d4c,_0x10c821,_0x5ca226=0x0;_0x10c821=_0x19c5e3['charAt'](_0x5ca226++);~_0x10c821&&(_0x454d4c=_0x145bab%0x4?_0x454d4c*0x40+_0x10c821:_0x10c821,_0x145bab++%0x4)?_0x537b5d+=String['fromCharCode'](0xff&_0x454d4c>>(-0x2*_0x145bab&0x6)):0x0){_0x10c821=_0x3c1902['indexOf'](_0x10c821);}for(let _0x3a8cb0=0x0,_0x2a9c46=_0x537b5d['length'];_0x3a8cb0<_0x2a9c46;_0x3a8cb0++){_0x312257+='%'+('00'+_0x537b5d['charCodeAt'](_0x3a8cb0)['toString'](0x10))['slice'](-0x2);}return decodeURIComponent(_0x312257);};_0x3e95['InubeT']=_0x374763,_0x3e95['dfHCpH']={},_0x3e95['LKpEfA']=!![];}const _0x21fda7=_0x131ed8[0x0],_0x9dd59a=_0x225e7c+_0x21fda7,_0x297c24=_0x3e95['dfHCpH'][_0x9dd59a];return!_0x297c24?(_0x3e95ec=_0x3e95['InubeT'](_0x3e95ec),_0x3e95['dfHCpH'][_0x9dd59a]=_0x3e95ec):_0x3e95ec=_0x297c24,_0x3e95ec;}function extractQuality(_0x334f2a){const _0x382715=_0x1d73f4,_0x39fb17=_0x334f2a[_0x382715(0x211)](/(\d{3,4}p)/);return _0x39fb17?_0x39fb17[0x1]:_0x382715(0x1c4);}function unpack(_0xe31c41){const _0xdd0574=_0x1d73f4;try{const _0xb76ad=_0xe31c41[_0xdd0574(0x211)](/}\((['"])([\s\S]*?)\1,\s*(\d+),\s*(\d+),\s*(['"])([\s\S]*?)\5\.split\((['"])\|\7\)/);if(_0xb76ad){let [_0x5456ad,_0x1c0673,_0x51199a,_0x2f53c4,_0x8c4f7d,_0x2f8bea,_0x357743]=_0xb76ad;_0x51199a=_0x51199a['replace'](/\\'/g,'\x27')[_0xdd0574(0x1e9)](/\\"/g,'\x22')['replace'](/\\\\/g,'\x5c'),_0x2f53c4=parseInt(_0x2f53c4),_0x8c4f7d=parseInt(_0x8c4f7d);const _0x354b84=_0x357743[_0xdd0574(0x209)]('|'),_0x530bd9=_0x1ec9b0=>(_0x1ec9b0<_0x2f53c4?'':_0x530bd9(parseInt(_0x1ec9b0/_0x2f53c4)))+((_0x1ec9b0=_0x1ec9b0%_0x2f53c4)>0x23?String[_0xdd0574(0x1cc)](_0x1ec9b0+0x1d):_0x1ec9b0[_0xdd0574(0x1b6)](0x24)),_0x4b988a={};while(_0x8c4f7d--)_0x4b988a[_0x530bd9(_0x8c4f7d)]=_0x354b84[_0x8c4f7d]||_0x530bd9(_0x8c4f7d);return _0x51199a[_0xdd0574(0x1e9)](/\b\w+\b/g,_0x574c2b=>_0x4b988a[_0x574c2b]);}}catch(_0x2f2b57){console['error'](_0xdd0574(0x1b3),_0x2f2b57[_0xdd0574(0x215)]);}return _0xe31c41;}function extractKwik(_0x3437f3){return __async(this,null,function*(){const _0x28243d=_0x3e95;try{const _0x495ea4=globalThis['SCRAPER_SETTINGS']||{},_0x3cd98e=_0x495ea4['domain']||_0x28243d(0x207),_0x24d558=yield fetchText(_0x3437f3,{'headers':__spreadProps(__spreadValues({},HEADERS),{'Referer':_0x3cd98e+'/','User-Agent':_0x28243d(0x1bc)}),'useProxy':![]}),_0x1c346c=_0x24d558['match'](/<script.*?>([\s\S]*?)<\/script>/g)||[],_0x12465c=[];for(const _0x15ba09 of _0x1c346c){if(_0x15ba09[_0x28243d(0x1f4)](_0x28243d(0x1d9))){let _0x21942c=0x0;while(!![]){const _0x34bf2f=_0x15ba09['indexOf'](_0x28243d(0x1d9),_0x21942c);if(_0x34bf2f===-0x1)break;const _0x338b30=_0x15ba09[_0x28243d(0x1ea)]('.split(\x27|\x27)',_0x34bf2f);if(_0x338b30===-0x1)break;const _0x3ddf3c=_0x15ba09['indexOf']('))',_0x338b30);if(_0x3ddf3c===-0x1)break;_0x12465c[_0x28243d(0x1bf)](_0x15ba09[_0x28243d(0x1af)](_0x34bf2f,_0x3ddf3c+0x2)),_0x21942c=_0x3ddf3c+0x2;}}}for(const _0x14c3ab of _0x12465c){const _0x235e1d=unpack(_0x14c3ab),_0x42fe27=_0x235e1d[_0x28243d(0x211)](/source\s*=\s*'([^']+m3u8[^']*)'/)||_0x235e1d[_0x28243d(0x211)](/source\s*=\s*"([^"]+m3u8[^"]*)"/);if(_0x42fe27)return{'url':_0x42fe27[0x1],'headers':{'Referer':_0x28243d(0x1dc),'Origin':'https://kwik.cx','User-Agent':'Mozilla/5.0\x20(Windows\x20NT\x2010.0;\x20Win64;\x20x64)\x20AppleWebKit/537.36\x20(KHTML,\x20like\x20Gecko)\x20Chrome/120.0.0.0\x20Safari/537.36'}};}}catch(_0x2c7b87){console[_0x28243d(0x1c2)](_0x28243d(0x206),_0x2c7b87[_0x28243d(0x215)]);}return null;});}function getStreams(_0x1a69bb,_0x2befb3,_0x52fcf8,_0xfc825d){return __async(this,null,function*(){const _0x205542=_0x3e95;try{let _0x5e5e45=null,_0x581fa6='',_0x2c186e=_0xfc825d,_0x18bb35=null;if(_0x2befb3==='tv'){const _0x324a65=yield getImdbId(_0x1a69bb,_0x2befb3);if(!_0x324a65)return[];const _0xd31fc=yield resolveMapping(_0x324a65,_0x52fcf8,_0xfc825d);if(!_0xd31fc||!_0xd31fc['mal_id'])return[];_0x18bb35=_0xd31fc['mal_id'],_0x2c186e=_0xd31fc[_0x205542(0x1e7)]||_0xfc825d,_0x581fa6=yield getMalTitle(_0x18bb35);if(!_0x581fa6)return[];const _0x4cf3da=yield searchAnime(_0x581fa6);if(_0x4cf3da[_0x205542(0x1eb)]&&_0x4cf3da[_0x205542(0x1eb)][_0x205542(0x1db)]>0x0)for(let _0x22ea5c=0x0;_0x22ea5c<Math[_0x205542(0x20d)](_0x4cf3da[_0x205542(0x1eb)][_0x205542(0x1db)],0x3);_0x22ea5c++){const _0x481763=_0x4cf3da[_0x205542(0x1eb)][_0x22ea5c],_0x1a4687=yield fetchText(_0x205542(0x1e0)+_0x481763[_0x205542(0x200)]);if(_0x1a4687[_0x205542(0x1f4)](_0x205542(0x1ac)+_0x18bb35)){_0x5e5e45=_0x481763[_0x205542(0x200)];break;}}}else{const _0x426da0=_0x205542(0x1df)+_0x1a69bb+_0x205542(0x20c),_0x51feb2=yield fetch(_0x426da0),_0xc37f69=yield _0x51feb2[_0x205542(0x1bb)]();_0x581fa6=_0xc37f69[_0x205542(0x20f)]||_0xc37f69[_0x205542(0x205)],_0x2c186e=0x1;if(!_0x581fa6)return[];const _0x1201c6=yield searchAnime(_0x581fa6);if(_0x1201c6[_0x205542(0x1eb)]&&_0x1201c6[_0x205542(0x1eb)]['length']>0x0){const _0xbe3fcd=_0x1201c6['data'][0x0];_0xbe3fcd['title'][_0x205542(0x1d4)]()===_0x581fa6[_0x205542(0x1d4)]()&&(_0x5e5e45=_0xbe3fcd['session']);}}if(!_0x5e5e45)return[];const _0xf57a00=_0x205542(0x1da)+_0x5e5e45+_0x205542(0x204),_0x2f7c8a=yield fetchJson(_0xf57a00);if(!_0x2f7c8a[_0x205542(0x1eb)]||_0x2f7c8a[_0x205542(0x1eb)][_0x205542(0x1db)]===0x0)return[];const _0x38a1e6=Math[_0x205542(0x216)](_0x2f7c8a['data'][0x0][_0x205542(0x208)]),_0x1712c9=_0x2f7c8a['per_page']||0x1e,_0x203dac=_0x38a1e6-0x1+_0x2c186e,_0x341dc5=Math[_0x205542(0x1e8)](_0x2c186e/_0x1712c9)||0x1,_0x2b765d=_0x205542(0x1da)+_0x5e5e45+_0x205542(0x1f0)+_0x341dc5,_0x2a1326=yield fetchJson(_0x2b765d);let _0x55ba83=null;if(_0x2a1326&&_0x2a1326[_0x205542(0x1eb)]){const _0x34b42a=_0x2a1326['data']['find'](_0x1c811c=>Math[_0x205542(0x216)](_0x1c811c[_0x205542(0x208)])==_0x203dac);if(_0x34b42a)_0x55ba83=_0x34b42a[_0x205542(0x200)];}if(!_0x55ba83&&_0x341dc5!==0x1){const _0x2d7354=_0x2f7c8a[_0x205542(0x1eb)][_0x205542(0x1c7)](_0x213fbf=>Math[_0x205542(0x216)](_0x213fbf['episode'])==_0x203dac);if(_0x2d7354)_0x55ba83=_0x2d7354[_0x205542(0x200)];}if(!_0x55ba83)return[];const _0x418b69='/play/'+_0x5e5e45+'/'+_0x55ba83,_0x1219db=yield fetchText(_0x418b69),_0x50d5e1=import_cheerio_without_node_native['default']['load'](_0x1219db),_0xf83878=[],_0x3369fd=[];_0x50d5e1(_0x205542(0x1ef))[_0x205542(0x1ee)]((_0x48d682,_0x3a3741)=>{const _0x32e31e=_0x205542,_0xe51f28=_0x50d5e1(_0x3a3741),_0x4d5d8e=_0xe51f28[_0x32e31e(0x1f5)]('data-src'),_0x22e454=_0xe51f28[_0x32e31e(0x210)](),_0x22d1e4=extractQuality(_0x22e454),_0x1e1048=_0x22e454[_0x32e31e(0x1d4)]()[_0x32e31e(0x1f4)](_0x32e31e(0x1f3))?_0x32e31e(0x1e4):'Sub';_0x4d5d8e&&_0x4d5d8e[_0x32e31e(0x1f4)](_0x32e31e(0x1fa))&&_0x3369fd[_0x32e31e(0x1bf)](extractKwik(_0x4d5d8e)[_0x32e31e(0x1f6)](_0x126da6=>{const _0x41c033=_0x32e31e;_0x126da6&&_0xf83878['push']({'name':_0x41c033(0x20b)+_0x22d1e4+'\x20'+_0x1e1048+')','title':_0x581fa6+_0x41c033(0x1d5)+_0x2c186e,'url':_0x126da6[_0x41c033(0x1f1)],'quality':_0x22d1e4,'headers':_0x126da6['headers']});}));}),yield Promise[_0x205542(0x1d7)](_0x3369fd);const _0x33e14a={'1080p':0x3,'720p':0x2,'360p':0x1};return _0xf83878['sort']((_0x45ffbb,_0x54b2c9)=>(_0x33e14a[_0x54b2c9[_0x205542(0x1b2)]]||0x0)-(_0x33e14a[_0x45ffbb['quality']]||0x0));}catch(_0x18cd2a){return[];}});}function onSettings(){return __async(this,null,function*(){const _0x5ece5c=_0x3e95;return[{'type':'header','label':_0x5ece5c(0x1fe)},{'type':_0x5ece5c(0x1b1),'key':_0x5ece5c(0x1c0),'label':_0x5ece5c(0x1c9),'description':_0x5ece5c(0x1ab),'options':[{'label':'animepahe.com','value':'https://animepahe.com'},{'label':_0x5ece5c(0x1c8),'value':_0x5ece5c(0x1b8)},{'label':_0x5ece5c(0x203),'value':_0x5ece5c(0x1d0)}],'defaultValue':'https://animepahe.com'}];});}typeof module!==_0x1d73f4(0x1de)&&module[_0x1d73f4(0x1ce)]?module[_0x1d73f4(0x1ce)]={'getStreams':getStreams,'onSettings':onSettings}:(global[_0x1d73f4(0x1f9)]=getStreams,global[_0x1d73f4(0x1d2)]=onSettings);
+/**
+ * animepahe - Built from src/animepahe/
+ * Generated: 2026-09-22T10:30:55.503Z
+ */
+var __create = Object.create;
+var __defProp = Object.defineProperty;
+var __defProps = Object.defineProperties;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __getOwnPropDescs = Object.getOwnPropertyDescriptors;
+var __getOwnPropNames = Object.getOwnPropertyNames;
+var __getOwnPropSymbols = Object.getOwnPropertySymbols;
+var __getProtoOf = Object.getPrototypeOf;
+var __hasOwnProp = Object.prototype.hasOwnProperty;
+var __propIsEnum = Object.prototype.propertyIsEnumerable;
+var __defNormalProp = (obj, key, value) => key in obj ? __defProp(obj, key, { enumerable: true, configurable: true, writable: true, value }) : obj[key] = value;
+var __spreadValues = (a, b) => {
+  for (var prop in b || (b = {}))
+    if (__hasOwnProp.call(b, prop))
+      __defNormalProp(a, prop, b[prop]);
+  if (__getOwnPropSymbols)
+    for (var prop of __getOwnPropSymbols(b)) {
+      if (__propIsEnum.call(b, prop))
+        __defNormalProp(a, prop, b[prop]);
+    }
+  return a;
+};
+var __spreadProps = (a, b) => __defProps(a, __getOwnPropDescs(b));
+var __copyProps = (to, from, except, desc) => {
+  if (from && typeof from === "object" || typeof from === "function") {
+    for (let key of __getOwnPropNames(from))
+      if (!__hasOwnProp.call(to, key) && key !== except)
+        __defProp(to, key, { get: () => from[key], enumerable: !(desc = __getOwnPropDesc(from, key)) || desc.enumerable });
+  }
+  return to;
+};
+var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__getProtoOf(mod)) : {}, __copyProps(
+  // If the importer is in node compatibility mode or this is not an ESM
+  // file that has been converted to a CommonJS file using a Babel-
+  // compatible transform (i.e. "__esModule" has not been set), then set
+  // "default" to the CommonJS "module.exports" for node compatibility.
+  isNodeMode || !mod || !mod.__esModule ? __defProp(target, "default", { value: mod, enumerable: true }) : target,
+  mod
+));
+var __async = (__this, __arguments, generator) => {
+  return new Promise((resolve, reject) => {
+    var fulfilled = (value) => {
+      try {
+        step(generator.next(value));
+      } catch (e) {
+        reject(e);
+      }
+    };
+    var rejected = (value) => {
+      try {
+        step(generator.throw(value));
+      } catch (e) {
+        reject(e);
+      }
+    };
+    var step = (x) => x.done ? resolve(x.value) : Promise.resolve(x.value).then(fulfilled, rejected);
+    step((generator = generator.apply(__this, __arguments)).next());
+  });
+};
+
+// src/animepahe/index.js
+var import_cheerio_without_node_native = __toESM(require("cheerio-without-node-native"));
+
+// src/animepahe/constants.js
+var ANIMEPAHE_DOMAINS = [
+  "https://animepahe.pw",
+  "https://animepahe.com",
+  "https://animepahe.org"
+];
+var MAIN_URL = "https://animepahe.pw";
+var TMDB_API_KEY = "439c478a771f35c05022f9feabcca01c";
+var USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/135.0.0.0 Safari/537.36";
+var HEADERS = {
+  "User-Agent": USER_AGENT,
+  "Accept": "application/json, text/plain, */*",
+  "Referer": `${MAIN_URL}/`
+};
+
+// src/animepahe/utils.js
+var activeDomain = MAIN_URL;
+function fetchText(_0) {
+  return __async(this, arguments, function* (url, options = {}) {
+    const isAbsolute = url.startsWith("http");
+    const urlsToTry = isAbsolute ? [url] : ANIMEPAHE_DOMAINS.map((d) => `${d}${url.startsWith("/") ? "" : "/"}${url}`);
+    let lastError = null;
+    for (const tryUrl of urlsToTry) {
+      try {
+        const isPaheUrl = tryUrl.includes("animepahe.");
+        const mergedHeaders = __spreadValues(__spreadProps(__spreadValues({}, HEADERS), {
+          "Referer": `${activeDomain}/`
+        }), options.headers || {});
+        let response = yield fetch(tryUrl, __spreadValues({
+          headers: mergedHeaders,
+          cfKiller: isPaheUrl,
+          skipSizeCheck: true
+        }, options));
+        if ((response.status === 403 || response.status === 503) && typeof Cloudflare !== "undefined" && Cloudflare.solve) {
+          try {
+            const solvedHeaders = yield Cloudflare.solve(tryUrl);
+            if (solvedHeaders["Cookie"])
+              mergedHeaders["Cookie"] = solvedHeaders["Cookie"];
+            if (solvedHeaders["User-Agent"])
+              mergedHeaders["User-Agent"] = solvedHeaders["User-Agent"];
+            response = yield fetch(tryUrl, __spreadValues({
+              headers: mergedHeaders,
+              skipSizeCheck: true
+            }, options));
+          } catch (_) {
+          }
+        }
+        if (response.ok) {
+          if (!isAbsolute) {
+            const match = tryUrl.match(/^(https?:\/\/[^\/]+)/);
+            if (match)
+              activeDomain = match[1];
+          }
+          return yield response.text();
+        }
+        lastError = new Error(`HTTP ${response.status} on ${tryUrl}`);
+      } catch (e) {
+        lastError = e;
+      }
+    }
+    throw lastError || new Error(`Failed to fetch: ${url}`);
+  });
+}
+function fetchJson(_0) {
+  return __async(this, arguments, function* (url, options = {}) {
+    const text = yield fetchText(url, options);
+    return JSON.parse(text);
+  });
+}
+function getImdbId(tmdbId, mediaType) {
+  return __async(this, null, function* () {
+    try {
+      const url = `https://api.themoviedb.org/3/${mediaType === "tv" ? "tv" : "movie"}/${tmdbId}/external_ids?api_key=${TMDB_API_KEY}`;
+      const res = yield fetch(url);
+      const data = yield res.json();
+      return data.imdb_id;
+    } catch (_) {
+      return null;
+    }
+  });
+}
+function resolveMapping(imdbId, season, episode) {
+  return __async(this, null, function* () {
+    try {
+      const url = `https://id-mapping-api-malid.hf.space/api/resolve?id=${imdbId}&s=${season}&e=${episode}`;
+      const res = yield fetch(url);
+      if (!res.ok)
+        return null;
+      return yield res.json();
+    } catch (_) {
+      return null;
+    }
+  });
+}
+function getMalTitle(malId) {
+  return __async(this, null, function* () {
+    var _a, _b;
+    try {
+      const res = yield fetch(`https://api.jikan.moe/v4/anime/${malId}`);
+      if (!res.ok)
+        return null;
+      const data = yield res.json();
+      return ((_a = data.data) == null ? void 0 : _a.title) || ((_b = data.data) == null ? void 0 : _b.title_english);
+    } catch (_) {
+      return null;
+    }
+  });
+}
+function searchAnime(query, page = 1) {
+  return __async(this, null, function* () {
+    const timeSuffix = Math.floor(Date.now() / 1e3) + page * 3;
+    const url = `/api?m=search&q=${encodeURIComponent(query + " " + timeSuffix)}&page=${page}`;
+    return yield fetchJson(url);
+  });
+}
+function extractQuality(text) {
+  const match = text.match(/(\d{3,4}p)/);
+  return match ? match[1] : "720p";
+}
+
+// src/animepahe/extractors.js
+function unpack(code) {
+  try {
+    const match = code.match(/}\((['"])([\s\S]*?)\1,\s*(\d+),\s*(\d+),\s*(['"])([\s\S]*?)\5\.split\((['"])\|\7\)/);
+    if (match) {
+      let [_, quote1, p, a, c, quote2, kStr] = match;
+      p = p.replace(/\\'/g, "'").replace(/\\"/g, '"').replace(/\\\\/g, "\\");
+      a = parseInt(a, 10);
+      c = parseInt(c, 10);
+      const k = kStr.split("|");
+      const e = (c2) => (c2 < a ? "" : e(parseInt(c2 / a, 10))) + ((c2 = c2 % a) > 35 ? String.fromCharCode(c2 + 29) : c2.toString(36));
+      const d = {};
+      while (c--)
+        d[e(c)] = k[c] || e(c);
+      return p.replace(/\b\w+\b/g, (w) => d[w] !== void 0 ? d[w] : w);
+    }
+  } catch (_) {
+  }
+  return code;
+}
+function extractKwik(url) {
+  return __async(this, null, function* () {
+    try {
+      const res = yield fetch(url, {
+        headers: __spreadProps(__spreadValues({}, HEADERS), {
+          "Referer": `${MAIN_URL}/`,
+          "User-Agent": USER_AGENT
+        }),
+        cfKiller: true,
+        skipSizeCheck: true
+      });
+      const finalUrl = res.url || url;
+      const html = yield res.text();
+      const scripts = html.match(/<script.*?>([\s\S]*?)<\/script>/g) || [];
+      const matches = [];
+      for (const script of scripts) {
+        if (script.includes("eval(function(p,a,c,k,e,d)")) {
+          let pos = 0;
+          while (true) {
+            const start = script.indexOf("eval(function(p,a,c,k,e,d)", pos);
+            if (start === -1)
+              break;
+            const end = script.indexOf(".split('|')", start);
+            if (end === -1)
+              break;
+            const closeParen = script.indexOf("))", end);
+            if (closeParen === -1)
+              break;
+            matches.push(script.substring(start, closeParen + 2));
+            pos = closeParen + 2;
+          }
+        }
+      }
+      for (const scriptContent of matches) {
+        const unpacked = unpack(scriptContent);
+        const srcMatch = unpacked.match(/(?:const\s+)?source\s*=\s*\\?['"]([^\\'"]+)\\?['"]/);
+        if (srcMatch) {
+          const streamUrl = srcMatch[1];
+          const titleMatch = html.match(/<title>([\s\S]*?)<\/title>/);
+          const title = titleMatch ? titleMatch[1].trim() : "video";
+          const fileName = title.endsWith(".mp4") ? title : `${title}.mp4`;
+          let mp4Url = null;
+          if (streamUrl.includes("/stream/")) {
+            const urlParts = streamUrl.replace("/stream/", "/mp4/").split("/");
+            urlParts.pop();
+            const mp4Base = urlParts.join("/");
+            mp4Url = `${mp4Base}?file=${encodeURIComponent(fileName)}`;
+          }
+          return {
+            m3u8: streamUrl,
+            mp4: mp4Url,
+            headers: {
+              "Referer": finalUrl,
+              "Origin": "https://kwik.cx",
+              "User-Agent": USER_AGENT
+            }
+          };
+        }
+      }
+    } catch (_) {
+    }
+    return null;
+  });
+}
+function paheDecrypt(fullString, key, v1, v2) {
+  const keyIndexMap = {};
+  for (let i2 = 0; i2 < key.length; i2++)
+    keyIndexMap[key[i2]] = i2;
+  let result = "";
+  let i = 0;
+  const toFind = key[v2];
+  while (i < fullString.length) {
+    const nextIndex = fullString.indexOf(toFind, i);
+    if (nextIndex === -1)
+      break;
+    let decodedCharStr = "";
+    for (let j = i; j < nextIndex; j++) {
+      decodedCharStr += keyIndexMap[fullString[j]];
+    }
+    i = nextIndex + 1;
+    const decodedChar = String.fromCharCode(parseInt(decodedCharStr, v2) - v1);
+    result += decodedChar;
+  }
+  return result;
+}
+function extractPahe(url) {
+  return __async(this, null, function* () {
+    try {
+      const initUrl = url.endsWith("/i") ? url : `${url}/i`;
+      const initRes = yield fetch(initUrl, {
+        method: "GET",
+        redirect: "manual",
+        headers: {
+          "User-Agent": USER_AGENT,
+          "Referer": "https://pahe.win/"
+        },
+        cfKiller: true,
+        skipSizeCheck: true
+      });
+      const redirectLoc = initRes.headers.get("location") || initRes.headers.get("Location");
+      if (!redirectLoc)
+        return null;
+      let kwikUrl = redirectLoc;
+      if (kwikUrl.includes("https://")) {
+        kwikUrl = "https://" + kwikUrl.split("https://").pop();
+      } else if (kwikUrl.includes("http://")) {
+        kwikUrl = "http://" + kwikUrl.split("http://").pop();
+      } else {
+        kwikUrl = `https://${kwikUrl.replace(/^\/+/, "")}`;
+      }
+      const kwikRes = yield fetch(kwikUrl, {
+        method: "GET",
+        headers: {
+          "User-Agent": USER_AGENT,
+          "Referer": "https://kwik.cx/",
+          "Origin": "https://kwik.cx"
+        },
+        cfKiller: true,
+        skipSizeCheck: true
+      });
+      const html = yield kwikRes.text();
+      let cookie = "";
+      if (typeof kwikRes.headers.getSetCookie === "function") {
+        cookie = kwikRes.headers.getSetCookie().map((c) => c.split(";")[0]).join("; ");
+      }
+      if (!cookie) {
+        const setCookieHeader = kwikRes.headers.get("set-cookie") || kwikRes.headers.get("Set-Cookie");
+        if (setCookieHeader) {
+          cookie = setCookieHeader.split(";")[0];
+        }
+      }
+      const kwikParamsRegex = /\("(\w+)",\d+,"(\w+)",(\d+),(\d+),\d+\)/;
+      const match = html.match(kwikParamsRegex);
+      if (!match)
+        return null;
+      const [_, fullString, key, v1, v2] = match;
+      const decrypted = paheDecrypt(fullString, key, parseInt(v1, 10), parseInt(v2, 10));
+      const actionMatch = decrypted.match(/action="([^"]+)"/);
+      const tokenMatch = decrypted.match(/value="([^"]+)"/);
+      if (!actionMatch || !tokenMatch)
+        return null;
+      const postUri = actionMatch[1];
+      const token = tokenMatch[1];
+      const formData = new URLSearchParams();
+      formData.append("_token", token);
+      let tries = 0;
+      let location = null;
+      while (tries < 3) {
+        tries++;
+        const postRes = yield fetch(postUri, {
+          method: "POST",
+          redirect: "manual",
+          headers: __spreadProps(__spreadValues({
+            "User-Agent": USER_AGENT,
+            "Referer": kwikUrl,
+            "Origin": "https://kwik.cx"
+          }, cookie ? { "Cookie": cookie } : {}), {
+            "Content-Type": "application/x-www-form-urlencoded"
+          }),
+          body: formData.toString(),
+          cfKiller: true,
+          skipSizeCheck: true
+        });
+        if (postRes.status === 302 || postRes.status === 301) {
+          location = postRes.headers.get("location") || postRes.headers.get("Location");
+          break;
+        }
+      }
+      if (location) {
+        return {
+          url: location,
+          headers: {
+            "Referer": "https://kwik.cx/",
+            "Origin": "https://kwik.cx",
+            "User-Agent": USER_AGENT
+          }
+        };
+      }
+    } catch (_) {
+    }
+    return null;
+  });
+}
+
+// src/animepahe/index.js
+function getStreams(tmdbId, mediaType, season, episode) {
+  return __async(this, null, function* () {
+    try {
+      let animeSession = null;
+      let animeTitle = "";
+      let mappedEp = episode;
+      let targetMalId = null;
+      if (mediaType === "tv") {
+        const imdbId = yield getImdbId(tmdbId, mediaType);
+        if (!imdbId)
+          return [];
+        const mapping = yield resolveMapping(imdbId, season, episode);
+        if (!mapping || !mapping.mal_id)
+          return [];
+        targetMalId = mapping.mal_id;
+        mappedEp = mapping.mal_episode || episode;
+        animeTitle = yield getMalTitle(targetMalId);
+        if (!animeTitle)
+          return [];
+        let searchResults = yield searchAnime(animeTitle);
+        if (!searchResults.data || searchResults.data.length === 0) {
+          const clean = animeTitle.replace(/[^a-zA-Z0-9\s]+/g, " ").replace(/\s+/g, " ").trim();
+          if (clean !== animeTitle) {
+            searchResults = yield searchAnime(clean);
+          }
+        }
+        if (!searchResults.data || searchResults.data.length === 0) {
+          const words = animeTitle.split(/\s+/).filter(Boolean);
+          if (words.length > 3) {
+            const shortQuery = words.slice(-3).join(" ");
+            searchResults = yield searchAnime(shortQuery);
+          }
+        }
+        if (searchResults.data && searchResults.data.length > 0) {
+          for (let i = 0; i < Math.min(searchResults.data.length, 5); i++) {
+            const item = searchResults.data[i];
+            try {
+              const pageHtml = yield fetchText(`/anime/${item.session}`);
+              if (pageHtml.includes(`myanimelist.net/anime/${targetMalId}`) || item.id && String(item.id) === String(targetMalId)) {
+                animeSession = item.session;
+                break;
+              }
+            } catch (_) {
+            }
+          }
+          if (!animeSession) {
+            const normTarget = animeTitle.toLowerCase().replace(/[^a-z0-9]+/g, "");
+            const titleMatch = searchResults.data.find((r) => {
+              const normR = (r.title || "").toLowerCase().replace(/[^a-z0-9]+/g, "");
+              return normR.includes(normTarget) || normTarget.includes(normR);
+            });
+            animeSession = titleMatch ? titleMatch.session : searchResults.data[0].session;
+          }
+        }
+      } else {
+        const tmdbUrl = `https://api.themoviedb.org/3/movie/${tmdbId}?api_key=439c478a771f35c05022f9feabcca01c`;
+        const tmdbRes = yield fetch(tmdbUrl);
+        const tmdbData = yield tmdbRes.json();
+        animeTitle = tmdbData.title || tmdbData.original_title;
+        mappedEp = 1;
+        if (!animeTitle)
+          return [];
+        let searchResults = yield searchAnime(animeTitle);
+        if (!searchResults.data || searchResults.data.length === 0) {
+          const clean = animeTitle.replace(/[^a-zA-Z0-9\s]+/g, " ").replace(/\s+/g, " ").trim();
+          if (clean !== animeTitle) {
+            searchResults = yield searchAnime(clean);
+          }
+        }
+        if (searchResults.data && searchResults.data.length > 0) {
+          const normTarget = animeTitle.toLowerCase().replace(/[^a-z0-9]+/g, "");
+          const match = searchResults.data.find((r) => {
+            const normR = (r.title || "").toLowerCase().replace(/[^a-z0-9]+/g, "");
+            return normR === normTarget || normR.includes(normTarget) || normTarget.includes(normR);
+          }) || searchResults.data[0];
+          animeSession = match.session;
+        }
+      }
+      if (!animeSession)
+        return [];
+      const firstPageUrl = `/api?m=release&id=${animeSession}&sort=episode_asc&page=1`;
+      const firstPageData = yield fetchJson(firstPageUrl);
+      if (!firstPageData.data || firstPageData.data.length === 0)
+        return [];
+      const targetEpNum = Number(mappedEp);
+      let episodeSession = null;
+      const epInFirstPage = firstPageData.data.find((e) => Math.floor(Number(e.episode)) === targetEpNum || Number(e.episode) === targetEpNum);
+      if (epInFirstPage) {
+        episodeSession = epInFirstPage.session;
+      } else {
+        const perPage = firstPageData.per_page || 30;
+        const targetPage = Math.ceil(targetEpNum / perPage) || 1;
+        const lastPage = firstPageData.last_page || 1;
+        if (targetPage !== 1 && targetPage <= lastPage) {
+          const targetPageUrl = `/api?m=release&id=${animeSession}&sort=episode_asc&page=${targetPage}`;
+          const targetPageData = yield fetchJson(targetPageUrl);
+          if (targetPageData && targetPageData.data) {
+            const foundEp = targetPageData.data.find((e) => Math.floor(Number(e.episode)) === targetEpNum || Number(e.episode) === targetEpNum);
+            if (foundEp)
+              episodeSession = foundEp.session;
+          }
+        }
+        if (!episodeSession) {
+          for (let p = 2; p <= Math.min(lastPage, 6); p++) {
+            if (p === targetPage)
+              continue;
+            const pData = yield fetchJson(`/api?m=release&id=${animeSession}&sort=episode_asc&page=${p}`);
+            if (pData && pData.data) {
+              const foundEp = pData.data.find((e) => Math.floor(Number(e.episode)) === targetEpNum || Number(e.episode) === targetEpNum);
+              if (foundEp) {
+                episodeSession = foundEp.session;
+                break;
+              }
+            }
+          }
+        }
+      }
+      if (!episodeSession)
+        return [];
+      const playUrl = `/play/${animeSession}/${episodeSession}`;
+      const playHtml = yield fetchText(playUrl);
+      const $ = import_cheerio_without_node_native.default.load(playHtml);
+      const streams = [];
+      const promises = [];
+      const seen = /* @__PURE__ */ new Set();
+      const downloadLinks = $("div#pickDownload > a");
+      const buttons = $("#resolutionMenu > button");
+      buttons.each((index, el) => {
+        const $btn = $(el);
+        const kwikUrl = $btn.attr("data-src");
+        const fullText = $btn.text().trim();
+        const qualityText = fullText.includes(" \xB7 ") ? fullText.substring(fullText.indexOf(" \xB7 ") + 3) : fullText;
+        const isDub = qualityText.toLowerCase().includes("eng");
+        const isKor = qualityText.toLowerCase().includes("kor");
+        const isChi = qualityText.toLowerCase().includes("chi");
+        const langLabel = isDub ? "DUB" : isKor ? "KOR" : isChi ? "CHI" : "SUB";
+        const cleanQualityText = qualityText.replace(/eng/gi, "").replace(/kor/gi, "").replace(/chi/gi, "").replace(/\s+/g, " ").trim();
+        const quality = extractQuality(cleanQualityText);
+        const paheWinLink = downloadLinks.eq(index).attr("href");
+        if (kwikUrl && kwikUrl.includes("kwik")) {
+          promises.push(
+            extractKwik(kwikUrl).then((res) => {
+              if (res && res.m3u8 && !seen.has(res.m3u8)) {
+                seen.add(res.m3u8);
+                streams.push({
+                  name: `AnimePahe [${langLabel}] (${quality} HLS)`,
+                  title: mediaType === "movie" ? `${animeTitle} (${langLabel})` : `${animeTitle} - Episode ${mappedEp} (${langLabel})`,
+                  url: res.m3u8,
+                  quality,
+                  headers: res.headers,
+                  provider: "animepahe",
+                  type: "m3u8"
+                });
+              }
+              if (res && res.mp4 && !seen.has(res.mp4)) {
+                seen.add(res.mp4);
+                streams.push({
+                  name: `AnimePahe [${langLabel}] (${quality} MP4)`,
+                  title: mediaType === "movie" ? `${animeTitle} (${langLabel})` : `${animeTitle} - Episode ${mappedEp} (${langLabel})`,
+                  url: res.mp4,
+                  quality,
+                  headers: __spreadProps(__spreadValues({}, res.headers), {
+                    "Referer": kwikUrl
+                  }),
+                  provider: "animepahe",
+                  type: "mp4"
+                });
+              }
+            }).catch(() => {
+            })
+          );
+        }
+        if (paheWinLink && (paheWinLink.includes("pahe.win") || paheWinLink.includes("pahe.me") || paheWinLink.includes("pahe.li") || paheWinLink.includes("kwik"))) {
+          promises.push(
+            extractPahe(paheWinLink).then((res) => {
+              if (res && res.url && !seen.has(res.url)) {
+                seen.add(res.url);
+                streams.push({
+                  name: `AnimePahe [${langLabel}] (${quality} Direct)`,
+                  title: mediaType === "movie" ? `${animeTitle} (${langLabel})` : `${animeTitle} - Episode ${mappedEp} (${langLabel})`,
+                  url: res.url,
+                  quality,
+                  headers: res.headers,
+                  provider: "animepahe",
+                  type: "mp4"
+                });
+              }
+            }).catch(() => {
+            })
+          );
+        }
+      });
+      yield Promise.all(promises);
+      const qualityOrder = { "1080p": 3, "720p": 2, "360p": 1 };
+      return streams.sort((a, b) => (qualityOrder[b.quality] || 0) - (qualityOrder[a.quality] || 0));
+    } catch (_) {
+      return [];
+    }
+  });
+}
+module.exports = { getStreams };

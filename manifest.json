@@ -511,6 +511,20 @@
       "contentLanguage": ["en", "hi"]
     },
     {
+      "id": "moviesmod",
+      "name": "MoviesMod",
+      "description": "Movie and TV show streams from MoviesMod with multiple quality options",
+      "version": "1.0.1",
+      "author": "Nuvio Team",
+      "supportedTypes": ["movie", "tv"],
+      "filename": "providers/moviesmod.js",
+      "enabled": true,
+      "hasSettings": false,
+      "formats": ["mp4", "mkv", "m3u8"],
+      "logo": "https://www.google.com/s2/favicons?domain=moviesmod.farm&sz=128",
+      "contentLanguage": ["en"]
+    },
+    {
       "id": "movieshunt",
       "name": "🎬 MoviesHunt",
       "description": "Hollywood & Bollywood Movies in Multi Language",
