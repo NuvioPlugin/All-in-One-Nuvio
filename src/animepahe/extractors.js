@@ -58,22 +58,24 @@ export async function extractKwik(url) {
 
         for (const scriptContent of matches) {
             const unpacked = unpack(scriptContent);
-            const m3u8Match = unpacked.match(/source\s*=\s*['"]([^'"]+m3u8[^'"]*)['"]/) ||
-                              unpacked.match(/const\s+source\s*=\s*\\['"]([^\\'"]+m3u8[^\\'"]*)\\['"]/);
+            const srcMatch = unpacked.match(/(?:const\s+)?source\s*=\s*\\?['"]([^\\'"]+)\\?['"]/);
 
-            if (m3u8Match) {
-                const m3u8Url = m3u8Match[1];
+            if (srcMatch) {
+                const streamUrl = srcMatch[1];
                 const titleMatch = html.match(/<title>([\s\S]*?)<\/title>/);
                 const title = titleMatch ? titleMatch[1].trim() : "video";
                 const fileName = title.endsWith(".mp4") ? title : `${title}.mp4`;
 
-                const urlParts = m3u8Url.replace("/stream/", "/mp4/").split("/");
-                urlParts.pop();
-                const mp4Base = urlParts.join("/");
-                const mp4Url = `${mp4Base}?file=${encodeURIComponent(fileName)}`;
+                let mp4Url = null;
+                if (streamUrl.includes("/stream/")) {
+                    const urlParts = streamUrl.replace("/stream/", "/mp4/").split("/");
+                    urlParts.pop();
+                    const mp4Base = urlParts.join("/");
+                    mp4Url = `${mp4Base}?file=${encodeURIComponent(fileName)}`;
+                }
 
                 return {
-                    m3u8: m3u8Url,
+                    m3u8: streamUrl,
                     mp4: mp4Url,
                     headers: {
                         "Referer": finalUrl,
@@ -130,23 +132,36 @@ export async function extractPahe(url) {
         const redirectLoc = initRes.headers.get('location') || initRes.headers.get('Location');
         if (!redirectLoc) return null;
 
-        const kwikUrl = redirectLoc.startsWith('http') ? redirectLoc : `https://${redirectLoc.replace(/^\/+/, '')}`;
+        let kwikUrl = redirectLoc;
+        if (kwikUrl.includes("https://")) {
+            kwikUrl = "https://" + kwikUrl.split("https://").pop();
+        } else if (kwikUrl.includes("http://")) {
+            kwikUrl = "http://" + kwikUrl.split("http://").pop();
+        } else {
+            kwikUrl = `https://${kwikUrl.replace(/^\/+/, '')}`;
+        }
 
         const kwikRes = await fetch(kwikUrl, {
             method: 'GET',
             headers: {
                 "User-Agent": USER_AGENT,
-                "Referer": "https://kwik.cx/"
+                "Referer": "https://kwik.cx/",
+                "Origin": "https://kwik.cx"
             },
             cfKiller: true,
             skipSizeCheck: true
         });
 
         const html = await kwikRes.text();
-        const setCookieHeader = kwikRes.headers.get('set-cookie') || kwikRes.headers.get('Set-Cookie');
         let cookie = '';
-        if (setCookieHeader) {
-            cookie = setCookieHeader.split(';')[0];
+        if (typeof kwikRes.headers.getSetCookie === 'function') {
+            cookie = kwikRes.headers.getSetCookie().map(c => c.split(';')[0]).join('; ');
+        }
+        if (!cookie) {
+            const setCookieHeader = kwikRes.headers.get('set-cookie') || kwikRes.headers.get('Set-Cookie');
+            if (setCookieHeader) {
+                cookie = setCookieHeader.split(';')[0];
+            }
         }
 
         const kwikParamsRegex = /\("(\w+)",\d+,"(\w+)",(\d+),(\d+),\d+\)/;
@@ -170,14 +185,16 @@ export async function extractPahe(url) {
         let tries = 0;
         let location = null;
 
-        while (tries < 10) {
+        while (tries < 3) {
+            tries++;
             const postRes = await fetch(postUri, {
                 method: 'POST',
                 redirect: 'manual',
                 headers: {
                     "User-Agent": USER_AGENT,
                     "Referer": kwikUrl,
-                    "Cookie": cookie,
+                    "Origin": "https://kwik.cx",
+                    ...(cookie ? { "Cookie": cookie } : {}),
                     "Content-Type": "application/x-www-form-urlencoded"
                 },
                 body: formData.toString(),
@@ -189,7 +206,6 @@ export async function extractPahe(url) {
                 location = postRes.headers.get('location') || postRes.headers.get('Location');
                 break;
             }
-            tries++;
         }
 
         if (location) {
@@ -197,6 +213,7 @@ export async function extractPahe(url) {
                 url: location,
                 headers: {
                     "Referer": "https://kwik.cx/",
+                    "Origin": "https://kwik.cx",
                     "User-Agent": USER_AGENT
                 }
             };

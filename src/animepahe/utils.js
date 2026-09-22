@@ -92,7 +92,7 @@ export async function getMalTitle(malId) {
 
 export async function searchAnime(query, page = 1) {
     const timeSuffix = Math.floor(Date.now() / 1000) + (page * 3);
-    const url = `/api?m=search&l=8&q=${encodeURIComponent(query + ' ' + timeSuffix)}&page=${page}`;
+    const url = `/api?m=search&q=${encodeURIComponent(query + ' ' + timeSuffix)}&page=${page}`;
     return await fetchJson(url);
 }
 

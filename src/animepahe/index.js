@@ -22,7 +22,21 @@ async function getStreams(tmdbId, mediaType, season, episode) {
 
             if (!animeTitle) return [];
 
-            const searchResults = await searchAnime(animeTitle);
+            let searchResults = await searchAnime(animeTitle);
+            if (!searchResults.data || searchResults.data.length === 0) {
+                const clean = animeTitle.replace(/[^a-zA-Z0-9\s]+/g, ' ').replace(/\s+/g, ' ').trim();
+                if (clean !== animeTitle) {
+                    searchResults = await searchAnime(clean);
+                }
+            }
+            if (!searchResults.data || searchResults.data.length === 0) {
+                const words = animeTitle.split(/\s+/).filter(Boolean);
+                if (words.length > 3) {
+                    const shortQuery = words.slice(-3).join(" ");
+                    searchResults = await searchAnime(shortQuery);
+                }
+            }
+
             if (searchResults.data && searchResults.data.length > 0) {
                 for (let i = 0; i < Math.min(searchResults.data.length, 5); i++) {
                     const item = searchResults.data[i];
@@ -34,8 +48,13 @@ async function getStreams(tmdbId, mediaType, season, episode) {
                         }
                     } catch (_) {}
                 }
-                if (!animeSession && searchResults.data.length > 0) {
-                    animeSession = searchResults.data[0].session;
+                if (!animeSession) {
+                    const normTarget = animeTitle.toLowerCase().replace(/[^a-z0-9]+/g, '');
+                    const titleMatch = searchResults.data.find(r => {
+                        const normR = (r.title || "").toLowerCase().replace(/[^a-z0-9]+/g, '');
+                        return normR.includes(normTarget) || normTarget.includes(normR);
+                    });
+                    animeSession = titleMatch ? titleMatch.session : searchResults.data[0].session;
                 }
             }
         } else {
@@ -47,9 +66,19 @@ async function getStreams(tmdbId, mediaType, season, episode) {
 
             if (!animeTitle) return [];
 
-            const searchResults = await searchAnime(animeTitle);
+            let searchResults = await searchAnime(animeTitle);
+            if (!searchResults.data || searchResults.data.length === 0) {
+                const clean = animeTitle.replace(/[^a-zA-Z0-9\s]+/g, ' ').replace(/\s+/g, ' ').trim();
+                if (clean !== animeTitle) {
+                    searchResults = await searchAnime(clean);
+                }
+            }
             if (searchResults.data && searchResults.data.length > 0) {
-                const match = searchResults.data.find(r => r.title.toLowerCase() === animeTitle.toLowerCase()) || searchResults.data[0];
+                const normTarget = animeTitle.toLowerCase().replace(/[^a-z0-9]+/g, '');
+                const match = searchResults.data.find(r => {
+                    const normR = (r.title || "").toLowerCase().replace(/[^a-z0-9]+/g, '');
+                    return normR === normTarget || normR.includes(normTarget) || normTarget.includes(normR);
+                }) || searchResults.data[0];
                 animeSession = match.session;
             }
         }
@@ -60,23 +89,39 @@ async function getStreams(tmdbId, mediaType, season, episode) {
         const firstPageData = await fetchJson(firstPageUrl);
         if (!firstPageData.data || firstPageData.data.length === 0) return [];
 
-        const paheEpStart = Math.floor(firstPageData.data[0].episode);
-        const perPage = firstPageData.per_page || 30;
-        const targetPaheEp = (paheEpStart - 1) + Number(mappedEp);
-
-        const targetPage = Math.ceil(Number(mappedEp) / perPage) || 1;
-        const targetPageUrl = `/api?m=release&id=${animeSession}&sort=episode_asc&page=${targetPage}`;
-        const targetPageData = await fetchJson(targetPageUrl);
-
+        const targetEpNum = Number(mappedEp);
         let episodeSession = null;
-        if (targetPageData && targetPageData.data) {
-            const foundEp = targetPageData.data.find(e => Math.floor(e.episode) === targetPaheEp);
-            if (foundEp) episodeSession = foundEp.session;
-        }
 
-        if (!episodeSession && targetPage !== 1) {
-            const fallbackEp = firstPageData.data.find(e => Math.floor(e.episode) === targetPaheEp);
-            if (fallbackEp) episodeSession = fallbackEp.session;
+        const epInFirstPage = firstPageData.data.find(e => Math.floor(Number(e.episode)) === targetEpNum || Number(e.episode) === targetEpNum);
+        if (epInFirstPage) {
+            episodeSession = epInFirstPage.session;
+        } else {
+            const perPage = firstPageData.per_page || 30;
+            const targetPage = Math.ceil(targetEpNum / perPage) || 1;
+            const lastPage = firstPageData.last_page || 1;
+
+            if (targetPage !== 1 && targetPage <= lastPage) {
+                const targetPageUrl = `/api?m=release&id=${animeSession}&sort=episode_asc&page=${targetPage}`;
+                const targetPageData = await fetchJson(targetPageUrl);
+                if (targetPageData && targetPageData.data) {
+                    const foundEp = targetPageData.data.find(e => Math.floor(Number(e.episode)) === targetEpNum || Number(e.episode) === targetEpNum);
+                    if (foundEp) episodeSession = foundEp.session;
+                }
+            }
+
+            if (!episodeSession) {
+                for (let p = 2; p <= Math.min(lastPage, 6); p++) {
+                    if (p === targetPage) continue;
+                    const pData = await fetchJson(`/api?m=release&id=${animeSession}&sort=episode_asc&page=${p}`);
+                    if (pData && pData.data) {
+                        const foundEp = pData.data.find(e => Math.floor(Number(e.episode)) === targetEpNum || Number(e.episode) === targetEpNum);
+                        if (foundEp) {
+                            episodeSession = foundEp.session;
+                            break;
+                        }
+                    }
+                }
+            }
         }
 
         if (!episodeSession) return [];
@@ -89,67 +134,72 @@ async function getStreams(tmdbId, mediaType, season, episode) {
         const promises = [];
         const seen = new Set();
 
-        // 1. Resolution menu buttons (Kwik HLS streams)
-        $('#resolutionMenu button').each((i, el) => {
+        const downloadLinks = $('div#pickDownload > a');
+        const buttons = $('#resolutionMenu > button');
+
+        buttons.each((index, el) => {
             const $btn = $(el);
             const kwikUrl = $btn.attr('data-src');
-            const btnText = $btn.text();
-            const quality = extractQuality(btnText);
-            const type = btnText.toLowerCase().includes('eng') ? 'DUB' : 'SUB';
+            const fullText = $btn.text().trim();
+
+            const qualityText = fullText.includes(' · ') ? fullText.substring(fullText.indexOf(' · ') + 3) : fullText;
+            const isDub = qualityText.toLowerCase().includes('eng');
+            const isKor = qualityText.toLowerCase().includes('kor');
+            const isChi = qualityText.toLowerCase().includes('chi');
+            const langLabel = isDub ? 'DUB' : (isKor ? 'KOR' : (isChi ? 'CHI' : 'SUB'));
+
+            const cleanQualityText = qualityText
+                .replace(/eng/gi, '')
+                .replace(/kor/gi, '')
+                .replace(/chi/gi, '')
+                .replace(/\s+/g, ' ')
+                .trim();
+            const quality = extractQuality(cleanQualityText);
+
+            const paheWinLink = downloadLinks.eq(index).attr('href');
 
             if (kwikUrl && kwikUrl.includes('kwik')) {
                 promises.push(
                     extractKwik(kwikUrl).then(res => {
-                        if (res) {
-                            if (res.m3u8 && !seen.has(res.m3u8)) {
-                                seen.add(res.m3u8);
-                                streams.push({
-                                    name: `AnimePahe [${type}] (${quality} HLS)`,
-                                    title: mediaType === 'movie' ? `${animeTitle} (${type})` : `${animeTitle} - Episode ${mappedEp} (${type})`,
-                                    url: res.m3u8,
-                                    quality: quality,
-                                    headers: res.headers,
-                                    provider: "animepahe",
-                                    type: "m3u8"
-                                });
-                            }
-                            if (res.mp4 && !seen.has(res.mp4)) {
-                                seen.add(res.mp4);
-                                streams.push({
-                                    name: `AnimePahe [${type}] (${quality} MP4)`,
-                                    title: mediaType === 'movie' ? `${animeTitle} (${type})` : `${animeTitle} - Episode ${mappedEp} (${type})`,
-                                    url: res.mp4,
-                                    quality: quality,
-                                    headers: {
-                                        ...res.headers,
-                                        "Referer": kwikUrl
-                                    },
-                                    provider: "animepahe",
-                                    type: "mp4"
-                                });
-                            }
+                        if (res && res.m3u8 && !seen.has(res.m3u8)) {
+                            seen.add(res.m3u8);
+                            streams.push({
+                                name: `AnimePahe [${langLabel}] (${quality} HLS)`,
+                                title: mediaType === 'movie' ? `${animeTitle} (${langLabel})` : `${animeTitle} - Episode ${mappedEp} (${langLabel})`,
+                                url: res.m3u8,
+                                quality: quality,
+                                headers: res.headers,
+                                provider: "animepahe",
+                                type: "m3u8"
+                            });
+                        }
+                        if (res && res.mp4 && !seen.has(res.mp4)) {
+                            seen.add(res.mp4);
+                            streams.push({
+                                name: `AnimePahe [${langLabel}] (${quality} MP4)`,
+                                title: mediaType === 'movie' ? `${animeTitle} (${langLabel})` : `${animeTitle} - Episode ${mappedEp} (${langLabel})`,
+                                url: res.mp4,
+                                quality: quality,
+                                headers: {
+                                    ...res.headers,
+                                    "Referer": kwikUrl
+                                },
+                                provider: "animepahe",
+                                type: "mp4"
+                            });
                         }
                     }).catch(() => {})
                 );
             }
-        });
 
-        // 2. Pick download links (Pahe.win direct MP4 downloads)
-        $('div#pickDownload a').each((i, el) => {
-            const $link = $(el);
-            const paheUrl = $link.attr('href');
-            const linkText = $link.text();
-            const quality = extractQuality(linkText);
-            const type = $link.find('span').text().toLowerCase().includes('eng') ? 'DUB' : 'SUB';
-
-            if (paheUrl && (paheUrl.includes('pahe.win') || paheUrl.includes('pahe.me') || paheUrl.includes('pahe.li') || paheUrl.includes('kwik'))) {
+            if (paheWinLink && (paheWinLink.includes('pahe.win') || paheWinLink.includes('pahe.me') || paheWinLink.includes('pahe.li') || paheWinLink.includes('kwik'))) {
                 promises.push(
-                    extractPahe(paheUrl).then(res => {
+                    extractPahe(paheWinLink).then(res => {
                         if (res && res.url && !seen.has(res.url)) {
                             seen.add(res.url);
                             streams.push({
-                                name: `AnimePahe [${type}] (${quality} Direct)`,
-                                title: mediaType === 'movie' ? `${animeTitle} (${type})` : `${animeTitle} - Episode ${mappedEp} (${type})`,
+                                name: `AnimePahe [${langLabel}] (${quality} Direct)`,
+                                title: mediaType === 'movie' ? `${animeTitle} (${langLabel})` : `${animeTitle} - Episode ${mappedEp} (${langLabel})`,
                                 url: res.url,
                                 quality: quality,
                                 headers: res.headers,
