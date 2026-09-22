@@ -130,17 +130,25 @@ export async function hubCloudExtractor(url, referer) {
             } else if (text.includes("fsl server") || (text.includes("fsl") && !text.includes("v2"))) {
                 links.push({ name: "HubCloud - FSL Server", quality, url: link, size });
             } else if (text.includes("download file") || text.includes("instant download") || text.includes("instant") || text.includes("10gbps")) {
-                try {
-                    const res = await fetch(link, {
-                        headers: { ...HEADERS, Referer: finalUrl },
-                        redirect: "follow"
-                    });
-                    const streamUrl = res.url;
-                    if (streamUrl && streamUrl.startsWith("http")) {
-                        links.push({ name: "HubCloud - Instant", quality, url: streamUrl, size });
-                    }
-                } catch (e) {
-                    links.push({ name: "HubCloud - Instant", quality, url: link, size });
+                let streamUrl = link;
+                if (streamUrl.includes("link=")) {
+                    streamUrl = streamUrl.split("link=")[1];
+                } else {
+                    try {
+                        const res = await fetch(link, {
+                            headers: { ...HEADERS, Referer: finalUrl },
+                            redirect: "follow"
+                        });
+                        if (res.url && res.url.startsWith("http")) {
+                            streamUrl = res.url;
+                            if (streamUrl.includes("link=")) {
+                                streamUrl = streamUrl.split("link=")[1];
+                            }
+                        }
+                    } catch (e) {}
+                }
+                if (streamUrl && streamUrl.startsWith("http")) {
+                    links.push({ name: "HubCloud - Instant", quality, url: streamUrl, size });
                 }
             } else if (text.includes("pixeldra") || text.includes("pixelserver") || text.includes("pixeldrain") || link.includes("pixeldrain")) {
                 let pUrl = link;

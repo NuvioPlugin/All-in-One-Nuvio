@@ -1,6 +1,6 @@
 /**
  * moviesdrive - Built from src/moviesdrive/
- * Generated: 2026-09-22T09:45:40.938Z
+ * Generated: 2026-09-22T10:00:32.946Z
  */
 var __create = Object.create;
 var __defProp = Object.defineProperty;
@@ -199,17 +199,26 @@ function hubCloudExtractor(url, referer) {
         } else if (text.includes("fsl server") || text.includes("fsl") && !text.includes("v2")) {
           links.push({ name: "HubCloud - FSL Server", quality, url: link, size });
         } else if (text.includes("download file") || text.includes("instant download") || text.includes("instant") || text.includes("10gbps")) {
-          try {
-            const res = yield fetch(link, {
-              headers: __spreadProps(__spreadValues({}, HEADERS), { Referer: finalUrl }),
-              redirect: "follow"
-            });
-            const streamUrl = res.url;
-            if (streamUrl && streamUrl.startsWith("http")) {
-              links.push({ name: "HubCloud - Instant", quality, url: streamUrl, size });
+          let streamUrl = link;
+          if (streamUrl.includes("link=")) {
+            streamUrl = streamUrl.split("link=")[1];
+          } else {
+            try {
+              const res = yield fetch(link, {
+                headers: __spreadProps(__spreadValues({}, HEADERS), { Referer: finalUrl }),
+                redirect: "follow"
+              });
+              if (res.url && res.url.startsWith("http")) {
+                streamUrl = res.url;
+                if (streamUrl.includes("link=")) {
+                  streamUrl = streamUrl.split("link=")[1];
+                }
+              }
+            } catch (e) {
             }
-          } catch (e) {
-            links.push({ name: "HubCloud - Instant", quality, url: link, size });
+          }
+          if (streamUrl && streamUrl.startsWith("http")) {
+            links.push({ name: "HubCloud - Instant", quality, url: streamUrl, size });
           }
         } else if (text.includes("pixeldra") || text.includes("pixelserver") || text.includes("pixeldrain") || link.includes("pixeldrain")) {
           let pUrl = link;
