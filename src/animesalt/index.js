@@ -1,6 +1,6 @@
 import cheerio from 'cheerio-without-node-native';
 import { MAIN_URL, HEADERS } from './constants.js';
-import { fetchTmdbDetails, cleanTitle, titleSimilarity } from './utils.js';
+import { fetchTmdbDetails, cleanTitle, titleSimilarity, isRealStreamUrl, isPlayableStream } from './utils.js';
 import { extractAwsStream, extractAbyss, extractMultiLang, extractMegaPlay, extractStreamWish } from './extractors.js';
 
 async function searchAnimeSalt(query) {
@@ -181,11 +181,11 @@ async function getStreams(tmdbId, mediaType, seasonNum = 1, episodeNum = 1) {
         await Promise.allSettled(promises);
 
         const seenUrls = new Set();
-        const uniqueStreams = [];
+        const candidateStreams = [];
         for (const s of streams) {
-            if (s && s.url && !seenUrls.has(s.url)) {
+            if (s && s.url && !seenUrls.has(s.url) && isRealStreamUrl(s.url)) {
                 seenUrls.add(s.url);
-                uniqueStreams.push({
+                candidateStreams.push({
                     name: s.name || 'AnimeSalt',
                     title: mediaType === 'movie' ? details.title : `${details.title} - S${seasonNum}E${episodeNum}`,
                     url: s.url,
@@ -198,8 +198,14 @@ async function getStreams(tmdbId, mediaType, seasonNum = 1, episodeNum = 1) {
             }
         }
 
+        const probeResults = await Promise.all(
+            candidateStreams.map(async s => ({ stream: s, playable: await isPlayableStream(s) }))
+        );
+        let finalStreams = probeResults.filter(r => r.playable).map(r => r.stream);
+        if (finalStreams.length === 0) finalStreams = candidateStreams;
+
         const qualityOrder = { '1080p': 4, '720p': 3, '480p': 2, '360p': 1, 'Auto': 0 };
-        return uniqueStreams.sort((a, b) => (qualityOrder[b.quality] ?? 0) - (qualityOrder[a.quality] ?? 0));
+        return finalStreams.sort((a, b) => (qualityOrder[b.quality] ?? 0) - (qualityOrder[a.quality] ?? 0));
     } catch {
         return [];
     }

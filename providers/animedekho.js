@@ -1,6 +1,6 @@
 /**
  * animedekho - Built from src/animedekho/
- * Generated: 2026-09-22T20:30:51.682Z
+ * Generated: 2026-09-22T20:41:44.640Z
  */
 var __create = Object.create;
 var __defProp = Object.defineProperty;
@@ -136,6 +136,44 @@ function unpack(code) {
   } catch (e) {
   }
   return code;
+}
+function isRealStreamUrl(url) {
+  if (!url || typeof url !== "string")
+    return false;
+  if (!url.startsWith("http://") && !url.startsWith("https://"))
+    return false;
+  const lowercase = url.toLowerCase();
+  if (lowercase.includes("/embed/") || lowercase.includes("/embed-") || lowercase.includes("/e/") || lowercase.includes("/play.php") || lowercase.includes("/player.php") || lowercase.includes("abyssplayer.com") || lowercase.includes("short.icu") || lowercase.includes("cloudy.upns.one") || lowercase.includes("vidcloud.upns.ink") || lowercase.includes("filesforever.link") || lowercase.includes("strmup.to") || lowercase.includes("emturbovid.com") || lowercase.includes("animedekho.app") || lowercase.includes("animesalt.cx") || lowercase.includes("youtube.com") || lowercase.includes("youtu.be") || lowercase.includes("vimeo.com") || lowercase.includes(".html") || lowercase.includes(".htm") || lowercase.includes(".php") || lowercase.includes("#")) {
+    return false;
+  }
+  const isHls = lowercase.includes(".m3u8");
+  const isMp4 = lowercase.includes(".mp4") || lowercase.includes("/sora/") || lowercase.includes("/stream/");
+  return isHls || isMp4 || lowercase.includes(".mkv") || lowercase.includes(".mpd");
+}
+function isPlayableStream(stream) {
+  return __async(this, null, function* () {
+    if (!isRealStreamUrl(stream == null ? void 0 : stream.url))
+      return false;
+    try {
+      const headers = __spreadProps(__spreadValues({
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36"
+      }, stream.headers || {}), {
+        "Range": "bytes=0-10"
+      });
+      const res = yield fetch(stream.url, {
+        headers,
+        signal: AbortSignal.timeout(3e3)
+      });
+      if (!res.ok && res.status !== 206)
+        return false;
+      const contentType = res.headers.get("content-type") || "";
+      if (contentType.includes("text/html"))
+        return false;
+      return true;
+    } catch (e) {
+      return false;
+    }
+  });
 }
 
 // src/animedekho/extractors.js
@@ -620,11 +658,11 @@ function getStreams(tmdbId, mediaType, seasonNum = 1, episodeNum = 1) {
       }
       yield Promise.allSettled(extractPromises);
       const seenUrls = /* @__PURE__ */ new Set();
-      const uniqueStreams = [];
+      const candidateStreams = [];
       for (const s of streams) {
-        if (s && s.url && !seenUrls.has(s.url)) {
+        if (s && s.url && !seenUrls.has(s.url) && isRealStreamUrl(s.url)) {
           seenUrls.add(s.url);
-          uniqueStreams.push({
+          candidateStreams.push({
             name: s.name || "AnimeDekho",
             title: mediaType === "movie" ? details.title : `${details.title} - S${seasonNum}E${episodeNum}`,
             url: s.url,
@@ -636,8 +674,16 @@ function getStreams(tmdbId, mediaType, seasonNum = 1, episodeNum = 1) {
           });
         }
       }
+      const probeResults = yield Promise.all(
+        candidateStreams.map((s) => __async(this, null, function* () {
+          return { stream: s, playable: yield isPlayableStream(s) };
+        }))
+      );
+      let finalStreams = probeResults.filter((r) => r.playable).map((r) => r.stream);
+      if (finalStreams.length === 0)
+        finalStreams = candidateStreams;
       const qualityOrder = { "1080p": 4, "720p": 3, "480p": 2, "360p": 1, "Auto": 0 };
-      return uniqueStreams.sort((a, b) => {
+      return finalStreams.sort((a, b) => {
         var _a, _b;
         return ((_a = qualityOrder[b.quality]) != null ? _a : 0) - ((_b = qualityOrder[a.quality]) != null ? _b : 0);
       });

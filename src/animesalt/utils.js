@@ -57,3 +57,65 @@ export function unpack(code) {
     } catch {}
     return code;
 }
+
+export function isRealStreamUrl(url) {
+    if (!url || typeof url !== 'string') return false;
+    if (!url.startsWith('http://') && !url.startsWith('https://')) return false;
+
+    const lowercase = url.toLowerCase();
+    if (
+        lowercase.includes('/embed/') ||
+        lowercase.includes('/embed-') ||
+        lowercase.includes('/e/') ||
+        lowercase.includes('/play.php') ||
+        lowercase.includes('/player.php') ||
+        lowercase.includes('abyssplayer.com') ||
+        lowercase.includes('short.icu') ||
+        lowercase.includes('cloudy.upns.one') ||
+        lowercase.includes('vidcloud.upns.ink') ||
+        lowercase.includes('filesforever.link') ||
+        lowercase.includes('strmup.to') ||
+        lowercase.includes('emturbovid.com') ||
+        lowercase.includes('animedekho.app') ||
+        lowercase.includes('animesalt.cx') ||
+        lowercase.includes('youtube.com') ||
+        lowercase.includes('youtu.be') ||
+        lowercase.includes('vimeo.com') ||
+        lowercase.includes('.html') ||
+        lowercase.includes('.htm') ||
+        lowercase.includes('.php') ||
+        lowercase.includes('#')
+    ) {
+        return false;
+    }
+
+    const isHls = lowercase.includes('.m3u8');
+    const isMp4 = lowercase.includes('.mp4') || lowercase.includes('/sora/') || lowercase.includes('/stream/');
+    return isHls || isMp4 || lowercase.includes('.mkv') || lowercase.includes('.mpd');
+}
+
+export async function isPlayableStream(stream) {
+    if (!isRealStreamUrl(stream?.url)) return false;
+
+    try {
+        const headers = {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36',
+            ...(stream.headers || {}),
+            'Range': 'bytes=0-10'
+        };
+
+        const res = await fetch(stream.url, {
+            headers,
+            signal: AbortSignal.timeout(3000)
+        });
+
+        if (!res.ok && res.status !== 206) return false;
+
+        const contentType = res.headers.get('content-type') || '';
+        if (contentType.includes('text/html')) return false;
+
+        return true;
+    } catch {
+        return false;
+    }
+}
