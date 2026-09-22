@@ -1,6 +1,6 @@
 /**
  * moviesmod - Built from src/moviesmod/
- * Generated: 2026-09-12T17:16:49.776Z
+ * Generated: 2026-09-22T08:14:06.813Z
  */
 var __create = Object.create;
 var __defProp = Object.defineProperty;
@@ -205,6 +205,134 @@ function getIndexQuality(str) {
     return "2160p";
   return "Unknown";
 }
+function extractVideoSeed(finallink) {
+  return __async(this, null, function* () {
+    try {
+      const urlObj = new URL(finallink);
+      const host = finallink.includes("video-leech") ? "video-leech.xyz" : urlObj.host || "video-seed.xyz";
+      const token = finallink.includes("?url=") ? finallink.split("?url=")[1] : finallink;
+      if (!token)
+        return null;
+      const res = yield fetch(`https://${host}/api`, {
+        method: "POST",
+        headers: __spreadProps(__spreadValues({}, HEADERS), {
+          "Content-Type": "application/x-www-form-urlencoded",
+          "x-token": host,
+          "Referer": finallink,
+          "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36"
+        }),
+        body: `keys=${encodeURIComponent(token)}`
+      });
+      const data = yield res.json();
+      if (data && data.url) {
+        return data.url.replace(/\\\//g, "/");
+      }
+      return null;
+    } catch (e) {
+      return null;
+    }
+  });
+}
+function instantLink(url) {
+  return __async(this, null, function* () {
+    try {
+      if (url.includes("cdn.video-gen.xyz")) {
+        const res = yield fetch(url, { headers: HEADERS, redirect: "follow" });
+        if (res.url && res.url.includes("url=")) {
+          const redirected = res.url.split("url=")[1];
+          if (redirected && !redirected.includes("?url="))
+            return redirected;
+          return yield extractVideoSeed(redirected);
+        }
+      }
+      if (url.includes("?url=")) {
+        return yield extractVideoSeed(url);
+      }
+      return url;
+    } catch (e) {
+      return null;
+    }
+  });
+}
+function resumeBot(url) {
+  return __async(this, null, function* () {
+    try {
+      const res = yield fetch(url, { headers: HEADERS });
+      const html = yield res.text();
+      const setCookie = res.headers.get("set-cookie") || "";
+      const ssidMatch = setCookie.match(/PHPSESSID=([^;]+)/);
+      const ssid = ssidMatch ? ssidMatch[1] : "";
+      const tokenMatch = html.match(/formData\.append\('token',\s*'([a-f0-9]+)'\)/);
+      const pathMatch = html.match(/fetch\('\/download\?id=([a-zA-Z0-9/+]+)'/);
+      if (!tokenMatch || !pathMatch)
+        return null;
+      const baseUrl = url.substring(0, url.indexOf("/download"));
+      const downloadUrl = `${baseUrl}/download?id=${pathMatch[1]}`;
+      const postRes = yield fetch(downloadUrl, {
+        method: "POST",
+        headers: __spreadValues(__spreadProps(__spreadValues({}, HEADERS), {
+          "Accept": "*/*",
+          "Origin": baseUrl,
+          "Sec-Fetch-Site": "same-origin",
+          "Content-Type": "application/x-www-form-urlencoded"
+        }), ssid ? { "Cookie": `PHPSESSID=${ssid}` } : {}),
+        body: `token=${encodeURIComponent(tokenMatch[1])}`
+      });
+      const data = yield postRes.json();
+      return data && data.url && data.url.startsWith("http") ? data.url : null;
+    } catch (e) {
+      return null;
+    }
+  });
+}
+function CFType1(url) {
+  return __async(this, null, function* () {
+    try {
+      const wfileUrl = url.replace("/file", "/wfile") + "?type=1";
+      const res = yield fetch(wfileUrl, { headers: HEADERS });
+      const html = yield res.text();
+      const $ = import_cheerio_without_node_native.default.load(html);
+      const links = [];
+      $("a.btn-success").each((_, el) => {
+        const h = $(el).attr("href");
+        if (h && h.startsWith("http"))
+          links.push(h);
+      });
+      return links;
+    } catch (e) {
+      return [];
+    }
+  });
+}
+function resumeCloudLink(url) {
+  return __async(this, null, function* () {
+    try {
+      const res = yield fetch(url, { headers: HEADERS });
+      const html = yield res.text();
+      const keyMatch = html.match(/formData\.append\(\s*['"]key['"]\s*,\s*['"]([^'"]+)['"]\s*\)/);
+      if (keyMatch) {
+        const host = new URL(url).host;
+        const postRes = yield fetch(url, {
+          method: "POST",
+          headers: __spreadProps(__spreadValues({}, HEADERS), {
+            "Content-Type": "application/x-www-form-urlencoded",
+            "x-token": host,
+            "X-Requested-With": "XMLHttpRequest"
+          }),
+          body: `action=cloud&key=${encodeURIComponent(keyMatch[1])}&action_token=`
+        });
+        const data = yield postRes.json();
+        if (data && data.url) {
+          return data.url.replace(/\\\//g, "/");
+        }
+      }
+      const $ = import_cheerio_without_node_native.default.load(html);
+      return $("a.btn-success").first().attr("href") || null;
+    } catch (e) {
+      return null;
+    }
+  });
+}
 function extractDriveseedPage(url) {
   return __async(this, null, function* () {
     const streams = [];
@@ -222,28 +350,34 @@ function extractDriveseedPage(url) {
       const html = yield res.text();
       const $ = import_cheerio_without_node_native.default.load(html);
       const baseDomain = getBaseUrl(pageUrl);
-      const qualityText = $("li.list-group-item").first().text() || "";
-      const size = $("li:nth-child(3)").text().replace("Size : ", "").trim();
-      const quality = getIndexQuality(qualityText);
-      const elements = $("div.text-center > a").get();
-      for (const el of elements) {
-        const text = $(el).text().toLowerCase();
-        const href = $(el).attr("href");
-        if (!href)
-          continue;
-        if (text.includes("instant download")) {
-          const instantRes = yield fetch(href, { headers: HEADERS, redirect: "follow" });
-          if (instantRes.url && instantRes.url.includes("url=")) {
-            streams.push({ name: "Driveseed Instant", url: instantRes.url.split("url=")[1], quality, size });
-          }
-        } else if (text.includes("resume cloud")) {
-          const cloudRes = yield fetch(baseDomain + href, { headers: HEADERS });
-          const cloudHtml = yield cloudRes.text();
-          const link = import_cheerio_without_node_native.default.load(cloudHtml)("a.btn-success").first().attr("href");
-          if (link)
-            streams.push({ name: "Driveseed Cloud", url: link, quality, size });
-        } else if (text.includes("cloud download")) {
-          streams.push({ name: "Driveseed Cloud", url: href, quality, size });
+      const nameText = $("li.list-group-item:contains(Name)").first().text() || "";
+      const sizeText = $("li.list-group-item:contains(Size)").first().text() || $("li:nth-child(3)").text() || "";
+      const size = sizeText.replace(/.*Size\s*:\s*/i, "").trim();
+      const quality = getIndexQuality(nameText || $("li.list-group-item").first().text() || "");
+      const instantHref = $("a.btn-danger").attr("href");
+      if (instantHref) {
+        const finalInstant = yield instantLink(instantHref);
+        if (finalInstant) {
+          streams.push({ name: "Driveseed Instant", url: finalInstant, quality, size });
+        }
+      }
+      const resumeBotHref = $("a.btn.btn-light").attr("href");
+      if (resumeBotHref) {
+        const finalBot = yield resumeBot(resumeBotHref);
+        if (finalBot) {
+          streams.push({ name: "Driveseed ResumeBot", url: finalBot, quality, size });
+        }
+      }
+      const cfLinks = yield CFType1(pageUrl);
+      for (const cfLink of cfLinks) {
+        streams.push({ name: "Driveseed CF Type1", url: cfLink, quality, size });
+      }
+      const resumeCloudHref = $("a.btn-warning").attr("href");
+      if (resumeCloudHref) {
+        const fullCloudUrl = resumeCloudHref.startsWith("http") ? resumeCloudHref : `${baseDomain}${resumeCloudHref}`;
+        const finalCloud = yield resumeCloudLink(fullCloudUrl);
+        if (finalCloud) {
+          streams.push({ name: "Driveseed ResumeCloud", url: finalCloud, quality, size });
         }
       }
     } catch (e) {
@@ -265,15 +399,22 @@ function getStreams(tmdbId, mediaType, seasonNum = 1, episodeNum = 1) {
     const searchUrl = mediaType === "movie" ? `${mainUrl.replace(/\/$/, "")}/search/${encodeURIComponent(query)}` : `${mainUrl.replace(/\/$/, "")}/search/${encodeURIComponent(query)} ${seasonNum}`;
     try {
       console.log(`[MoviesMod] Searching at: ${searchUrl}`);
-      const searchRes = yield fetch(searchUrl, { headers: __spreadProps(__spreadValues({}, HEADERS), { "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36" }) });
+      const searchRes = yield fetch(searchUrl, { headers: __spreadProps(__spreadValues({}, HEADERS), { "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36" }), cfKiller: true });
       const searchHtml = yield searchRes.text();
       const $search = import_cheerio_without_node_native2.default.load(searchHtml);
-      let targetUrl = $search("#content_box article > a").first().attr("href");
+      let targetUrl = $search("#content_box article > a").first().attr("href") || $search("#content_box article a").first().attr("href");
+      if (!targetUrl && details.imdbId && details.title) {
+        const fallbackQuery = mediaType === "movie" ? `${mainUrl.replace(/\/$/, "")}/search/${encodeURIComponent(details.title)}` : `${mainUrl.replace(/\/$/, "")}/search/${encodeURIComponent(details.title)} ${seasonNum}`;
+        const fallbackRes = yield fetch(fallbackQuery, { headers: __spreadProps(__spreadValues({}, HEADERS), { "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36" }), cfKiller: true });
+        const fallbackHtml = yield fallbackRes.text();
+        const $fallback = import_cheerio_without_node_native2.default.load(fallbackHtml);
+        targetUrl = $fallback("#content_box article > a").first().attr("href") || $fallback("#content_box article a").first().attr("href");
+      }
       if (!targetUrl) {
         console.log("[MoviesMod] No search result found");
         return [];
       }
-      const pageRes = yield fetch(targetUrl, { headers: __spreadProps(__spreadValues({}, HEADERS), { "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36" }) });
+      const pageRes = yield fetch(targetUrl, { headers: __spreadProps(__spreadValues({}, HEADERS), { "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36" }), cfKiller: true });
       const pageHtml = yield pageRes.text();
       const $ = import_cheerio_without_node_native2.default.load(pageHtml);
       const allStreams = [];
@@ -288,10 +429,16 @@ function getStreams(tmdbId, mediaType, seasonNum = 1, episodeNum = 1) {
       });
       for (const entry of entries.get()) {
         const quality = getIndexQuality($(entry).text());
-        const linkEl = $(entry).nextAll("p, div").find(`a:contains('${aTag}')`).first();
-        const nextHref = linkEl.attr("href");
+        let linkEl = $(entry).next().find(`a:contains('${aTag}')`).first();
+        if (!linkEl.length) {
+          linkEl = $(entry).nextAll("p, div").find(`a:contains('${aTag}')`).first();
+        }
+        let nextHref = linkEl.attr("href");
+        if (nextHref && nextHref.includes("=")) {
+          nextHref = nextHref.substring(nextHref.indexOf("=") + 1);
+        }
         if (nextHref) {
-          const streams = yield processModLink(nextHref, targetUrl, quality);
+          const streams = yield processModLink(nextHref, targetUrl, quality, mediaType, episodeNum);
           allStreams.push(...streams);
         }
       }
@@ -302,30 +449,42 @@ function getStreams(tmdbId, mediaType, seasonNum = 1, episodeNum = 1) {
     }
   });
 }
-function processModLink(url, referer, quality) {
+function processModLink(url, referer, quality, mediaType, episodeNum) {
   return __async(this, null, function* () {
     try {
       const res = yield fetch(url, { headers: __spreadProps(__spreadValues({}, HEADERS), { Referer: referer }) });
       const html = yield res.text();
       const $ = import_cheerio_without_node_native2.default.load(html);
-      const links = [];
-      $('a[href*="driveseed.org"], a[href*="tech.unblockedgames.world"]').each((i, el) => {
-        links.push($(el).attr("href"));
-      });
+      const selector = mediaType === "movie" ? "p a.maxbutton, a:contains('Download')" : `h3 a:contains('Episode ${episodeNum}'), a:contains('Episode ${episodeNum}'), a.maxbutton`;
+      let source = $(selector).first().attr("href");
+      if (!source) {
+        source = $('a[href*="driveseed.org"], a[href*="tech.unblockedgames.world"], a[href*="video-seed"]').first().attr("href");
+      }
+      if (!source)
+        return [];
+      let finalLink = source;
+      if (source.includes("unblockedgames") || source.includes("tech.") || source.includes("href.li")) {
+        finalLink = yield bypassHrefli(source);
+      }
       const results = [];
-      for (const link of [...new Set(links)]) {
-        let finalLink = link;
-        if (link.includes("unblockedgames")) {
-          finalLink = yield bypassHrefli(link);
-        }
-        if (finalLink && finalLink.includes("driveseed")) {
-          const streams = yield extractDriveseedPage(finalLink);
-          results.push(...streams.map((s) => __spreadProps(__spreadValues({}, s), {
-            name: `MoviesMod [${s.name}]`,
-            title: `MoviesMod - ${s.quality} ${s.size ? `[${s.size}]` : ""}`,
-            quality: s.quality || quality,
+      if (finalLink && finalLink.includes("driveseed")) {
+        const streams = yield extractDriveseedPage(finalLink);
+        results.push(...streams.map((s) => __spreadProps(__spreadValues({}, s), {
+          name: `MoviesMod [${s.name}]`,
+          title: `MoviesMod - ${s.quality} ${s.size ? `[${s.size}]` : ""}`,
+          quality: s.quality || quality,
+          provider: "moviesmod"
+        })));
+      } else if (finalLink && (finalLink.includes("video-seed") || finalLink.includes("video-leech"))) {
+        const streamUrl = yield extractVideoSeed(finalLink);
+        if (streamUrl) {
+          results.push({
+            name: "MoviesMod [VideoSeed]",
+            title: `MoviesMod - ${quality}`,
+            url: streamUrl,
+            quality,
             provider: "moviesmod"
-          })));
+          });
         }
       }
       return results;

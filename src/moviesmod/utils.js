@@ -121,8 +121,8 @@ export function getIndexQuality(str) {
 export async function extractVideoSeed(finallink) {
     try {
         const urlObj = new URL(finallink);
-        const host = urlObj.host || "video-seed.xyz";
-        const token = finallink.split("?url=")[1];
+        const host = finallink.includes("video-leech") ? "video-leech.xyz" : (urlObj.host || "video-seed.xyz");
+        const token = finallink.includes("?url=") ? finallink.split("?url=")[1] : finallink;
         if (!token) return null;
 
         const res = await fetch(`https://${host}/api`, {
@@ -131,13 +131,117 @@ export async function extractVideoSeed(finallink) {
                 ...HEADERS,
                 "Content-Type": "application/x-www-form-urlencoded",
                 "x-token": host,
-                "Referer": finallink
+                "Referer": finallink,
+                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36"
             },
             body: `keys=${encodeURIComponent(token)}`
         });
-        const text = await res.text();
-        const urlMatch = text.match(/url":"([^"]+)"/);
-        return urlMatch ? urlMatch[1].replace(/\\\//g, "/") : null;
+        const data = await res.json();
+        if (data && data.url) {
+            return data.url.replace(/\\\//g, "/");
+        }
+        return null;
+    } catch (e) {
+        return null;
+    }
+}
+
+async function instantLink(url) {
+    try {
+        if (url.includes("cdn.video-gen.xyz")) {
+            const res = await fetch(url, { headers: HEADERS, redirect: "follow" });
+            if (res.url && res.url.includes("url=")) {
+                const redirected = res.url.split("url=")[1];
+                if (redirected && !redirected.includes("?url=")) return redirected;
+                return await extractVideoSeed(redirected);
+            }
+        }
+        if (url.includes("?url=")) {
+            return await extractVideoSeed(url);
+        }
+        return url;
+    } catch (e) {
+        return null;
+    }
+}
+
+async function resumeBot(url) {
+    try {
+        const res = await fetch(url, { headers: HEADERS });
+        const html = await res.text();
+        const setCookie = res.headers.get("set-cookie") || "";
+        const ssidMatch = setCookie.match(/PHPSESSID=([^;]+)/);
+        const ssid = ssidMatch ? ssidMatch[1] : "";
+        
+        const tokenMatch = html.match(/formData\.append\('token',\s*'([a-f0-9]+)'\)/);
+        const pathMatch = html.match(/fetch\('\/download\?id=([a-zA-Z0-9/+]+)'/);
+        if (!tokenMatch || !pathMatch) return null;
+
+        const baseUrl = url.substring(0, url.indexOf("/download"));
+        const downloadUrl = `${baseUrl}/download?id=${pathMatch[1]}`;
+
+        const postRes = await fetch(downloadUrl, {
+            method: "POST",
+            headers: {
+                ...HEADERS,
+                "Accept": "*/*",
+                "Origin": baseUrl,
+                "Sec-Fetch-Site": "same-origin",
+                "Content-Type": "application/x-www-form-urlencoded",
+                ...(ssid ? { "Cookie": `PHPSESSID=${ssid}` } : {})
+            },
+            body: `token=${encodeURIComponent(tokenMatch[1])}`
+        });
+        const data = await postRes.json();
+        return data && data.url && data.url.startsWith("http") ? data.url : null;
+    } catch (e) {
+        return null;
+    }
+}
+
+async function CFType1(url) {
+    try {
+        const wfileUrl = url.replace("/file", "/wfile") + "?type=1";
+        const res = await fetch(wfileUrl, { headers: HEADERS });
+        const html = await res.text();
+        const $ = cheerio.load(html);
+        const links = [];
+        $("a.btn-success").each((_, el) => {
+            const h = $(el).attr("href");
+            if (h && h.startsWith("http")) links.push(h);
+        });
+        return links;
+    } catch (e) {
+        return [];
+    }
+}
+
+async function resumeCloudLink(url) {
+    try {
+        const res = await fetch(url, { headers: HEADERS });
+        const html = await res.text();
+        const keyMatch = html.match(/formData\.append\(\s*['"]key['"]\s*,\s*['"]([^'"]+)['"]\s*\)/);
+        
+        if (keyMatch) {
+            const host = new URL(url).host;
+            const postRes = await fetch(url, {
+                method: "POST",
+                headers: {
+                    ...HEADERS,
+                    "Content-Type": "application/x-www-form-urlencoded",
+                    "x-token": host,
+                    "X-Requested-With": "XMLHttpRequest"
+                },
+                body: `action=cloud&key=${encodeURIComponent(keyMatch[1])}&action_token=`
+            });
+            const data = await postRes.json();
+            if (data && data.url) {
+                return data.url.replace(/\\\//g, "/");
+            }
+        }
+        
+        const $ = cheerio.load(html);
+        return $("a.btn-success").first().attr("href") || null;
     } catch (e) {
         return null;
     }
@@ -161,28 +265,42 @@ export async function extractDriveseedPage(url) {
         const $ = cheerio.load(html);
         const baseDomain = getBaseUrl(pageUrl);
 
-        const qualityText = $("li.list-group-item").first().text() || "";
-        const size = $("li:nth-child(3)").text().replace("Size : ", "").trim();
-        const quality = getIndexQuality(qualityText);
+        const nameText = $("li.list-group-item:contains(Name)").first().text() || "";
+        const sizeText = $("li.list-group-item:contains(Size)").first().text() || $("li:nth-child(3)").text() || "";
+        const size = sizeText.replace(/.*Size\s*:\s*/i, "").trim();
+        const quality = getIndexQuality(nameText || $("li.list-group-item").first().text() || "");
 
-        const elements = $("div.text-center > a").get();
-        for (const el of elements) {
-            const text = $(el).text().toLowerCase();
-            const href = $(el).attr("href");
-            if (!href) continue;
+        // 1. Instant Download
+        const instantHref = $("a.btn-danger").attr("href");
+        if (instantHref) {
+            const finalInstant = await instantLink(instantHref);
+            if (finalInstant) {
+                streams.push({ name: "Driveseed Instant", url: finalInstant, quality, size });
+            }
+        }
 
-            if (text.includes("instant download")) {
-                const instantRes = await fetch(href, { headers: HEADERS, redirect: "follow" });
-                if (instantRes.url && instantRes.url.includes("url=")) {
-                    streams.push({ name: "Driveseed Instant", url: instantRes.url.split("url=")[1], quality, size });
-                }
-            } else if (text.includes("resume cloud")) {
-                const cloudRes = await fetch(baseDomain + href, { headers: HEADERS });
-                const cloudHtml = await cloudRes.text();
-                const link = cheerio.load(cloudHtml)("a.btn-success").first().attr("href");
-                if (link) streams.push({ name: "Driveseed Cloud", url: link, quality, size });
-            } else if (text.includes("cloud download")) {
-                streams.push({ name: "Driveseed Cloud", url: href, quality, size });
+        // 2. ResumeBot
+        const resumeBotHref = $("a.btn.btn-light").attr("href");
+        if (resumeBotHref) {
+            const finalBot = await resumeBot(resumeBotHref);
+            if (finalBot) {
+                streams.push({ name: "Driveseed ResumeBot", url: finalBot, quality, size });
+            }
+        }
+
+        // 3. CF Type1
+        const cfLinks = await CFType1(pageUrl);
+        for (const cfLink of cfLinks) {
+            streams.push({ name: "Driveseed CF Type1", url: cfLink, quality, size });
+        }
+
+        // 4. Resume Cloud
+        const resumeCloudHref = $("a.btn-warning").attr("href");
+        if (resumeCloudHref) {
+            const fullCloudUrl = resumeCloudHref.startsWith("http") ? resumeCloudHref : `${baseDomain}${resumeCloudHref}`;
+            const finalCloud = await resumeCloudLink(fullCloudUrl);
+            if (finalCloud) {
+                streams.push({ name: "Driveseed ResumeCloud", url: finalCloud, quality, size });
             }
         }
     } catch (e) {}
