@@ -1,6 +1,6 @@
 /**
  * moviesdrive - Built from src/moviesdrive/
- * Generated: 2026-09-22T08:14:06.962Z
+ * Generated: 2026-09-22T09:45:40.938Z
  */
 var __create = Object.create;
 var __defProp = Object.defineProperty;
@@ -294,14 +294,42 @@ function getStreams(tmdbId, mediaType, seasonNum = 1, episodeNum = 1) {
     const cleanTitle = tmdbData.title || tmdbData.name || "";
     const mainUrl = yield getMainUrl();
     let match = null;
+    const findMatch = (hits) => {
+      if (!hits || !hits.length)
+        return null;
+      if (mediaType === "tv") {
+        const sSlug = String(seasonNum).padStart(2, "0");
+        const seasonPatterns = [
+          new RegExp(`\\bseason\\s*0?${seasonNum}\\b`, "i"),
+          new RegExp(`\\bs0?${seasonNum}\\b`, "i"),
+          new RegExp(`\\bseason\\s*${sSlug}\\b`, "i")
+        ];
+        return hits.find((doc) => {
+          const postTitle = (doc.post_title || "").toLowerCase();
+          const permalink2 = (doc.permalink || "").toLowerCase();
+          const normDocTitle = postTitle.replace(/[^a-z0-9]/g, "");
+          const normTitle = cleanTitle.toLowerCase().replace(/[^a-z0-9]/g, "");
+          const titleMatches = normDocTitle.includes(normTitle) || postTitle.includes(cleanTitle.toLowerCase()) || permalink2.includes(cleanTitle.toLowerCase().replace(/ /g, "-"));
+          const seasonMatches = seasonPatterns.some((pat) => pat.test(postTitle) || pat.test(permalink2));
+          return titleMatches && seasonMatches;
+        });
+      } else {
+        return hits.find((d) => imdbId && d.imdb_id === imdbId) || hits.find((doc) => {
+          const postTitle = (doc.post_title || "").toLowerCase();
+          const permalink2 = (doc.permalink || "").toLowerCase();
+          const normDocTitle = postTitle.replace(/[^a-z0-9]/g, "");
+          const normTitle = cleanTitle.toLowerCase().replace(/[^a-z0-9]/g, "");
+          return normDocTitle.includes(normTitle) || postTitle.includes(cleanTitle.toLowerCase()) || permalink2.includes(cleanTitle.toLowerCase().replace(/ /g, "-"));
+        }) || hits[0];
+      }
+    };
     if (imdbId) {
       try {
         const searchUrl = `${mainUrl}/search.php?q=${imdbId}&page=1`;
         const searchRes = yield fetch(searchUrl, { headers: HEADERS });
         if (searchRes.ok) {
           const searchData = yield searchRes.json();
-          const hits = searchData.hits || [];
-          match = hits.map((h) => h.document).find((d) => d.imdb_id === imdbId);
+          match = findMatch((searchData.hits || []).map((h) => h.document));
         }
       } catch (e) {
       }
@@ -312,29 +340,7 @@ function getStreams(tmdbId, mediaType, seasonNum = 1, episodeNum = 1) {
         const searchRes = yield fetch(searchUrl, { headers: HEADERS });
         if (searchRes.ok) {
           const searchData = yield searchRes.json();
-          const hits = (searchData.hits || []).map((h) => h.document);
-          if (mediaType === "tv") {
-            const sSlug = String(seasonNum).padStart(2, "0");
-            const seasonPatterns = [`season ${seasonNum}`, `season ${sSlug}`, `s${sSlug}`, `s${seasonNum}`];
-            match = hits.find((doc) => {
-              const postTitle = (doc.post_title || "").toLowerCase();
-              const permalink2 = (doc.permalink || "").toLowerCase();
-              const normDocTitle = postTitle.replace(/[^a-z0-9]/g, "");
-              const normTitle = cleanTitle.toLowerCase().replace(/[^a-z0-9]/g, "");
-              const titleMatches = normDocTitle.includes(normTitle) || postTitle.includes(cleanTitle.toLowerCase()) || permalink2.includes(cleanTitle.toLowerCase().replace(/ /g, "-"));
-              const seasonMatches = seasonPatterns.some((pat) => postTitle.includes(pat) || permalink2.includes(pat));
-              return titleMatches && seasonMatches;
-            });
-          }
-          if (!match) {
-            match = hits.find((doc) => {
-              const postTitle = (doc.post_title || "").toLowerCase();
-              const permalink2 = (doc.permalink || "").toLowerCase();
-              const normDocTitle = postTitle.replace(/[^a-z0-9]/g, "");
-              const normTitle = cleanTitle.toLowerCase().replace(/[^a-z0-9]/g, "");
-              return normDocTitle.includes(normTitle) || postTitle.includes(cleanTitle.toLowerCase()) || permalink2.includes(cleanTitle.toLowerCase().replace(/ /g, "-"));
-            }) || hits[0];
-          }
+          match = findMatch((searchData.hits || []).map((h) => h.document));
         }
       } catch (e) {
       }
