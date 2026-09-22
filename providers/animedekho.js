@@ -1,6 +1,6 @@
 /**
- * animesalt - Built from src/animesalt/
- * Generated: 2026-09-22T20:41:44.444Z
+ * animedekho - Built from src/animedekho/
+ * Generated: 2026-09-22T20:41:44.640Z
  */
 var __create = Object.create;
 var __defProp = Object.defineProperty;
@@ -62,11 +62,11 @@ var __async = (__this, __arguments, generator) => {
   });
 };
 
-// src/animesalt/index.js
+// src/animedekho/index.js
 var import_cheerio_without_node_native2 = __toESM(require("cheerio-without-node-native"));
 
-// src/animesalt/constants.js
-var MAIN_URL = "https://animesalt.cx";
+// src/animedekho/constants.js
+var MAIN_URL = "https://animedekho.app";
 var TMDB_API_KEY = "1865f43a0549ca50d341dd9ab8b29f49";
 var TMDB_BASE_URL = "https://api.themoviedb.org/3";
 var USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36";
@@ -76,7 +76,7 @@ var HEADERS = {
   "Accept-Language": "en-US,en;q=0.5"
 };
 
-// src/animesalt/utils.js
+// src/animedekho/utils.js
 function fetchTmdbDetails(tmdbId, mediaType) {
   return __async(this, null, function* () {
     var _a;
@@ -176,54 +176,78 @@ function isPlayableStream(stream) {
   });
 }
 
-// src/animesalt/extractors.js
+// src/animedekho/extractors.js
 var import_cheerio_without_node_native = __toESM(require("cheerio-without-node-native"));
-var import_crypto_js = __toESM(require("crypto-js"));
-function extractAwsStream(url) {
+function extractStreamRuby(url) {
   return __async(this, null, function* () {
     try {
-      const hash = url.split("/").filter(Boolean).pop();
-      if (!hash)
-        return null;
-      const origin = new URL(url).origin;
-      const res = yield fetch(url, { headers: HEADERS });
+      const cleanedUrl = url.replace("/e/", "/");
+      const res = yield fetch(cleanedUrl, {
+        headers: __spreadProps(__spreadValues({}, HEADERS), {
+          "X-Requested-With": "XMLHttpRequest",
+          "Referer": cleanedUrl
+        })
+      });
       if (!res.ok)
         return null;
       const html = yield res.text();
-      const postUrl = `${origin}/player/index.php?data=${hash}&do=getVideo`;
-      const postRes = yield fetch(postUrl, {
-        method: "POST",
-        headers: __spreadProps(__spreadValues({}, HEADERS), {
-          "x-requested-with": "XMLHttpRequest",
-          "Origin": origin,
-          "Referer": url,
-          "Content-Type": "application/x-www-form-urlencoded"
-        }),
-        body: `hash=${encodeURIComponent(hash)}&r=${encodeURIComponent(origin)}`
-      });
-      if (!postRes.ok)
-        return null;
-      const json = yield postRes.json();
-      const m3u8 = json == null ? void 0 : json.videoSource;
-      if (!m3u8)
-        return null;
-      let subtitle = null;
+      let m3u8 = null;
       const packedMatch = html.match(/eval\(function\(p,a,c,k,e,d\)[\s\S]*?\.split\(['"]\|['"]\)\)/);
       if (packedMatch) {
         const unpacked = unpack(packedMatch[0]);
-        const subMatch = unpacked.match(/"kind":\s*"captions"\s*,\s*"file":\s*"(https?:\/\/[^"]+)"/);
-        if (subMatch) {
-          subtitle = subMatch[1].replace(/\\/g, "");
-        }
+        const match = unpacked.match(/file\s*:\s*["'](https?:\/\/[^"']+\.m3u8[^"']*)["']/);
+        if (match)
+          m3u8 = match[1];
       }
+      if (!m3u8) {
+        const directMatch = html.match(/file\s*:\s*["'](https?:\/\/[^"']+\.m3u8[^"']*)["']/);
+        if (directMatch)
+          m3u8 = directMatch[1];
+      }
+      if (!m3u8)
+        return null;
+      const origin = new URL(cleanedUrl).origin;
       return {
+        name: "AnimeDekho [StreamRuby] (Auto M3U8)",
         url: m3u8,
+        quality: "720p",
+        headers: {
+          "Origin": origin,
+          "Referer": `${cleanedUrl}/`,
+          "User-Agent": HEADERS["User-Agent"]
+        },
+        type: "m3u8"
+      };
+    } catch (e) {
+      return null;
+    }
+  });
+}
+function extractVidmoly(url) {
+  return __async(this, null, function* () {
+    try {
+      const res = yield fetch(url, {
+        headers: __spreadProps(__spreadValues({}, HEADERS), {
+          "Referer": "https://animedekho.app/"
+        })
+      });
+      if (!res.ok)
+        return null;
+      const html = yield res.text();
+      const match = html.match(/file\s*:\s*["'](https?:\/\/[^"'\s]+\.m3u8[^"'\s]*)["']/);
+      if (!match || !match[1])
+        return null;
+      const origin = new URL(url).origin;
+      return {
+        name: "AnimeDekho [Vidmoly] (Auto M3U8)",
+        url: match[1],
+        quality: "1080p",
         headers: {
           "Referer": `${origin}/`,
           "Origin": origin,
           "User-Agent": HEADERS["User-Agent"]
         },
-        subtitles: subtitle ? [{ lang: "English", url: subtitle }] : []
+        type: "m3u8"
       };
     } catch (e) {
       return null;
@@ -262,7 +286,7 @@ function extractAbyss(url, langName = "Default") {
         const codec = (s.codec || "MP4").toUpperCase();
         const quality = s.type || "720p";
         return {
-          name: `AnimeSalt [${langName}] (${codec} ${quality})`,
+          name: `AnimeDekho [${langName}] (${codec} ${quality})`,
           url: s.url,
           quality,
           headers: {
@@ -278,115 +302,64 @@ function extractAbyss(url, langName = "Default") {
     }
   });
 }
-function extractMultiLang(dataParam) {
+function extractAwsStream(url) {
   return __async(this, null, function* () {
     try {
-      let decodedStr = "";
-      if (typeof atob === "function") {
-        decodedStr = atob(dataParam);
-      } else {
-        decodedStr = Buffer.from(dataParam, "base64").toString("utf-8");
-      }
-      const list = JSON.parse(decodedStr);
-      if (!Array.isArray(list))
-        return [];
-      const streamPromises = list.map((item) => {
-        const lang = item.language || "Default";
-        const link = item.link;
-        if (!link)
-          return Promise.resolve([]);
-        return extractAbyss(link, lang);
+      const hash = url.split("/").filter(Boolean).pop();
+      if (!hash)
+        return null;
+      const origin = new URL(url).origin;
+      const res = yield fetch(url, { headers: HEADERS });
+      if (!res.ok)
+        return null;
+      const html = yield res.text();
+      const postUrl = `${origin}/player/index.php?data=${hash}&do=getVideo`;
+      const postRes = yield fetch(postUrl, {
+        method: "POST",
+        headers: __spreadProps(__spreadValues({}, HEADERS), {
+          "x-requested-with": "XMLHttpRequest",
+          "Origin": origin,
+          "Referer": url,
+          "Content-Type": "application/x-www-form-urlencoded"
+        }),
+        body: `hash=${encodeURIComponent(hash)}&r=${encodeURIComponent(origin)}`
       });
-      const nested = yield Promise.all(streamPromises);
-      return nested.flat();
-    } catch (e) {
-      return [];
-    }
-  });
-}
-function extractMegaPlay(url) {
-  return __async(this, null, function* () {
-    var _a;
-    try {
-      let streamPageUrl = url;
-      if (!url.includes("/stream/s-")) {
-        const pageRes = yield fetch(url, { headers: HEADERS });
-        if (!pageRes.ok)
-          return [];
-        const html = yield pageRes.text();
-        const $ = import_cheerio_without_node_native.default.load(html);
-        const embedSrc = $("iframe.s5-embed").attr("src");
-        if (!embedSrc)
-          return [];
-        streamPageUrl = embedSrc;
+      if (!postRes.ok)
+        return null;
+      const json = yield postRes.json();
+      const m3u8 = json == null ? void 0 : json.videoSource;
+      if (!m3u8)
+        return null;
+      let subtitle = null;
+      const packedMatch = html.match(/eval\(function\(p,a,c,k,e,d\)[\s\S]*?\.split\(['"]\|['"]\)\)/);
+      if (packedMatch) {
+        const unpacked = unpack(packedMatch[0]);
+        const subMatch = unpacked.match(/"kind":\s*"captions"\s*,\s*"file":\s*"(https?:\/\/[^"]+)"/);
+        if (subMatch) {
+          subtitle = subMatch[1].replace(/\\/g, "");
+        }
       }
-      const idMatch = streamPageUrl.match(/\/stream\/s-\d+\/(\d+)\//);
-      if (!idMatch || !idMatch[1])
-        return [];
-      const id = idMatch[1];
-      const origin = new URL(streamPageUrl).origin;
-      const apiHeaders = {
-        "Accept": "*/*",
-        "X-Requested-With": "XMLHttpRequest",
-        "Referer": origin,
-        "User-Agent": HEADERS["User-Agent"]
-      };
-      const apiRes = yield fetch(`${origin}/stream/getSources?id=${id}`, { headers: apiHeaders });
-      if (!apiRes.ok)
-        return [];
-      const resJson = yield apiRes.json();
-      let file = (_a = resJson == null ? void 0 : resJson.sources) == null ? void 0 : _a.file;
-      const enc = resJson == null ? void 0 : resJson.enc;
-      if (!file && enc) {
-        const keyStr = "i?LMTAx0Q6,:}50U";
-        const keyHex = import_crypto_js.default.enc.Utf8.parse(keyStr).toString(import_crypto_js.default.enc.Hex).padEnd(64, "0");
-        const key = import_crypto_js.default.enc.Hex.parse(keyHex);
-        const iv = import_crypto_js.default.enc.Utf8.parse("W0;27ToaUpl_P%'c");
-        const normalized = enc.replace(/-/g, "+").replace(/_/g, "/");
-        const padded = normalized + "=".repeat((4 - normalized.length % 4) % 4);
-        const decrypted = import_crypto_js.default.AES.decrypt(padded, key, {
-          iv,
-          mode: import_crypto_js.default.mode.CBC,
-          padding: import_crypto_js.default.pad.Pkcs7
-        });
-        const decObj = JSON.parse(decrypted.toString(import_crypto_js.default.enc.Utf8));
-        file = decObj == null ? void 0 : decObj.file;
-      }
-      if (!file)
-        return [];
-      const tokenMatch = file.match(/\/([a-f0-9]{32})\/([a-f0-9]{32})\//i);
-      if (tokenMatch && !file.includes("token=")) {
-        const secret = "MpCdnT0k3n!9f2K#xQ7vL5mR8wN1pY4s";
-        const expires = Math.floor(Date.now() / 1e3) + 90;
-        const payload = `${expires}|${tokenMatch[1]}/${tokenMatch[2]}`;
-        const hash = import_crypto_js.default.HmacSHA256(payload, secret);
-        const b64Payload = import_crypto_js.default.enc.Base64.stringify(import_crypto_js.default.enc.Utf8.parse(payload)).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
-        const b64Sig = import_crypto_js.default.enc.Base64.stringify(hash).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
-        const token = `${b64Payload}.${b64Sig}`;
-        file = `${file}${file.includes("?") ? "&" : "?"}token=${token}`;
-      }
-      const subtitles = ((resJson == null ? void 0 : resJson.tracks) || []).filter((t) => t.file && t.kind !== "thumbnails").map((t) => ({ lang: t.label || "English", url: t.file }));
-      return [{
-        name: "AnimeSalt [MegaPlay] (Auto M3U8)",
-        url: file,
+      return {
+        name: "AnimeDekho [AWSStream] (Auto M3U8)",
+        url: m3u8,
         quality: "1080p",
         headers: {
           "Referer": `${origin}/`,
           "Origin": origin,
           "User-Agent": HEADERS["User-Agent"]
         },
-        subtitles,
+        subtitles: subtitle ? [{ lang: "English", url: subtitle }] : [],
         type: "m3u8"
-      }];
+      };
     } catch (e) {
-      return [];
+      return null;
     }
   });
 }
 function extractStreamWish(url) {
   return __async(this, null, function* () {
     try {
-      const embedUrl = url.includes("/e/") ? url : url.replace("/f/", "/e/");
+      const embedUrl = url.includes("/e/") ? url : url.includes("/embed/") ? url : url.replace("/f/", "/e/");
       const res = yield fetch(embedUrl, { headers: HEADERS });
       if (!res.ok)
         return null;
@@ -398,7 +371,7 @@ function extractStreamWish(url) {
         if (fileMatch) {
           const origin = new URL(embedUrl).origin;
           return {
-            name: "AnimeSalt [StreamWish] (Auto M3U8)",
+            name: "AnimeDekho [StreamWish] (Auto M3U8)",
             url: fileMatch[1],
             quality: "720p",
             headers: {
@@ -415,32 +388,85 @@ function extractStreamWish(url) {
     return null;
   });
 }
-
-// src/animesalt/index.js
-function searchAnimeSalt(query) {
+function extractBlakite(url) {
   return __async(this, null, function* () {
     var _a;
     try {
-      const body = `action=torofilm_infinite_scroll&page=1&per_page=12&query_type=search&query_args[s]=${encodeURIComponent(query)}`;
-      const res = yield fetch(`${MAIN_URL}/wp-admin/admin-ajax.php`, {
-        method: "POST",
-        headers: __spreadProps(__spreadValues({}, HEADERS), {
-          "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
-          "X-Requested-With": "XMLHttpRequest",
-          "Referer": `${MAIN_URL}/`
-        }),
-        body
+      const id = url.split("/").filter(Boolean).pop();
+      const tmdbMatch = url.match(/embed\/([^/]+)/);
+      const tmdbId = tmdbMatch ? tmdbMatch[1] : "";
+      const apiUrl = `https://blakiteapi.xyz/api/get.php?id=${id}&tmdbId=${tmdbId}`;
+      const res = yield fetch(apiUrl, { headers: HEADERS });
+      if (!res.ok)
+        return null;
+      const json = yield res.json();
+      if (!(json == null ? void 0 : json.success) || !((_a = json == null ? void 0 : json.data) == null ? void 0 : _a.dataId))
+        return null;
+      const dataId = json.data.dataId;
+      const format = json.data.format || "mp4";
+      const quality = json.data.quality || "720p";
+      const streamUrl = `https://blakiteapi.xyz/stream/${dataId}.${format}`;
+      return {
+        name: `AnimeDekho [Blakite] (${quality})`,
+        url: streamUrl,
+        quality,
+        headers: {
+          "Referer": "https://blakiteapi.xyz/",
+          "User-Agent": HEADERS["User-Agent"]
+        },
+        type: format.toLowerCase().includes("m3u8") ? "m3u8" : "mp4"
+      };
+    } catch (e) {
+      return null;
+    }
+  });
+}
+function extractVidStack(url) {
+  return __async(this, null, function* () {
+    try {
+      const hash = url.split("#").pop().split("/").pop();
+      if (!hash)
+        return null;
+      const origin = new URL(url).origin;
+      const res = yield fetch(`${origin}/api/v1/video?id=${hash}`, {
+        headers: HEADERS
       });
       if (!res.ok)
+        return null;
+      const text = (yield res.text()).trim();
+      const match = text.match(/https?:\/\/[^"'\s]+\.m3u8[^"'\s]*/);
+      if (!match)
+        return null;
+      return {
+        name: "AnimeDekho [VidStack] (Auto M3U8)",
+        url: match[0],
+        quality: "720p",
+        headers: {
+          "Referer": `${origin}/`,
+          "User-Agent": HEADERS["User-Agent"]
+        },
+        type: "m3u8"
+      };
+    } catch (e) {
+      return null;
+    }
+  });
+}
+
+// src/animedekho/index.js
+function searchAnimeDekho(query) {
+  return __async(this, null, function* () {
+    try {
+      const url = `${MAIN_URL}/?s=${encodeURIComponent(query)}`;
+      const res = yield fetch(url, { headers: HEADERS });
+      if (!res.ok)
         return [];
-      const json = yield res.json();
-      if (!(json == null ? void 0 : json.success) || !((_a = json == null ? void 0 : json.data) == null ? void 0 : _a.content))
-        return [];
-      const $ = import_cheerio_without_node_native2.default.load(json.data.content);
+      const html = yield res.text();
+      const $ = import_cheerio_without_node_native2.default.load(html);
       const results = [];
-      $("article").each((_, el) => {
-        const title = $(el).find("header h2").text().trim();
-        const href = $(el).find("a").first().attr("href");
+      $("ul[data-results] li article, article.post, article").each((_, el) => {
+        const title = $(el).find("header h2, h2").text().trim();
+        const href = $(el).find("a.lnk-blk, a").first().attr("href");
         if (title && href) {
           results.push({ title, href });
         }
@@ -457,11 +483,11 @@ function getStreams(tmdbId, mediaType, seasonNum = 1, episodeNum = 1) {
       const details = yield fetchTmdbDetails(tmdbId, mediaType);
       if (!details || !details.title)
         return [];
-      let results = yield searchAnimeSalt(details.title);
+      let results = yield searchAnimeDekho(details.title);
       if (results.length === 0) {
         const cleaned = cleanTitle(details.title);
         if (cleaned && cleaned !== details.title.toLowerCase()) {
-          results = yield searchAnimeSalt(cleaned);
+          results = yield searchAnimeDekho(cleaned);
         }
       }
       if (results.length === 0)
@@ -479,127 +505,171 @@ function getStreams(tmdbId, mediaType, seasonNum = 1, episodeNum = 1) {
         bestMatch = results[0];
       }
       let targetUrl = bestMatch.href;
+      const mediaTypeVal = mediaType === "movie" ? 1 : 2;
       if (mediaType === "tv") {
-        const seriesRes = yield fetch(bestMatch.href, { headers: HEADERS });
+        const seriesRes = yield fetch(bestMatch.href, {
+          headers: __spreadProps(__spreadValues({}, HEADERS), {
+            "Cookie": "toronites_server=vidstream"
+          })
+        });
         if (!seriesRes.ok)
           return [];
         const seriesHtml = yield seriesRes.text();
         const $series = import_cheerio_without_node_native2.default.load(seriesHtml);
-        let seasonBtn = $series(`div.season-buttons a[data-season="${seasonNum}"]`);
-        if (seasonBtn.length === 0) {
-          seasonBtn = $series("div.season-buttons a").first();
-        }
-        const postId = seasonBtn.attr("data-post");
-        const dataSeason = seasonBtn.attr("data-season") || seasonNum;
-        if (postId) {
-          const epRes = yield fetch(`${MAIN_URL}/wp-admin/admin-ajax.php`, {
-            method: "POST",
-            headers: __spreadProps(__spreadValues({}, HEADERS), {
-              "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
-              "X-Requested-With": "XMLHttpRequest",
-              "Referer": bestMatch.href
-            }),
-            body: `action=action_select_season&season=${dataSeason}&post=${postId}`
-          });
-          if (epRes.ok) {
-            const epHtml = yield epRes.text();
-            const $ep = import_cheerio_without_node_native2.default.load(epHtml);
-            const epArticles = $ep("li article");
-            let targetEp = null;
-            epArticles.each((idx, el) => {
-              const epText = $ep(el).find("h2.entry-title").text();
-              if (epText.includes(`x${episodeNum}`) || epText.includes(`Episode ${episodeNum}`)) {
-                targetEp = $ep(el).find("a").first().attr("href");
+        let targetEpUrl = null;
+        const epElements = $series("ul.seasons-lst li");
+        epElements.each((_, el) => {
+          const epText = $series(el).find("h3.title").text().trim();
+          const epHref = $series(el).find("a").first().attr("href");
+          if (epText && epHref) {
+            const sMatch = epText.match(/S(\d+)[\s-]*E(\d+)/i) || epText.match(/(\d+)x(\d+)/i);
+            if (sMatch) {
+              const s = parseInt(sMatch[1]);
+              const e = parseInt(sMatch[2]);
+              if (s === seasonNum && e === episodeNum) {
+                targetEpUrl = epHref;
               }
-            });
-            if (!targetEp && epArticles.length >= episodeNum) {
-              targetEp = $ep(epArticles[episodeNum - 1]).find("a").first().attr("href");
-            }
-            if (targetEp) {
-              targetUrl = targetEp;
+            } else if (epText.includes(`E${episodeNum}`) || epText.includes(`Episode ${episodeNum}`)) {
+              if (seasonNum === 1)
+                targetEpUrl = epHref;
             }
           }
+        });
+        if (!targetEpUrl && epElements.length >= episodeNum && seasonNum === 1) {
+          targetEpUrl = $series(epElements[episodeNum - 1]).find("a").first().attr("href");
+        }
+        if (targetEpUrl) {
+          targetUrl = targetEpUrl;
         }
       }
-      const pageRes = yield fetch(targetUrl, { headers: HEADERS });
+      const pageRes = yield fetch(targetUrl, {
+        headers: __spreadProps(__spreadValues({}, HEADERS), {
+          "Cookie": "toronites_server=vidstream"
+        })
+      });
       if (!pageRes.ok)
         return [];
       const pageHtml = yield pageRes.text();
       const $page = import_cheerio_without_node_native2.default.load(pageHtml);
       const iframeUrls = /* @__PURE__ */ new Set();
-      $page("iframe").each((_, el) => {
-        const src = $page(el).attr("data-src") || $page(el).attr("src");
+      const serverPromises = [];
+      $page("iframe.serversel[src], iframe[src]").each((_, el) => {
+        const src = $page(el).attr("src");
         if (src && !src.startsWith("about:") && !src.startsWith("javascript:")) {
-          const fullUrl = src.startsWith("//") ? `https:${src}` : src.startsWith("http") ? src : `${MAIN_URL}${src}`;
-          iframeUrls.add(fullUrl);
-        }
-      });
-      const streams = [];
-      const promises = [];
-      for (const iframeUrl of iframeUrls) {
-        if (iframeUrl.includes("multi-lang-plyr/player.php")) {
-          const urlObj = new URL(iframeUrl);
-          const dataParam = urlObj.searchParams.get("data");
-          if (dataParam) {
-            promises.push(
-              extractMultiLang(dataParam).then((res) => {
-                if (Array.isArray(res))
-                  streams.push(...res);
+          const fullSrc = src.startsWith("//") ? `https:${src}` : src.startsWith("http") ? src : `${MAIN_URL}${src}`;
+          if (fullSrc.includes("animedekho.app/embed/")) {
+            serverPromises.push(
+              fetch(fullSrc, { headers: HEADERS }).then((r) => __async(this, null, function* () {
+                if (!r.ok)
+                  return;
+                const h = yield r.text();
+                const $inner = import_cheerio_without_node_native2.default.load(h);
+                $inner("iframe[src]").each((_2, iEl) => {
+                  const iSrc = $inner(iEl).attr("src");
+                  if (iSrc && !iSrc.startsWith("about:"))
+                    iframeUrls.add(iSrc);
+                });
+              })).catch(() => {
               })
             );
+          } else {
+            iframeUrls.add(fullSrc);
           }
-        } else if (iframeUrl.includes("as-cdn") || iframeUrl.includes("awstream") || iframeUrl.includes("zephyrflick")) {
-          promises.push(
-            extractAwsStream(iframeUrl).then((res) => {
-              if (res && res.url) {
-                streams.push({
-                  name: "AnimeSalt [AWSStream] (Auto M3U8)",
-                  url: res.url,
-                  quality: "1080p",
-                  headers: res.headers,
-                  subtitles: res.subtitles,
-                  type: "m3u8"
-                });
+        }
+      });
+      yield Promise.allSettled(serverPromises);
+      const bodyClass = $page("body").attr("class") || "";
+      const termMatch = bodyClass.match(/(?:term|postid)-(\d+)/);
+      if (termMatch && termMatch[1]) {
+        const termId = termMatch[1];
+        const trdekhoPromises = [];
+        for (let i = 0; i <= 10; i++) {
+          const trUrl = `${MAIN_URL}/?trdekho=${i}&trid=${termId}&trtype=${mediaTypeVal}`;
+          trdekhoPromises.push(
+            fetch(trUrl, { headers: HEADERS }).then((r) => __async(this, null, function* () {
+              if (!r.ok)
+                return;
+              const h = yield r.text();
+              const $tr = import_cheerio_without_node_native2.default.load(h);
+              const iSrc = $tr("iframe").attr("src");
+              if (iSrc && !iSrc.startsWith("about:")) {
+                const full = iSrc.startsWith("//") ? `https:${iSrc}` : iSrc.startsWith("http") ? iSrc : `${MAIN_URL}${iSrc}`;
+                iframeUrls.add(full);
               }
+            })).catch(() => {
+            })
+          );
+        }
+        yield Promise.allSettled(trdekhoPromises);
+      }
+      const streams = [];
+      const extractPromises = [];
+      for (const iframeUrl of iframeUrls) {
+        if (iframeUrl.includes("rubystm.com") || iframeUrl.includes("streamruby")) {
+          extractPromises.push(
+            extractStreamRuby(iframeUrl).then((s) => {
+              if (s)
+                streams.push(s);
+            })
+          );
+        } else if (iframeUrl.includes("vidmoly")) {
+          extractPromises.push(
+            extractVidmoly(iframeUrl).then((s) => {
+              if (s)
+                streams.push(s);
             })
           );
         } else if (iframeUrl.includes("abyssplayer.com") || iframeUrl.includes("short.icu")) {
-          promises.push(
+          extractPromises.push(
             extractAbyss(iframeUrl, "Default").then((res) => {
               if (Array.isArray(res))
                 streams.push(...res);
             })
           );
-        } else if (iframeUrl.includes("megaplay.buzz") || iframeUrl.includes("rapid-cloud.co")) {
-          promises.push(
-            extractMegaPlay(iframeUrl).then((res) => {
-              if (Array.isArray(res))
-                streams.push(...res);
+        } else if (iframeUrl.includes("as-cdn") || iframeUrl.includes("awstream") || iframeUrl.includes("zephyrflick")) {
+          extractPromises.push(
+            extractAwsStream(iframeUrl).then((s) => {
+              if (s)
+                streams.push(s);
             })
           );
-        } else if (iframeUrl.includes("pixdrive") || iframeUrl.includes("ghbrisk") || iframeUrl.includes("streamwish") || iframeUrl.includes("filesim")) {
-          promises.push(
-            extractStreamWish(iframeUrl).then((res) => {
-              if (res)
-                streams.push(res);
+        } else if (iframeUrl.includes("filesforever.link") || iframeUrl.includes("cdnwish") || iframeUrl.includes("multimovies") || iframeUrl.includes("streamwish")) {
+          extractPromises.push(
+            extractStreamWish(iframeUrl).then((s) => {
+              if (s)
+                streams.push(s);
+            })
+          );
+        } else if (iframeUrl.includes("blakiteapi.xyz")) {
+          extractPromises.push(
+            extractBlakite(iframeUrl).then((s) => {
+              if (s)
+                streams.push(s);
+            })
+          );
+        } else if (iframeUrl.includes("cloudy.upns.one") || iframeUrl.includes("vidcloud.upns.ink")) {
+          extractPromises.push(
+            extractVidStack(iframeUrl).then((s) => {
+              if (s)
+                streams.push(s);
             })
           );
         }
       }
-      yield Promise.allSettled(promises);
+      yield Promise.allSettled(extractPromises);
       const seenUrls = /* @__PURE__ */ new Set();
       const candidateStreams = [];
       for (const s of streams) {
         if (s && s.url && !seenUrls.has(s.url) && isRealStreamUrl(s.url)) {
           seenUrls.add(s.url);
           candidateStreams.push({
-            name: s.name || "AnimeSalt",
+            name: s.name || "AnimeDekho",
             title: mediaType === "movie" ? details.title : `${details.title} - S${seasonNum}E${episodeNum}`,
             url: s.url,
             quality: s.quality || "Auto",
             headers: s.headers,
             subtitles: s.subtitles || [],
-            provider: "animesalt",
+            provider: "animedekho",
             type: s.type || "m3u8"
           });
         }

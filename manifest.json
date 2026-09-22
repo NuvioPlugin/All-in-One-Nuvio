@@ -118,16 +118,28 @@
     },
     {
       "id": "animesalt",
-      "name": "🧂 AnimeSalt",
-      "description": "Watch Anime in – Hindi, Tamil & Telugu.",
+      "name": "AnimeSalt",
+      "description": "AnimeSalt anime streaming with multi-language audio (Hindi, Tamil, Telugu, English) and high-quality direct HLS streams",
       "version": "1.0.0",
-      "author": "piratezoro9",
+      "author": "Nuvio Team",
       "supportedTypes": ["movie", "tv"],
       "filename": "providers/animesalt.js",
       "enabled": true,
-      "hasSettings": true,
       "formats": ["m3u8", "mp4"],
-      "logo": "https://i.postimg.cc/1X24MYhg/animesalt.png",
+      "logo": "https://www.google.com/s2/favicons?domain=animesalt.cx&sz=128",
+      "contentLanguage": ["hi", "ta", "te", "en", "ja"]
+    },
+    {
+      "id": "animedekho",
+      "name": "AnimeDekho",
+      "description": "AnimeDekho streaming anime series and movies with Hindi dub, multi-audio and high-speed multi-server support",
+      "version": "1.0.0",
+      "author": "Nuvio Team",
+      "supportedTypes": ["movie", "tv"],
+      "filename": "providers/animedekho.js",
+      "enabled": true,
+      "formats": ["m3u8", "mp4"],
+      "logo": "https://www.google.com/s2/favicons?domain=animedekho.app&sz=128",
       "contentLanguage": ["hi", "en", "ja"]
     },
     {
