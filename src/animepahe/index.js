@@ -13,12 +13,15 @@ async function getStreams(tmdbId, mediaType, season, episode) {
             const imdbId = await getImdbId(tmdbId, mediaType);
             if (!imdbId) return [];
 
-            const mapping = await resolveMapping(imdbId, season, episode);
+            const mapping = await resolveMapping(imdbId, season, episode, tmdbId);
             if (!mapping || !mapping.mal_id) return [];
 
             targetMalId = mapping.mal_id;
             mappedEp = mapping.mal_episode || episode;
             animeTitle = await getMalTitle(targetMalId);
+            if (!animeTitle && mapping.anime_title) {
+                animeTitle = mapping.anime_title;
+            }
 
             if (!animeTitle) return [];
 
@@ -71,6 +74,11 @@ async function getStreams(tmdbId, mediaType, season, episode) {
                 const clean = animeTitle.replace(/[^a-zA-Z0-9\s]+/g, ' ').replace(/\s+/g, ' ').trim();
                 if (clean !== animeTitle) {
                     searchResults = await searchAnime(clean);
+                }
+            }
+            if (!searchResults.data || searchResults.data.length === 0) {
+                if (tmdbData.original_title && tmdbData.original_title !== animeTitle) {
+                    searchResults = await searchAnime(tmdbData.original_title);
                 }
             }
             if (searchResults.data && searchResults.data.length > 0) {

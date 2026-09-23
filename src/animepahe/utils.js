@@ -68,26 +68,199 @@ export async function getImdbId(tmdbId, mediaType) {
     }
 }
 
-export async function resolveMapping(imdbId, season, episode) {
+export function isDateMatch(d1, d2) {
+    if (!d1 || !d2) return false;
+    const s1 = d1.split('T')[0];
+    const s2 = d2.split('T')[0];
+    const date1 = new Date(s1 + "T00:00:00Z");
+    const date2 = new Date(s2 + "T00:00:00Z");
+    const diff = Math.abs(date1.getTime() - date2.getTime());
+    return Math.ceil(diff / (1000 * 60 * 60 * 24)) <= 2;
+}
+
+async function fetchWithTimeout(url, options = {}, timeoutMs = 6000) {
+    let timer = null;
+    const timeoutPromise = new Promise((_, reject) => {
+        timer = setTimeout(() => reject(new Error('Timeout')), timeoutMs);
+    });
     try {
-        const url = `https://id-mapping-api-malid.hf.space/api/resolve?id=${imdbId}&s=${season}&e=${episode}`;
-        const res = await fetch(url);
-        if (!res.ok) return null;
-        return await res.json();
-    } catch (_) {
-        return null;
+        const res = await Promise.race([fetch(url, options), timeoutPromise]);
+        clearTimeout(timer);
+        return res;
+    } catch (e) {
+        clearTimeout(timer);
+        throw e;
     }
+}
+
+export async function resolveMapping(imdbId, season, episode, tmdbId) {
+    const seasonNum = parseInt(season);
+    const episodeNum = parseInt(episode);
+    const mapId = `${imdbId}:s${season}:e${episode}`;
+
+    try {
+        const res = await fetchWithTimeout(`https://id-mapping-api-malid.hf.space/api/resolve?id=${imdbId}&s=${season}&e=${episode}`, {}, 2000);
+        if (res.ok) {
+            const data = await res.json();
+            if (data && data.mal_id) return data;
+        }
+    } catch (_) {}
+
+    let metaData = null;
+    const metaUrls = [
+        `https://v3-cinemeta.strem.io/meta/series/${imdbId}.json`,
+        `https://cinemeta-live.strem.io/meta/series/${imdbId}.json`,
+        `https://v3-meta.stremio.com/meta/series/${imdbId}.json`
+    ];
+
+    for (const url of metaUrls) {
+        try {
+            const mRes = await fetchWithTimeout(url, {}, 5000);
+            if (mRes.ok) {
+                const json = await mRes.json();
+                if (json?.meta?.videos) {
+                    metaData = json.meta;
+                    break;
+                }
+            }
+        } catch (_) {}
+    }
+
+    if (!metaData || !metaData.videos) return null;
+
+    const video = metaData.videos.find(v => v.season === seasonNum && v.episode === episodeNum);
+    if (!video?.released) return null;
+    const airDate = video.released.split('T')[0];
+    const showTitle = metaData.name;
+
+    const dayIndex = metaData.videos.filter(v => {
+        if (!v.released) return false;
+        return v.released.split('T')[0] === airDate && (v.season < seasonNum || (v.season === seasonNum && v.episode < episodeNum));
+    }).length;
+
+    let malIds = [];
+    const tId = tmdbId || metaData.moviedb_id || metaData.themoviedb_id;
+    const tvdbId = metaData.tvdb_id;
+
+    const armUrls = [
+        `https://arm.haglund.dev/api/v2/imdb?id=${imdbId}`,
+        tId ? `https://arm.haglund.dev/api/v2/themoviedb?id=${tId}` : null,
+        tvdbId ? `https://arm.haglund.dev/api/v2/thetvdb?id=${tvdbId}` : null
+    ].filter(Boolean);
+
+    for (const url of armUrls) {
+        try {
+            const res = await fetchWithTimeout(url, {}, 5000);
+            if (res.ok) {
+                const data = await res.json();
+                if (Array.isArray(data)) {
+                    data.forEach(e => { if (e.myanimelist) malIds.push(e.myanimelist); });
+                }
+            }
+        } catch (_) {}
+    }
+
+    try {
+        const aniIdUrl = tId ? `https://api.ani.zip/mappings?themoviedb_id=${tId}` : `https://api.ani.zip/mappings?imdb_id=${imdbId}`;
+        const aniRes = await fetchWithTimeout(aniIdUrl, {}, 5000);
+        if (aniRes.ok) {
+            const aniData = await aniRes.json();
+            if (aniData?.mappings?.mal_id) malIds.push(aniData.mappings.mal_id);
+        }
+    } catch (_) {}
+
+    malIds = [...new Set(malIds)].filter(Boolean).sort((a, b) => b - a);
+
+    let finalResult = null;
+    for (const malId of malIds) {
+        try {
+            const aniRes = await fetchWithTimeout(`https://api.ani.zip/mappings?mal_id=${malId}`, {}, 5000);
+            if (aniRes.ok) {
+                const aniData = await aniRes.json();
+                if (aniData?.episodes) {
+                    const aniEpisodes = Object.values(aniData.episodes).map(ep => ({
+                        mal_episode_number: parseInt(ep.episode),
+                        air_date: ep.airDateUtc || ep.airDate || ep.airdate
+                    })).filter(ep => !isNaN(ep.mal_episode_number));
+
+                    const aniDateMatches = aniEpisodes.filter(ep => isDateMatch(ep.air_date, airDate))
+                        .sort((a, b) => a.mal_episode_number - b.mal_episode_number);
+
+                    if (aniDateMatches[dayIndex]) {
+                        const match = aniDateMatches[dayIndex];
+                        finalResult = {
+                            id: mapId,
+                            imdb_id: imdbId,
+                            season: seasonNum,
+                            episode: episodeNum,
+                            mal_id: malId,
+                            mal_episode: match.mal_episode_number,
+                            anime_title: showTitle,
+                            air_date: airDate
+                        };
+                        break;
+                    }
+                }
+            }
+        } catch (_) {}
+
+        try {
+            const jRes = await fetchWithTimeout(`https://api.jikan.moe/v4/anime/${malId}`, {}, 5000);
+            if (jRes.ok) {
+                const jData = await jRes.json();
+                if (jData?.data?.aired?.from && isDateMatch(jData.data.aired.from, airDate)) {
+                    finalResult = {
+                        id: mapId,
+                        imdb_id: imdbId,
+                        season: seasonNum,
+                        episode: episodeNum,
+                        mal_id: malId,
+                        mal_episode: dayIndex + 1,
+                        anime_title: showTitle,
+                        air_date: airDate
+                    };
+                    break;
+                }
+            }
+        } catch (_) {}
+    }
+
+    if (!finalResult && malIds.length === 1 && seasonNum === 1) {
+        finalResult = {
+            id: mapId,
+            imdb_id: imdbId,
+            season: seasonNum,
+            episode: episodeNum,
+            mal_id: malIds[0],
+            mal_episode: episodeNum,
+            anime_title: showTitle,
+            air_date: airDate
+        };
+    }
+
+    return finalResult;
 }
 
 export async function getMalTitle(malId) {
     try {
-        const res = await fetch(`https://api.jikan.moe/v4/anime/${malId}`);
-        if (!res.ok) return null;
-        const data = await res.json();
-        return data.data?.title || data.data?.title_english;
-    } catch (_) {
-        return null;
-    }
+        const res = await fetchWithTimeout(`https://api.jikan.moe/v4/anime/${malId}`, {}, 4000);
+        if (res.ok) {
+            const data = await res.json();
+            const title = data.data?.title || data.data?.title_english;
+            if (title) return title;
+        }
+    } catch (_) {}
+
+    try {
+        const aniRes = await fetchWithTimeout(`https://api.ani.zip/mappings?mal_id=${malId}`, {}, 4000);
+        if (aniRes.ok) {
+            const aniData = await aniRes.json();
+            const titles = aniData?.titles || {};
+            return titles.en || titles['x-jat'] || titles.ja || null;
+        }
+    } catch (_) {}
+
+    return null;
 }
 
 export async function searchAnime(query, page = 1) {

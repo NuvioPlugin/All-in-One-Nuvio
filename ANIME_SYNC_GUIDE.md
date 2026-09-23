@@ -1,42 +1,251 @@
-# Anime Synchronization Guide (ArmSync)
+# Anime Synchronization & ID Mapping Guide (ID Mapping Engine v1.5.0)
 
-This document describes the high-fidelity synchronization logic used to match Anime content from TMDB/IMDb to AniList for precise scraping.
+This document describes the architecture, air-date comparison logic, API specifications, and client-side resolution pipeline used to map Western anime metadata (Cinemeta / IMDb / TMDB) to Japanese anime tracking entries (MyAnimeList / AniList / AniZip) for precise scraping across providers such as AnimePahe.
 
-## Why this is necessary
-Anime seasonal structures vary wildly between platforms. A single "Season 3" on TMDB might be split into three different entries on AniList. Title-based mapping is unreliable without date verification.
+---
 
-## The "ArmSync" Workflow
+## 1. Problem Statement
 
-### Phase 1: Metadata Acquisition (The First Step)
-1. **IMDb Resolution**: The very first step is obtaining the **IMDb ID** (`tt...`). 
-   - The scraper queries TMDB for the `imdb_id`.
-   - **Fallback**: If TMDB lacks an IMDb ID, the **ARM API** (`/themoviedb?id={id}`) is queried to resolve the link.
-2. **Target Date & Title**: Using the IMDb ID, the scraper queries **Cinemata** (`https://v3-cinemeta.strem.io/meta/series/{imdbId}.json`) to get the exact `released` date and `name` (title) for the target `season` and `episode`.
-   - **Movie Logic**: For movies, the **TMDB Release Date** is prioritized over Cinemata to ensure matching against the original Japanese air date.
-3. **Day Index Calculation**: The scraper calculates the **Release Order** of the episode for that specific day (e.g., if two episodes aired on the same day, Episode 15 is index `1`, Episode 16 is index `2`).
+Western metadata providers (TMDB, IMDb, Cinemeta, TVDb) and Japanese anime tracking databases (MyAnimeList, AniList, AniDB) organize anime releases according to fundamentally conflicting models:
+- **Western Structure**: Anime is aggregated into traditional western TV seasons (e.g. Attack on Titan Season 4 Episodes 1–30; Jujutsu Kaisen Season 2 Episodes 1–23).
+- **Japanese Structure**: Each cour, split-season, OVA, TV special, or movie is listed as an independent database entry with its own ID (e.g. Attack on Titan: The Final Season Part 1, Part 2, The Final Chapters Special 1, Special 2).
 
-### Phase 2: Candidate Resolution
-1. **AniList Title Search**: Query the **AniList GraphQL API** using the show's title from TMDB.
-2. **Bulk Discovery**: This returns all related AniList entries (TV, OVA, Special, Movie) in a single request.
+Direct numerical mapping (e.g. requesting "Season 4, Episode 29") fails because Japanese trackers do not recognize Western season numbers, and title matching alone fails due to differences between English, Romaji, and Kanji titles.
 
-### Phase 3: Date & Title Validation
-1. **Air Date Match**: Compare the episode's `releaseDate` against the `startDate` and `endDate` of every AniList candidate.
-   - **Tolerance**: A **2-day grace period** is allowed to account for timezone differences.
-2. **Title Tie-Breaker**: If multiple episodes match the same date, the scraper compares the **Cinemata Episode Title** against the **AniList Episode Titles** to pick the correct part.
-3. **Database Sync**: The scraper then queries the streaming backend using the verified **AniList ID**.
-   - **Token Selection**: Prioritizes the **Original Episode Number** for standard TV series to ensure consistency. For specials or multi-part releases, it uses the **Day Index** (numerical order) and **Title Match** as highly accurate fallbacks.
+---
 
-## Required APIs
+## 2. Core Philosophy: The Absolute Air-Date Rule
 
-| API | Purpose | Endpoint |
-| :--- | :--- | :--- |
-| **TMDB** | Metadata & IMDb ID | `/tv/{id}` |
-| **Cinemata** | Air Dates & Indexing | `/meta/series/{id}.json` |
-| **ARM** | IMDb ID Fallback | `/api/v2/themoviedb?id={id}` |
-| **AniList** | Discovery | `https://graphql.anilist.co` |
+> [!IMPORTANT]
+> **Only compare dates, never numbers.**
+> The only immutable link between a Western episode and a Japanese anime episode entry is the **UTC broadcast air date**.
 
-## Benefits
-- **IMDb-First Foundation**: Ensures reliable air date data from the start.
-- **No Manual Mapping**: Bypasses mapping gaps in ARM/IMDb.
-- **Movies & Specials Support**: Correctly identifies regional movie releases and Season 0 content.
-- **Split Part Support**: Precise resolution via **Day Indexing** and **Title Matching**.
+Because television broadcasts air across international time zones (JST vs. UTC vs. EST), air dates can differ by up to 24–48 hours depending on when metadata scrapers index the episode.
+
+### Date Matching Algorithm (`isDateMatch`)
+A tolerance of $\le 2$ days is applied when comparing air date strings:
+
+```javascript
+function isDateMatch(d1, d2) {
+    if (!d1 || !d2) return false;
+    const s1 = d1.split('T')[0];
+    const s2 = d2.split('T')[0];
+    const date1 = new Date(s1 + "T00:00:00Z");
+    const date2 = new Date(s2 + "T00:00:00Z");
+    const diff = Math.abs(date1.getTime() - date2.getTime());
+    return Math.ceil(diff / (1000 * 60 * 60 * 24)) <= 2;
+}
+```
+
+### Day Indexing (`dayIndex`)
+When multiple episodes air on the same calendar day (such as double-episode premieres or batch drops), the scraper calculates the zero-based order of earlier episodes airing on that identical date:
+
+$$\text{dayIndex} = \operatorname{count}\Big(v \in \text{videos} \;\Big|\; v.\text{released} = \text{targetDate} \land (v.s < s \lor (v.s = s \land v.e < e))\Big)$$
+
+The resolved candidate is selected at index `dateMatches[dayIndex]`.
+
+---
+
+## 3. Resolution Workflow Architecture
+
+```mermaid
+flowchart TD
+    Start([Request: tmdbId / imdbId, season, episode, mediaType]) --> CheckType{mediaType == 'movie'?}
+    
+    %% Movie Branch
+    CheckType -- Yes --> MovieFlow[Bypass Episode Mapping<br/>Fetch TMDB Movie Title & Set mappedEp=1]
+    MovieFlow --> ProviderSearch[Search Provider by Title]
+    
+    %% TV Series Branch
+    CheckType -- No --> Step1[Phase 1: Western Episode Metadata<br/>Cinemeta API: Find airDate & calculate dayIndex]
+    Step1 --> Step2[Phase 2: Candidate Anime Discovery<br/>ARM API & AniZip Mappings: Fetch Candidate MAL IDs]
+    Step2 --> Step3[Phase 3: Episode Date Verification]
+    
+    Step3 --> CheckAniZip{AniZip Episode<br/>Air Date Match?}
+    CheckAniZip -- Yes --> FoundMatch[Extract mal_id & mal_episode]
+    CheckAniZip -- No --> CheckJikan{Jikan Series Premiere<br/>aired.from Match?}
+    CheckJikan -- Yes --> FoundBatch[Extract mal_id & mal_episode = dayIndex + 1]
+    CheckJikan -- No --> NextCandidate[Try Next Candidate MAL ID]
+    NextCandidate --> Step3
+    
+    FoundMatch --> Phase4[Phase 4: AnimePahe Search & Session Resolution]
+    FoundBatch --> Phase4
+    Phase4 --> ProviderSearch
+```
+
+---
+
+## 4. Resolution Stages
+
+### Phase 1: Western Metadata Acquisition
+1. Retrieve `imdb_id` via TMDB external IDs or ARM fallback (`https://api.themoviedb.org/3/tv/{id}/external_ids`).
+2. Query Cinemeta series metadata across mirrors:
+   - Primary: `https://v3-cinemeta.strem.io/meta/series/{imdbId}.json`
+   - Mirrors: `https://cinemeta-live.strem.io/meta/series/{imdbId}.json`, `https://v3-meta.stremio.com/meta/series/{imdbId}.json`
+3. Locate the video entry matching `season` and `episode`.
+4. Extract `airDate` (`released.split('T')[0]`) and calculate `dayIndex`.
+
+### Phase 2: Candidate MAL ID Discovery
+Query candidate anime relations from the Anime Relations Map (ARM) and AniZip:
+- ARM IMDb endpoint: `https://arm.haglund.dev/api/v2/imdb?id={imdbId}`
+- ARM TMDb endpoint: `https://arm.haglund.dev/api/v2/themoviedb?id={tmdbId}`
+- ARM TVDb endpoint: `https://arm.haglund.dev/api/v2/thetvdb?id={tvdbId}`
+- AniZip mapping endpoint: `https://api.ani.zip/mappings?themoviedb_id={tmdbId}` or `?imdb_id={imdbId}`
+
+Collect unique candidate `myanimelist` IDs and sort descending (`(a, b) => b - a`) so newer entries/specials are evaluated first.
+
+### Phase 3: Episode Date Verification
+For each candidate `malId`:
+1. **AniZip Episode Verification**:
+   Query `https://api.ani.zip/mappings?mal_id={malId}`.
+   Compare `airDateUtc` / `airDate` against target `airDate` using `isDateMatch()`.
+   If a match exists at `dateMatches[dayIndex]`, return:
+   ```json
+   {
+     "mal_id": 51535,
+     "mal_episode": 1,
+     "anime_title": "Attack on Titan",
+     "air_date": "2023-03-03"
+   }
+   ```
+2. **Jikan / Premiere Date Fallback**:
+   If individual episode records are missing (e.g. special batch releases), check series start date `aired.from` via Jikan (`https://api.jikan.moe/v4/anime/{malId}`). If `isDateMatch(aired.from, airDate)` matches, assign `mal_episode = dayIndex + 1`.
+
+---
+
+## 5. Movie Exception Rule
+
+> [!NOTE]
+> Movies do not possess seasonal episode splits. When `mediaType === 'movie'`, the scraper **bypasses episode resolution entirely**.
+- The scraper queries TMDB movie details directly for `title` and `original_title`.
+- Target episode is set to `mappedEp = 1`.
+- The provider queries the movie title directly on AnimePahe releases.
+
+---
+
+## 6. OpenAPI 3.0 Specification (`/api/resolve`)
+
+For hosted microservices, the resolution engine exposes an OpenAPI 3.0 compliant endpoint:
+
+```yaml
+openapi: 3.0.0
+info:
+  title: ID Mapping API
+  version: 1.5.0
+  description: Bridge between western metadata (IMDb/Cinemeta) and Japanese anime tracking (MyAnimeList).
+servers:
+  - url: https://id-mapping-api-malid.hf.space
+paths:
+  /api/resolve:
+    get:
+      summary: Resolve Episode Mapping
+      parameters:
+        - in: query
+          name: id
+          required: true
+          schema:
+            type: string
+          description: The IMDb series ID (e.g., tt2560140)
+        - in: query
+          name: s
+          required: true
+          schema:
+            type: integer
+          description: Season number
+        - in: query
+          name: e
+          required: true
+          schema:
+            type: integer
+          description: Episode number
+      responses:
+        '200':
+          description: Successful mapping found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                    example: "tt2560140:s4:e29"
+                  imdb_id:
+                    type: string
+                    example: "tt2560140"
+                  season:
+                    type: integer
+                    example: 4
+                  episode:
+                    type: integer
+                    example: 29
+                  mal_id:
+                    type: integer
+                    example: 51535
+                  mal_episode:
+                    type: integer
+                    example: 1
+                  anime_title:
+                    type: string
+                    example: "Attack on Titan"
+                  air_date:
+                    type: string
+                    example: "2023-03-03"
+        '400':
+          description: Missing required query parameters
+        '404':
+          description: No match found
+        '500':
+          description: Internal server error
+```
+
+---
+
+## 7. Cloudflare Worker Jikan Shield Proxy
+
+Because `api.jikan.moe` enforces strict rate limiting, a Cloudflare Worker can be used to proxy Jikan requests with enterprise caching:
+
+```javascript
+export default {
+  async fetch(request) {
+    const { searchParams } = new URL(request.url);
+    const malId = searchParams.get('id');
+    const q = searchParams.get('q');
+    const page = searchParams.get('page') || 1;
+    const type = searchParams.get('type') || 'episodes';
+
+    let url;
+    if (type === 'search' || q) {
+        url = `https://api.jikan.moe/v4/anime?q=${encodeURIComponent(q)}&limit=5`;
+    } else if (type === 'episodes') {
+        url = `https://api.jikan.moe/v4/anime/${malId}/episodes?page=${page}`;
+    } else {
+        url = `https://api.jikan.moe/v4/anime/${malId}`;
+    }
+
+    try {
+        const res = await fetch(url, {
+            headers: { 'User-Agent': 'Nuvio-Enterprise-Shield' }
+        });
+        const data = await res.text();
+        return new Response(data, {
+            headers: { 
+                'Content-Type': 'application/json',
+                'Access-Control-Allow-Origin': '*' 
+            }
+        });
+    } catch (e) {
+        return new Response(JSON.stringify({ error: e.message }), { status: 500 });
+    }
+  }
+};
+```
+
+---
+
+## 8. Integrated Client-Side Provider Implementation
+
+In mobile and standalone environments (such as Nuvio providers), the resolution pipeline runs directly inside `src/animepahe/utils.js`:
+- Client queries Cinemeta, ARM, AniZip, and Jikan directly using timeout-guarded requests.
+- Eliminates hard dependencies on external backend microservices.
+- Automatically handles fallback from Jikan to AniZip titles.
+- Accurately targets anime releases and episode sessions on AnimePahe.
