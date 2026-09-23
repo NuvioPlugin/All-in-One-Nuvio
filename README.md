@@ -80,6 +80,14 @@ This project is for educational purposes only. Users are responsible for ensurin
 A masive shoutout to all the developers who have created these plugins.
 - **Yoruix**, **Paregi12**, **Phisher98**, **Wooodyhood**, **Piratezoro9 (Kabir)**, **KennethJYS**, **Real-Morpheus**, **Xyr0nX/Antonio**, **Yatin-Code**, **RaymondNoodles**
 
+## Support & Donation
+
+If you enjoy these scrapers and want to support ongoing development and maintenance, you can donate on Ko-fi:
+
+[![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/paregi)
+
+- **Ko-fi**: [https://ko-fi.com/paregi](https://ko-fi.com/paregi)
+
 ---
 
 **Created with ❤️ for Nuvio**
