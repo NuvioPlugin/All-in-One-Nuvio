@@ -68,7 +68,7 @@
       "id": "animepahe",
       "name": "AnimePahe",
       "description": "AnimePahe (Sub/Dub)",
-      "version": "1.0.1",
+      "version": "1.0.2",
       "author": "Nuvio Team",
       "supportedTypes": [
         "movie",

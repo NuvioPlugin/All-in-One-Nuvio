@@ -4,6 +4,7 @@ import { extractKwik, extractPahe } from './extractors.js';
 
 async function getStreams(tmdbId, mediaType, season, episode) {
     try {
+        console.log(`[AnimePahe] getStreams: tmdbId=${tmdbId}, mediaType=${mediaType}, S${season}E${episode}`);
         let animeSession = null;
         let animeTitle = "";
         let mappedEp = episode;
@@ -11,9 +12,11 @@ async function getStreams(tmdbId, mediaType, season, episode) {
 
         if (mediaType === 'tv') {
             const imdbId = await getImdbId(tmdbId, mediaType);
+            console.log(`[AnimePahe] IMDb ID: ${imdbId}`);
             if (!imdbId) return [];
 
             const mapping = await resolveMapping(imdbId, season, episode, tmdbId);
+            console.log(`[AnimePahe] Mapping:`, mapping ? JSON.stringify(mapping) : 'null');
             if (!mapping || !mapping.mal_id) return [];
 
             targetMalId = mapping.mal_id;
@@ -23,6 +26,7 @@ async function getStreams(tmdbId, mediaType, season, episode) {
                 animeTitle = mapping.anime_title;
             }
 
+            console.log(`[AnimePahe] Target title: "${animeTitle}" (MAL ID: ${targetMalId})`);
             if (!animeTitle) return [];
 
             let searchResults = await searchAnime(animeTitle);
@@ -91,6 +95,7 @@ async function getStreams(tmdbId, mediaType, season, episode) {
             }
         }
 
+        console.log(`[AnimePahe] Anime session: ${animeSession}`);
         if (!animeSession) return [];
 
         const firstPageUrl = `/api?m=release&id=${animeSession}&sort=episode_asc&page=1`;
@@ -132,6 +137,7 @@ async function getStreams(tmdbId, mediaType, season, episode) {
             }
         }
 
+        console.log(`[AnimePahe] Episode session: ${episodeSession}`);
         if (!episodeSession) return [];
 
         const playUrl = `/play/${animeSession}/${episodeSession}`;
@@ -224,7 +230,8 @@ async function getStreams(tmdbId, mediaType, season, episode) {
 
         const qualityOrder = { "1080p": 3, "720p": 2, "360p": 1 };
         return streams.sort((a, b) => (qualityOrder[b.quality] || 0) - (qualityOrder[a.quality] || 0));
-    } catch (_) {
+    } catch (err) {
+        console.error(`[AnimePahe] Error in getStreams:`, err?.message || err);
         return [];
     }
 }
