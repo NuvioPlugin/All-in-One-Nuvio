@@ -84,7 +84,19 @@ async function fetchWithTimeout(url, options = {}, timeoutMs = 6000) {
         timer = setTimeout(() => reject(new Error('Timeout')), timeoutMs);
     });
     try {
-        const res = await Promise.race([fetch(url, options), timeoutPromise]);
+        const mergedHeaders = {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/135.0.0.0 Safari/537.36',
+            'Accept': 'application/json, text/plain, */*',
+            ...(options.headers || {})
+        };
+        const res = await Promise.race([
+            fetch(url, {
+                skipSizeCheck: true,
+                headers: mergedHeaders,
+                ...options
+            }),
+            timeoutPromise
+        ]);
         clearTimeout(timer);
         return res;
     } catch (e) {
@@ -101,18 +113,42 @@ export async function resolveMapping(imdbId, season, episode, tmdbId) {
     let metaData = null;
     const metaUrls = [
         `https://v3-cinemeta.strem.io/meta/series/${imdbId}.json`,
-        `https://cinemeta-live.strem.io/meta/series/${imdbId}.json`,
-        `https://v3-meta.stremio.com/meta/series/${imdbId}.json`
+        `https://cinemeta-live.strem.io/meta/series/${imdbId}.json`
     ];
 
     for (const url of metaUrls) {
         try {
             const mRes = await fetchWithTimeout(url, {}, 5000);
             if (mRes.ok) {
-                const json = await mRes.json();
+                const text = await mRes.text();
+                const json = JSON.parse(text);
                 if (json?.meta?.videos) {
                     metaData = json.meta;
                     break;
+                }
+            }
+        } catch (_) {}
+    }
+
+    if ((!metaData || !metaData.videos) && tmdbId) {
+        try {
+            const tmdbEpUrl = `https://api.themoviedb.org/3/tv/${tmdbId}/season/${seasonNum}/episode/${episodeNum}?api_key=${TMDB_API_KEY}`;
+            const tmdbRes = await fetchWithTimeout(tmdbEpUrl, {}, 5000);
+            if (tmdbRes.ok) {
+                const epData = JSON.parse(await tmdbRes.text());
+                if (epData?.air_date) {
+                    const tvUrl = `https://api.themoviedb.org/3/tv/${tmdbId}?api_key=${TMDB_API_KEY}`;
+                    const tvRes = await fetchWithTimeout(tvUrl, {}, 5000);
+                    const tvData = tvRes.ok ? JSON.parse(await tvRes.text()) : {};
+                    metaData = {
+                        name: tvData.name || tvData.original_name,
+                        moviedb_id: tmdbId,
+                        videos: [{
+                            season: seasonNum,
+                            episode: episodeNum,
+                            released: epData.air_date
+                        }]
+                    };
                 }
             }
         } catch (_) {}
@@ -144,7 +180,7 @@ export async function resolveMapping(imdbId, season, episode, tmdbId) {
         try {
             const res = await fetchWithTimeout(url, {}, 5000);
             if (res.ok) {
-                const data = await res.json();
+                const data = JSON.parse(await res.text());
                 if (Array.isArray(data)) {
                     data.forEach(e => { if (e.myanimelist) malIds.push(e.myanimelist); });
                 }
@@ -156,7 +192,7 @@ export async function resolveMapping(imdbId, season, episode, tmdbId) {
         const aniIdUrl = tId ? `https://api.ani.zip/mappings?themoviedb_id=${tId}` : `https://api.ani.zip/mappings?imdb_id=${imdbId}`;
         const aniRes = await fetchWithTimeout(aniIdUrl, {}, 5000);
         if (aniRes.ok) {
-            const aniData = await aniRes.json();
+            const aniData = JSON.parse(await aniRes.text());
             if (aniData?.mappings?.mal_id) malIds.push(aniData.mappings.mal_id);
         }
     } catch (_) {}
@@ -168,7 +204,7 @@ export async function resolveMapping(imdbId, season, episode, tmdbId) {
         try {
             const aniRes = await fetchWithTimeout(`https://api.ani.zip/mappings?mal_id=${malId}`, {}, 5000);
             if (aniRes.ok) {
-                const aniData = await aniRes.json();
+                const aniData = JSON.parse(await aniRes.text());
                 if (aniData?.episodes) {
                     const aniEpisodes = Object.values(aniData.episodes).map(ep => ({
                         mal_episode_number: parseInt(ep.episode),
@@ -199,7 +235,7 @@ export async function resolveMapping(imdbId, season, episode, tmdbId) {
         try {
             const jRes = await fetchWithTimeout(`https://api.jikan.moe/v4/anime/${malId}`, {}, 5000);
             if (jRes.ok) {
-                const jData = await jRes.json();
+                const jData = JSON.parse(await jRes.text());
                 if (jData?.data?.aired?.from && isDateMatch(jData.data.aired.from, airDate)) {
                     finalResult = {
                         id: mapId,
