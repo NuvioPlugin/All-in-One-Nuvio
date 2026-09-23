@@ -1,6 +1,6 @@
 /**
  * animepahe - Built from src/animepahe/
- * Generated: 2026-09-23T06:33:28.323Z
+ * Generated: 2026-09-23T06:40:24.161Z
  */
 var __create = Object.create;
 var __defProp = Object.defineProperty;
@@ -178,15 +178,6 @@ function resolveMapping(imdbId, season, episode, tmdbId) {
     const seasonNum = parseInt(season);
     const episodeNum = parseInt(episode);
     const mapId = `${imdbId}:s${season}:e${episode}`;
-    try {
-      const res = yield fetchWithTimeout(`https://id-mapping-api-malid.hf.space/api/resolve?id=${imdbId}&s=${season}&e=${episode}`, {}, 2e3);
-      if (res.ok) {
-        const data = yield res.json();
-        if (data && data.mal_id)
-          return data;
-      }
-    } catch (_) {
-    }
     let metaData = null;
     const metaUrls = [
       `https://v3-cinemeta.strem.io/meta/series/${imdbId}.json`,

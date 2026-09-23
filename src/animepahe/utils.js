@@ -98,14 +98,6 @@ export async function resolveMapping(imdbId, season, episode, tmdbId) {
     const episodeNum = parseInt(episode);
     const mapId = `${imdbId}:s${season}:e${episode}`;
 
-    try {
-        const res = await fetchWithTimeout(`https://id-mapping-api-malid.hf.space/api/resolve?id=${imdbId}&s=${season}&e=${episode}`, {}, 2000);
-        if (res.ok) {
-            const data = await res.json();
-            if (data && data.mal_id) return data;
-        }
-    } catch (_) {}
-
     let metaData = null;
     const metaUrls = [
         `https://v3-cinemeta.strem.io/meta/series/${imdbId}.json`,
