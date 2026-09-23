@@ -1,51 +1,79 @@
 import cheerio from 'cheerio-without-node-native';
-import { fetchText, getImdbId, resolveMapping, getMalTitle } from './utils.js';
+import { fetchText, fetchWithCookies, getTmdbInfo, parseXDataJson } from './utils.js';
 import { MAIN_URL, HEADERS } from './constants.js';
 
-function extractCardInfo($, el) {
-    const href = $(el).find('a[href*="/anime/"]').first().attr('href');
-    if (!href) return null;
-    
-    const parts = href.split('/');
-    const slug = parts[parts.length - 1] || parts[parts.length - 2];
-    
-    const xData = $(el).attr('x-data') || '';
-    
-    const defaultTitleMatch = xData.match(/window\.getTitle\(this\.anmTitles,\s*'([^']+)'\)/);
-    const defaultTitle = defaultTitleMatch ? defaultTitleMatch[1] : '';
-    
-    const titles = new Set();
-    if (defaultTitle) titles.add(defaultTitle);
-    
-    const jsonMatch = xData.match(/JSON\.parse\('([^']+)'\)/);
-    if (jsonMatch) {
-        try {
-            const jsonStr = jsonMatch[1].replace(/\\\\/g, '\\')
-                                         .replace(/\\u([0-9a-fA-F]{4})/g, (m, grp) => String.fromCharCode(parseInt(grp, 16)))
-                                         .replace(/\\'/g, "'");
-            const parsed = JSON.parse(jsonStr);
-            Object.values(parsed).forEach(t => {
-                if (t) titles.add(t);
-            });
-        } catch (e) {
-            // ignore
-        }
-    }
-    
-    return {
-        slug,
-        titles: Array.from(titles)
-    };
+function normalize(str) {
+    if (!str) return '';
+    return str.toLowerCase().replace(/[^a-z0-9]/g, '').trim();
 }
 
-function normalize(str) {
-    return str.toLowerCase().replace(/[^a-z0-9]/g, '').trim();
+function parseCards(html, $) {
+    const cards = [];
+    const itemsMatch = html.match(/items:\s*JSON\.parse\('((?:[^'\\]|\\.)*)'\)/);
+    if (itemsMatch) {
+        try {
+            const parsed = parseXDataJson(itemsMatch[1]);
+            if (Array.isArray(parsed)) {
+                for (const item of parsed) {
+                    if (!item || !item.slug) continue;
+                    const titles = new Set();
+                    if (item.main_title) titles.add(item.main_title);
+                    if (item.title_list && typeof item.title_list === 'object') {
+                        Object.values(item.title_list).forEach(t => {
+                            if (t) titles.add(t);
+                        });
+                    }
+                    cards.push({
+                        slug: item.slug,
+                        url: item.url || `/anime/${item.slug}`,
+                        titles: Array.from(titles)
+                    });
+                }
+            }
+        } catch (e) {}
+    }
+
+    if (cards.length === 0) {
+        $('[x-data*="anmTitles"]').each((i, el) => {
+            const href = $(el).find('a[href*="/anime/"]').first().attr('href');
+            if (!href) return;
+            const parts = href.split('/');
+            const slug = parts[parts.length - 1] || parts[parts.length - 2];
+            const titles = new Set();
+            const xData = $(el).attr('x-data') || '';
+            const jsonMatch = xData.match(/JSON\.parse\('((?:[^'\\]|\\.)*)'\)/);
+            if (jsonMatch) {
+                try {
+                    const parsed = parseXDataJson(jsonMatch[1]);
+                    Object.values(parsed).forEach(t => {
+                        if (t) titles.add(t);
+                    });
+                } catch (e) {}
+            }
+            cards.push({ slug, titles: Array.from(titles) });
+        });
+    }
+
+    return cards;
 }
 
 function getSeasonRegexes(season) {
     if (season === 1) {
         return {
-            mustNot: [/season\s*[2-9]/i, /[\s\-][iI]{2,}/, /\s+[2-9]nd/i, /\s+[2-9]rd/i, /\s+[2-9]th/i, /\s+ii/i, /\s+iii/i, /\s+iv/i, /\s+v/i]
+            mustNot: [
+                /season\s*[2-9]/i,
+                /[\s\-][iI]{2,}/,
+                /\s+[2-9]nd/i,
+                /\s+[2-9]rd/i,
+                /\s+[2-9]th/i,
+                /\s+ii\b/i,
+                /\s+iii\b/i,
+                /\s+iv\b/i,
+                /\s+v\b/i,
+                /movie/i,
+                /gekijouban/i,
+                /the movie/i
+            ]
         };
     }
     const patterns = [];
@@ -61,28 +89,45 @@ function getSeasonRegexes(season) {
     return { must: patterns };
 }
 
-function matchCard(cards, jikanTitle, baseTitle, season) {
-    const normalizedJikan = normalize(jikanTitle);
-    const normalizedJikanNoSub = normalize(jikanTitle.split(':')[0]);
+function matchCard(cards, targetTitles, baseTitle, season = 1, seasonName = "") {
+    const normalizedTargets = targetTitles.map(normalize).filter(Boolean);
     const normalizedBase = normalize(baseTitle);
+    const normalizedSeasonName = normalize(seasonName);
 
-    // Level 1: Match Jikan title exactly (normalized)
-    for (const card of cards) {
-        for (const title of card.titles) {
-            const normTitle = normalize(title);
-            const normTitleNoSub = normalize(title.split(':')[0]);
-            if (normTitle === normalizedJikan || normTitleNoSub === normalizedJikanNoSub) {
-                return card.slug;
+    if (normalizedSeasonName && normalizedSeasonName !== 'season' + season) {
+        for (const card of cards) {
+            for (const title of card.titles) {
+                if (normalize(title).includes(normalizedSeasonName)) {
+                    return card.slug;
+                }
             }
         }
     }
 
-    // Level 2: Heuristic matching using baseTitle and season indicator
+    for (const card of cards) {
+        for (const title of card.titles) {
+            const normTitle = normalize(title);
+            const normTitleNoSub = normalize(title.split(':')[0]);
+            for (const target of normalizedTargets) {
+                const normTargetNoSub = normalize(target.split(':')[0]);
+                if (normTitle === target || normTitleNoSub === normTargetNoSub) {
+                    if (season === 1) {
+                        const seasonRules = getSeasonRegexes(1);
+                        const hasOtherSeason = card.titles.some(t => seasonRules.mustNot.some(r => r.test(t)));
+                        if (!hasOtherSeason) return card.slug;
+                    } else {
+                        return card.slug;
+                    }
+                }
+            }
+        }
+    }
+
     const seasonRules = getSeasonRegexes(season);
     for (const card of cards) {
         let matchesBase = false;
         for (const title of card.titles) {
-            if (normalize(title).includes(normalizedBase)) {
+            if (normalize(title).includes(normalizedBase) || normalizedBase.includes(normalize(title))) {
                 matchesBase = true;
                 break;
             }
@@ -111,157 +156,219 @@ function matchCard(cards, jikanTitle, baseTitle, season) {
         if (seasonMatches) return card.slug;
     }
 
-    return null;
+    return cards[0] ? cards[0].slug : null;
 }
 
-function matchMovieCard(cards, targetTitle) {
-    const normTarget = normalize(targetTitle);
+function matchMovieCard(cards, targetTitles) {
+    const normalizedTargets = targetTitles.map(normalize).filter(Boolean);
     for (const card of cards) {
         for (const title of card.titles) {
-            if (normalize(title) === normTarget) return card.slug;
+            const norm = normalize(title);
+            if (normalizedTargets.some(t => t === norm)) return card.slug;
         }
     }
     for (const card of cards) {
         for (const title of card.titles) {
-            if (normalize(title).includes(normTarget) || normTarget.includes(normalize(title))) return card.slug;
+            const norm = normalize(title);
+            if (normalizedTargets.some(t => norm.includes(t) || t.includes(norm))) return card.slug;
         }
     }
-    return cards[0].slug;
+    return cards[0] ? cards[0].slug : null;
 }
 
-async function getStreams(tmdbId, mediaType, season, episode) {
+function parseVidstackFromHtml(html, $) {
+    const vidMatch = html.match(/vidstackPlayer\(JSON\.parse\('((?:[^'\\]|\\.)*)'\)\)/);
+    if (vidMatch) {
+        try {
+            const data = parseXDataJson(vidMatch[1]);
+            const masterUrl = data.src ? data.src.replace(/\\/g, '') : null;
+            const subtitles = (data.subtitles || []).map(s => ({
+                url: s.file ? s.file.replace(/\\/g, '') : '',
+                name: s.title || s.language || 'English',
+                language: s.language || 'en'
+            })).filter(s => s.url);
+            if (masterUrl) return { masterUrl, subtitles };
+        } catch (e) {}
+    }
+
+    let masterUrl = $('media-player').attr('src');
+    if (!masterUrl) {
+        const urlMatch = html.match(/https:\/\/[^"']+\/master\.m3u8/);
+        if (urlMatch) masterUrl = urlMatch[0];
+    }
+
+    const subtitles = [];
+    $('track').each((i, el) => {
+        const src = $(el).attr('src');
+        const kind = $(el).attr('kind');
+        if (src && (kind === 'subtitles' || kind === 'captions' || src.endsWith('.ass') || src.endsWith('.vtt'))) {
+            subtitles.push({
+                url: src,
+                name: $(el).attr('label') || 'English',
+                language: $(el).attr('srclang') || 'en'
+            });
+        }
+    });
+
+    return { masterUrl, subtitles };
+}
+
+function parseAudioFormat(btnText) {
+    const lower = btnText.toLowerCase();
+    const hasJap = lower.includes('japanese') || lower.includes('jpn') || lower.includes('ja');
+    const hasEng = lower.includes('english') || lower.includes('eng') || lower.includes('en');
+    if (hasEng && hasJap) return 'Dual Audio';
+    if (hasEng) return 'Dub';
+    if (hasJap) return 'Sub';
+    if (lower.includes('multi')) return 'Multi-Audio';
+    return 'Sub';
+}
+
+async function getStreams(tmdbId, mediaType = 'tv', season = 1, episode = 1) {
     try {
-        let animeTitle = "";
+        let animeTitle = '';
+        let altTitles = [];
         let mappedEp = episode;
-        let mapping = null;
+        let seasonName = '';
 
         if (mediaType === 'tv') {
-            const imdbId = await getImdbId(tmdbId, mediaType);
-            if (!imdbId) return [];
-
-            mapping = await resolveMapping(imdbId, season, episode);
-            if (!mapping || !mapping.mal_id) return [];
-
-            mappedEp = mapping.mal_episode || episode;
-            animeTitle = await getMalTitle(mapping.mal_id);
+            const tmdbInfo = await getTmdbInfo(tmdbId, mediaType, season);
+            if (tmdbInfo) {
+                animeTitle = tmdbInfo.title;
+                if (tmdbInfo.originalTitle) altTitles.push(tmdbInfo.originalTitle);
+                seasonName = tmdbInfo.seasonName || '';
+            }
         } else {
-            const tmdbUrl = `https://api.themoviedb.org/3/movie/${tmdbId}?api_key=1865f43a0549ca50d341dd9ab8b29f49`;
-            const tmdbRes = await fetch(tmdbUrl);
-            const tmdbData = await tmdbRes.json();
-            animeTitle = tmdbData.title || tmdbData.original_title;
+            const tmdbInfo = await getTmdbInfo(tmdbId, 'movie');
+            if (tmdbInfo) {
+                animeTitle = tmdbInfo.title;
+                if (tmdbInfo.originalTitle) altTitles.push(tmdbInfo.originalTitle);
+            }
             mappedEp = 1;
         }
 
         if (!animeTitle) return [];
 
-        // Determine Search Query
-        let searchQuery = animeTitle;
-        if (mediaType === 'tv' && mapping) {
-            searchQuery = mapping.anime_title || animeTitle.split(':')[0].trim();
-        } else {
-            searchQuery = animeTitle.split(':')[0].trim();
-        }
-
-        // 1. Search AniZone
-        const searchUrl = `/anime?search=${encodeURIComponent(searchQuery)}`;
+        const searchQuery = animeTitle.split(':')[0].trim();
+        const searchUrl = `/anime?search=${encodeURIComponent(searchQuery)}&sort=title-asc`;
         const searchHtml = await fetchText(searchUrl);
         if (!searchHtml) return [];
-        
+
         const $search = cheerio.load(searchHtml);
-        
-        // Extract all cards
-        const cards = [];
-        $search('[x-data*="anmTitles"]').each((i, el) => {
-            const info = extractCardInfo($search, el);
-            if (info) cards.push(info);
-        });
+        const cards = parseCards(searchHtml, $search);
+        if (cards.length === 0) return [];
 
+        const targetTitles = [animeTitle, ...altTitles];
         let animeSlug = null;
-        if (cards.length > 0) {
-            if (mediaType === 'tv') {
-                animeSlug = matchCard(cards, animeTitle, (mapping && mapping.anime_title) || animeTitle, season);
-            } else {
-                animeSlug = matchMovieCard(cards, animeTitle);
-            }
-        }
-
-        // Fallback to the old logic if cards couldn't be parsed or matched
-        if (!animeSlug) {
-            $search('main a').each((i, el) => {
-                const href = $search(el).attr('href');
-                if (href && (href.startsWith('https://anizone.to/anime/') || href.startsWith('/anime/')) && !animeSlug) {
-                    const parts = href.split('/');
-                    animeSlug = parts[parts.length - 1] || parts[parts.length - 2];
-                }
-            });
+        if (mediaType === 'tv') {
+            animeSlug = matchCard(cards, targetTitles, searchQuery, season, seasonName);
+        } else {
+            animeSlug = matchMovieCard(cards, targetTitles);
         }
 
         if (!animeSlug) return [];
 
-        // 2. Go to episode page
         const episodeUrl = `/anime/${animeSlug}/${mappedEp}`;
-        const episodeHtml = await fetchText(episodeUrl);
-        if (!episodeHtml) return [];
+        const epResponse = await fetchWithCookies(episodeUrl);
+        if (!epResponse.ok || !epResponse.text) return [];
 
-        // 3. Extract Stream URL and Subtitles
+        const epHtml = epResponse.text;
+        const $ep = cheerio.load(epHtml);
         const streams = [];
-        const $epPage = cheerio.load(episodeHtml);
 
-        let masterUrl = $epPage('media-player').attr('src');
-        if (!masterUrl) {
-            const matches = episodeHtml.match(/https:\/\/[^"']+\/master\.m3u8/);
-            if (matches) {
-                masterUrl = matches[0];
-            }
+        const defaultStream = parseVidstackFromHtml(epHtml, $ep);
+        const serverButtons = $ep('button[wire\\:click*="setVideo"]');
+        let defaultFormat = 'Sub';
+        let defaultServerName = 'AniZone';
+
+        if (serverButtons.length > 0) {
+            const firstBtn = serverButtons.first();
+            const btnText = firstBtn.text().replace(/\s+/g, ' ').trim();
+            defaultFormat = parseAudioFormat(btnText);
+            const nameMatch = btnText.match(/^([A-Za-z0-9_-]+)/);
+            if (nameMatch) defaultServerName = nameMatch[1];
         }
 
-        const subtitles = [];
-        $epPage('track').each((i, el) => {
-            const src = $epPage(el).attr('src');
-            const kind = $epPage(el).attr('kind');
-            if (src && (kind === 'subtitles' || kind === 'captions' || src.endsWith('.ass') || src.endsWith('.vtt'))) {
-                subtitles.push({
-                    url: src,
-                    name: $epPage(el).attr('label') || 'English',
-                    language: $epPage(el).attr('srclang') || 'en'
-                });
-            }
-        });
-
-        let format = "Sub";
-        $epPage('button').each((i, el) => {
-            const text = $epPage(el).text();
-            if (text.includes('Audio:')) {
-                const hasJapanese = text.includes('Japanese');
-                const hasEnglish = text.includes('English');
-                if (hasEnglish && !hasJapanese) format = "Dub";
-                else if (hasEnglish && hasJapanese) format = "Sub & Dub";
-            }
-        });
-
-        if (format === "Sub") {
-            $epPage('button[wire\\:click^="setVideo"]').each((i, el) => {
-                const btnText = $epPage(el).text();
-                const hasJapanese = btnText.includes('Japanese');
-                const hasEnglish = btnText.includes('English');
-                if (hasEnglish && !hasJapanese) format = "Dub";
-                else if (hasEnglish && hasJapanese) format = "Sub & Dub";
-            });
-        }
-
-        if (masterUrl) {
+        if (defaultStream.masterUrl) {
             streams.push({
                 name: "AniZone",
-                title: `${animeTitle} - Episode ${mappedEp} [${format}]`,
-                url: masterUrl,
+                title: `${animeTitle} - Episode ${mappedEp} [${defaultServerName} - ${defaultFormat}]`,
+                url: defaultStream.masterUrl,
                 quality: "Multi",
                 headers: HEADERS,
-                subtitles: subtitles
+                subtitles: defaultStream.subtitles
             });
+        }
+
+        if (serverButtons.length > 1) {
+            const csrfToken = $ep('script[data-csrf]').attr('data-csrf');
+            const snapshotEl = $ep('main > div[wire\\:snapshot], main > ul[wire\\:snapshot], [wire\\:snapshot]');
+            const snapshot = snapshotEl.attr('wire:snapshot');
+
+            if (csrfToken && snapshot && epResponse.cookies) {
+                for (let i = 1; i < serverButtons.length; i++) {
+                    const btn = serverButtons.eq(i);
+                    const clickAttr = btn.attr('wire:click') || '';
+                    const vMatch = clickAttr.match(/setVideo\((\d+)\)/);
+                    if (!vMatch) continue;
+
+                    const videoId = parseInt(vMatch[1], 10);
+                    const btnText = btn.text().replace(/\s+/g, ' ').trim();
+                    const sFormat = parseAudioFormat(btnText);
+                    const nameMatch = btnText.match(/^([A-Za-z0-9_-]+)/);
+                    const sName = nameMatch ? nameMatch[1] : `Server ${i + 1}`;
+
+                    try {
+                        const payload = {
+                            _token: csrfToken,
+                            components: [
+                                {
+                                    snapshot: snapshot,
+                                    updates: {},
+                                    calls: [{ path: "", method: "setVideo", params: [videoId] }]
+                                }
+                            ]
+                        };
+
+                        const postRes = await fetch(`${MAIN_URL}/livewire/update`, {
+                            method: "POST",
+                            headers: {
+                                "Accept": "*/*",
+                                "Content-Type": "application/json",
+                                "X-Livewire": "",
+                                "X-CSRF-TOKEN": csrfToken,
+                                "Origin": MAIN_URL,
+                                "Referer": `${MAIN_URL}${episodeUrl}`,
+                                "User-Agent": HEADERS["User-Agent"],
+                                "Cookie": epResponse.cookies
+                            },
+                            body: JSON.stringify(payload)
+                        });
+
+                        if (postRes.ok) {
+                            const postData = await postRes.json();
+                            const liveHtml = postData.components?.[0]?.effects?.html;
+                            if (liveHtml) {
+                                const $live = cheerio.load(liveHtml);
+                                const extraStream = parseVidstackFromHtml(liveHtml, $live);
+                                if (extraStream.masterUrl && extraStream.masterUrl !== defaultStream.masterUrl) {
+                                    streams.push({
+                                        name: "AniZone",
+                                        title: `${animeTitle} - Episode ${mappedEp} [${sName} - ${sFormat}]`,
+                                        url: extraStream.masterUrl,
+                                        quality: "Multi",
+                                        headers: HEADERS,
+                                        subtitles: extraStream.subtitles.length > 0 ? extraStream.subtitles : defaultStream.subtitles
+                                    });
+                                }
+                            }
+                        }
+                    } catch (e) {}
+                }
+            }
         }
 
         return streams;
-
     } catch (error) {
         return [];
     }
