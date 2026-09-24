@@ -685,7 +685,7 @@
       "id": "anizone",
       "name": "AniZone",
       "description": "AniZone high-quality anime streaming with multi-audio and soft subtitles",
-      "version": "1.0.1",
+      "version": "1.0.2",
       "author": "Nuvio Team",
       "supportedTypes": [
         "movie",

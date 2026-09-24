@@ -1,5 +1,14 @@
 import cheerio from 'cheerio-without-node-native';
-import { fetchText, fetchWithCookies, getTmdbInfo, parseXDataJson } from './utils.js';
+import { 
+    fetchText, 
+    fetchWithCookies, 
+    fetchWithTimeout,
+    getImdbId, 
+    resolveMapping, 
+    getMalTitle, 
+    getTmdbInfo, 
+    parseXDataJson 
+} from './utils.js';
 import { MAIN_URL, HEADERS } from './constants.js';
 
 function normalize(str) {
@@ -62,6 +71,7 @@ function getSeasonRegexes(season) {
         return {
             mustNot: [
                 /season\s*[2-9]/i,
+                /saison\s*[2-9]/i,
                 /[\s\-][iI]{2,}/,
                 /\s+[2-9]nd/i,
                 /\s+[2-9]rd/i,
@@ -78,13 +88,13 @@ function getSeasonRegexes(season) {
     }
     const patterns = [];
     if (season === 2) {
-        patterns.push(/season\s*2/i, /2nd\s*season/i, /[\s\-]ii\b/i, /\b2\b/);
+        patterns.push(/season\s*2/i, /saison\s*2/i, /2nd\s*season/i, /[\s\-]ii\b/i, /\b2\b/);
     } else if (season === 3) {
-        patterns.push(/season\s*3/i, /3rd\s*season/i, /[\s\-]iii\b/i, /\b3\b/);
+        patterns.push(/season\s*3/i, /saison\s*3/i, /3rd\s*season/i, /[\s\-]iii\b/i, /\b3\b/);
     } else if (season === 4) {
-        patterns.push(/season\s*4/i, /4th\s*season/i, /[\s\-]iv\b/i, /\b4\b/);
+        patterns.push(/season\s*4/i, /saison\s*4/i, /4th\s*season/i, /[\s\-]iv\b/i, /\b4\b/, /final\s*season/i);
     } else {
-        patterns.push(new RegExp(`season\\s*${season}`, 'i'), new RegExp(`\\b${season}\\b`));
+        patterns.push(new RegExp(`(?:season|saison)\\s*${season}`, 'i'), new RegExp(`\\b${season}\\b`));
     }
     return { must: patterns };
 }
@@ -104,20 +114,11 @@ function matchCard(cards, targetTitles, baseTitle, season = 1, seasonName = "") 
         }
     }
 
-    for (const card of cards) {
-        for (const title of card.titles) {
-            const normTitle = normalize(title);
-            const normTitleNoSub = normalize(title.split(':')[0]);
-            for (const target of normalizedTargets) {
-                const normTargetNoSub = normalize(target.split(':')[0]);
-                if (normTitle === target || normTitleNoSub === normTargetNoSub) {
-                    if (season === 1) {
-                        const seasonRules = getSeasonRegexes(1);
-                        const hasOtherSeason = card.titles.some(t => seasonRules.mustNot.some(r => r.test(t)));
-                        if (!hasOtherSeason) return card.slug;
-                    } else {
-                        return card.slug;
-                    }
+    for (const target of normalizedTargets) {
+        for (const card of cards) {
+            for (const title of card.titles) {
+                if (normalize(title) === target) {
+                    return card.slug;
                 }
             }
         }
@@ -127,7 +128,8 @@ function matchCard(cards, targetTitles, baseTitle, season = 1, seasonName = "") 
     for (const card of cards) {
         let matchesBase = false;
         for (const title of card.titles) {
-            if (normalize(title).includes(normalizedBase) || normalizedBase.includes(normalize(title))) {
+            const norm = normalize(title);
+            if (norm.includes(normalizedBase) || normalizedBase.includes(norm)) {
                 matchesBase = true;
                 break;
             }
@@ -224,19 +226,48 @@ function parseAudioFormat(btnText) {
     return 'Sub';
 }
 
+async function searchCards(query) {
+    if (!query) return [];
+    const searchUrl = `/anime?search=${encodeURIComponent(query)}&sort=title-asc`;
+    const searchHtml = await fetchText(searchUrl);
+    if (!searchHtml) return [];
+    const $search = cheerio.load(searchHtml);
+    return parseCards(searchHtml, $search);
+}
+
 async function getStreams(tmdbId, mediaType = 'tv', season = 1, episode = 1) {
     try {
         let animeTitle = '';
         let altTitles = [];
         let mappedEp = episode;
         let seasonName = '';
+        let targetTitles = [];
 
         if (mediaType === 'tv') {
-            const tmdbInfo = await getTmdbInfo(tmdbId, mediaType, season);
-            if (tmdbInfo) {
-                animeTitle = tmdbInfo.title;
-                if (tmdbInfo.originalTitle) altTitles.push(tmdbInfo.originalTitle);
-                seasonName = tmdbInfo.seasonName || '';
+            const imdbId = await getImdbId(tmdbId, 'tv');
+            if (imdbId) {
+                const mapping = await resolveMapping(imdbId, season, episode, tmdbId);
+                if (mapping) {
+                    mappedEp = mapping.mal_episode || episode;
+                    animeTitle = mapping.anime_title || '';
+                    if (mapping.titles && Array.isArray(mapping.titles)) {
+                        targetTitles.push(...mapping.titles);
+                    }
+                    const malTitle = await getMalTitle(mapping.mal_id);
+                    if (malTitle) {
+                        targetTitles.push(malTitle);
+                        if (!animeTitle) animeTitle = malTitle;
+                    }
+                }
+            }
+
+            if (!animeTitle) {
+                const tmdbInfo = await getTmdbInfo(tmdbId, mediaType, season);
+                if (tmdbInfo) {
+                    animeTitle = tmdbInfo.title;
+                    if (tmdbInfo.originalTitle) altTitles.push(tmdbInfo.originalTitle);
+                    seasonName = tmdbInfo.seasonName || '';
+                }
             }
         } else {
             const tmdbInfo = await getTmdbInfo(tmdbId, 'movie');
@@ -247,23 +278,38 @@ async function getStreams(tmdbId, mediaType = 'tv', season = 1, episode = 1) {
             mappedEp = 1;
         }
 
-        if (!animeTitle) return [];
+        if (!animeTitle && targetTitles.length === 0) return [];
+        if (!animeTitle && targetTitles.length > 0) animeTitle = targetTitles[0];
 
-        const searchQuery = animeTitle.split(':')[0].trim();
-        const searchUrl = `/anime?search=${encodeURIComponent(searchQuery)}&sort=title-asc`;
-        const searchHtml = await fetchText(searchUrl);
-        if (!searchHtml) return [];
+        const specificTargetTitles = (season === 1 || mediaType === 'movie')
+            ? [...targetTitles, animeTitle, ...altTitles]
+            : [...targetTitles];
 
-        const $search = cheerio.load(searchHtml);
-        const cards = parseCards(searchHtml, $search);
+        const baseCleanQuery = animeTitle.split(':')[0]
+            .replace(/season.*|\d+nd season|\d+rd season|\d+th season|saison.*/gi, '')
+            .trim();
+
+        let cards = await searchCards(baseCleanQuery);
+
+        if (cards.length === 0 && animeTitle !== baseCleanQuery) {
+            cards = await searchCards(animeTitle.split(':')[0].trim());
+        }
+
+        if (cards.length === 0) {
+            for (const t of altTitles) {
+                const altClean = t.split(':')[0].trim();
+                cards = await searchCards(altClean);
+                if (cards.length > 0) break;
+            }
+        }
+
         if (cards.length === 0) return [];
 
-        const targetTitles = [animeTitle, ...altTitles];
         let animeSlug = null;
         if (mediaType === 'tv') {
-            animeSlug = matchCard(cards, targetTitles, searchQuery, season, seasonName);
+            animeSlug = matchCard(cards, specificTargetTitles, baseCleanQuery, season, seasonName);
         } else {
-            animeSlug = matchMovieCard(cards, targetTitles);
+            animeSlug = matchMovieCard(cards, specificTargetTitles);
         }
 
         if (!animeSlug) return [];
@@ -330,7 +376,7 @@ async function getStreams(tmdbId, mediaType = 'tv', season = 1, episode = 1) {
                             ]
                         };
 
-                        const postRes = await fetch(`${MAIN_URL}/livewire/update`, {
+                        const postRes = await fetchWithTimeout(`${MAIN_URL}/livewire/update`, {
                             method: "POST",
                             headers: {
                                 "Accept": "*/*",
@@ -339,11 +385,10 @@ async function getStreams(tmdbId, mediaType = 'tv', season = 1, episode = 1) {
                                 "X-CSRF-TOKEN": csrfToken,
                                 "Origin": MAIN_URL,
                                 "Referer": `${MAIN_URL}${episodeUrl}`,
-                                "User-Agent": HEADERS["User-Agent"],
                                 "Cookie": epResponse.cookies
                             },
                             body: JSON.stringify(payload)
-                        });
+                        }, 8000);
 
                         if (postRes.ok) {
                             const postData = await postRes.json();
