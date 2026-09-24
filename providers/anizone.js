@@ -1,6 +1,6 @@
 /**
  * anizone - Built from src/anizone/
- * Generated: 2026-09-24T02:40:44.231Z
+ * Generated: 2026-09-24T02:44:38.514Z
  */
 var __create = Object.create;
 var __defProp = Object.defineProperty;
@@ -71,7 +71,7 @@ var HEADERS = {
   "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/120.0.0.0 Safari/537.36",
   "Referer": "https://anizone.to/"
 };
-var TMDB_API_KEY = "1865f43a0549ca50d341dd9ab8b29f49";
+var TMDB_API_KEY = "68e094699525b18a70bab2f86b1fa706";
 
 // src/anizone/utils.js
 var HEX_ESCAPE = /\\x([0-9a-fA-F]{2})/g;
