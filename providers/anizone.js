@@ -1,6 +1,6 @@
 /**
  * anizone - Built from src/anizone/
- * Generated: 2026-09-24T02:44:38.514Z
+ * Generated: 2026-09-24T02:51:26.296Z
  */
 var __create = Object.create;
 var __defProp = Object.defineProperty;
@@ -617,6 +617,7 @@ function getStreams(tmdbId, mediaType = "tv", season = 1, episode = 1) {
   return __async(this, null, function* () {
     var _a, _b, _c;
     try {
+      console.log(`[AniZone] Querying streams for TMDB: ${tmdbId}, Type: ${mediaType}, S${season}E${episode}`);
       let animeTitle = "";
       let altTitles = [];
       let mappedEp = episode;
@@ -638,6 +639,7 @@ function getStreams(tmdbId, mediaType = "tv", season = 1, episode = 1) {
               if (!animeTitle)
                 animeTitle = malTitle;
             }
+            console.log(`[AniZone] AnimeSync mapped: "${animeTitle}", mappedEp=${mappedEp}`);
           }
         }
         if (!animeTitle) {
@@ -684,12 +686,17 @@ function getStreams(tmdbId, mediaType = "tv", season = 1, episode = 1) {
       } else {
         animeSlug = matchMovieCard(cards, specificTargetTitles);
       }
-      if (!animeSlug)
+      if (!animeSlug) {
+        console.log(`[AniZone] No matching slug found for "${animeTitle}"`);
         return [];
+      }
+      console.log(`[AniZone] Selected slug: "${animeSlug}", mappedEp=${mappedEp}`);
       const episodeUrl = `/anime/${animeSlug}/${mappedEp}`;
       const epResponse = yield fetchWithCookies(episodeUrl);
-      if (!epResponse.ok || !epResponse.text)
+      if (!epResponse.ok || !epResponse.text) {
+        console.log(`[AniZone] Failed to load episode page: ${episodeUrl}`);
         return [];
+      }
       const epHtml = epResponse.text;
       const $ep = import_cheerio_without_node_native.default.load(epHtml);
       const streams = [];
@@ -778,8 +785,10 @@ function getStreams(tmdbId, mediaType = "tv", season = 1, episode = 1) {
           }
         }
       }
+      console.log(`[AniZone] Total streams found: ${streams.length}`);
       return streams;
     } catch (error) {
+      console.log(`[AniZone] Error: ${error.message}`);
       return [];
     }
   });

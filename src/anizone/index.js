@@ -237,6 +237,7 @@ async function searchCards(query) {
 
 async function getStreams(tmdbId, mediaType = 'tv', season = 1, episode = 1) {
     try {
+        console.log(`[AniZone] Querying streams for TMDB: ${tmdbId}, Type: ${mediaType}, S${season}E${episode}`);
         let animeTitle = '';
         let altTitles = [];
         let mappedEp = episode;
@@ -258,6 +259,7 @@ async function getStreams(tmdbId, mediaType = 'tv', season = 1, episode = 1) {
                         targetTitles.push(malTitle);
                         if (!animeTitle) animeTitle = malTitle;
                     }
+                    console.log(`[AniZone] AnimeSync mapped: "${animeTitle}", mappedEp=${mappedEp}`);
                 }
             }
 
@@ -312,11 +314,18 @@ async function getStreams(tmdbId, mediaType = 'tv', season = 1, episode = 1) {
             animeSlug = matchMovieCard(cards, specificTargetTitles);
         }
 
-        if (!animeSlug) return [];
+        if (!animeSlug) {
+            console.log(`[AniZone] No matching slug found for "${animeTitle}"`);
+            return [];
+        }
 
+        console.log(`[AniZone] Selected slug: "${animeSlug}", mappedEp=${mappedEp}`);
         const episodeUrl = `/anime/${animeSlug}/${mappedEp}`;
         const epResponse = await fetchWithCookies(episodeUrl);
-        if (!epResponse.ok || !epResponse.text) return [];
+        if (!epResponse.ok || !epResponse.text) {
+            console.log(`[AniZone] Failed to load episode page: ${episodeUrl}`);
+            return [];
+        }
 
         const epHtml = epResponse.text;
         const $ep = cheerio.load(epHtml);
@@ -413,8 +422,10 @@ async function getStreams(tmdbId, mediaType = 'tv', season = 1, episode = 1) {
             }
         }
 
+        console.log(`[AniZone] Total streams found: ${streams.length}`);
         return streams;
     } catch (error) {
+        console.log(`[AniZone] Error: ${error.message}`);
         return [];
     }
 }
