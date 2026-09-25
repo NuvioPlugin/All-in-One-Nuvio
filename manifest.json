@@ -382,16 +382,25 @@
     {
       "id": "fibwatch",
       "name": "FibWatch",
-      "description": "Watch Movies, Series, Anime in English & Hindi",
+      "description": "FibWatch movie and TV streams with episode selection",
       "version": "1.0.0",
       "author": "Nuvio Team",
-      "supportedTypes": ["movie", "tv"],
+      "supportedTypes": [
+        "movie",
+        "tv"
+      ],
       "filename": "providers/fibwatch.js",
       "enabled": true,
-      "hasSettings": true,
-      "formats": ["mkv", "m3u8"],
-      "logo": "https://i.postimg.cc/sfLR6dMm/fibwatch.png",
-      "contentLanguage": ["en", "hi"]
+      "formats": [
+        "m3u8",
+        "mp4",
+        "mkv"
+      ],
+      "contentLanguage": [
+        "hi",
+        "bn",
+        "en"
+      ]
     },
     {
       "id": "goated",
