@@ -832,6 +832,29 @@
         "en",
         "ja"
       ]
+    },
+    {
+      "id": "fibwatch",
+      "name": "FibWatch",
+      "description": "FibWatch movie and TV streams with episode selection",
+      "version": "1.0.0",
+      "author": "Nuvio Team",
+      "supportedTypes": [
+        "movie",
+        "tv"
+      ],
+      "filename": "providers/fibwatch.js",
+      "enabled": true,
+      "formats": [
+        "m3u8",
+        "mp4",
+        "mkv"
+      ],
+      "contentLanguage": [
+        "hi",
+        "bn",
+        "en"
+      ]
     }
   ]
 }
