@@ -1,0 +1,47 @@
+name: Sync dev plugins to main
+
+on:
+  push:
+    branches:
+      - dev
+    paths:
+      - "providers/*.js"
+      - "providers/**/*.js"
+      - "manifest.json"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: sync-dev-plugins-to-main
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository history
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Git identity
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: Sync changed plugins and manifest entries
+        env:
+          DEV_BEFORE: ${{ github.event.before }}
+          DEV_SHA: ${{ github.sha }}
+        run: python3 scripts/sync_dev_plugins_to_main.py
+
+      - name: Commit and push changes to main
+        run: |
+          git add -- manifest.json providers
+          if git diff --cached --quiet; then
+            echo "No plugin changes to sync."
+            exit 0
+          fi
+          git commit -m "Sync plugin updates from dev"
+          git push origin main
