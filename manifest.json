@@ -75,6 +75,19 @@
       "contentLanguage": ["en"]
     },
     {
+      "id": "anizone",
+      "name": "AniZone",
+      "description": "AniZone high-quality anime streaming with multi-audio and soft subtitles",
+      "version": "1.0.2",
+      "author": "Nuvio Team",
+      "supportedTypes": ["movie", "tv"],
+      "filename": "providers/anizone.js",
+      "enabled": true,
+      "formats": ["m3u8"],
+      "logo": "https://anizone.to/favicon.ico",
+      "contentLanguage": ["en", "ja"]
+    },
+    {
       "id": "anikototv",
       "name": "AnikotoTV",
       "description": "Anime provider for AnikotoTV.to via Mapper API + Native Extractor",
