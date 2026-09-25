@@ -703,6 +703,27 @@
       ]
     },
     {
+      "id": "anikoto",
+      "name": "Anikoto",
+      "description": "Anikoto anime streams with site and mapper servers",
+      "version": "1.0.0",
+      "author": "Adapted from Yuzono anime-extensions",
+      "supportedTypes": [
+        "movie",
+        "tv"
+      ],
+      "filename": "providers/anikoto.js",
+      "enabled": true,
+      "formats": [
+        "m3u8"
+      ],
+      "logo": "https://anikototv.to/favicon.ico",
+      "contentLanguage": [
+        "en",
+        "ja"
+      ]
+    },
+    {
       "id": "anichi",
       "name": "Anichi",
       "description": "Anichi high-quality anime streaming with GraphQL persisted queries",
@@ -814,4 +835,3 @@
     }
   ]
 }
-
