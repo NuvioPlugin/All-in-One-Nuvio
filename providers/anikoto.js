@@ -121,10 +121,23 @@ async function getTmdbInfo(tmdbId, mediaType, season) {
 }
 
 async function fetchJsonWithTimeout(url, timeoutMs = 5000) {
+  const requestOptions = { headers: { "Accept": "application/json, text/plain, */*" } };
+  // Nuvio's QuickJS runtime has no timer globals; rely on its overall plugin
+  // execution timeout in that environment.
+  if (typeof setTimeout !== "function") {
+    try {
+      const response = await request(url, requestOptions);
+      if (!response.ok) return null;
+      return await response.json();
+    } catch (_) {
+      return null;
+    }
+  }
+
   let timer;
   try {
     const response = await Promise.race([
-      request(url, { headers: { "Accept": "application/json, text/plain, */*" } }),
+      request(url, requestOptions),
       new Promise((_, reject) => { timer = setTimeout(() => reject(new Error("Request timed out")), timeoutMs); })
     ]);
     if (!response.ok) return null;

@@ -24,22 +24,30 @@ export function parseXDataJson(rawArg) {
 }
 
 export async function fetchWithTimeout(url, options = {}, timeoutMs = 8000) {
+    const mergedHeaders = {
+        'User-Agent': HEADERS['User-Agent'],
+        'Referer': HEADERS['Referer'],
+        ...(options.headers || {})
+    };
+    const fetchOptions = {
+        skipSizeCheck: true,
+        ...options,
+        headers: mergedHeaders
+    };
+
+    // Nuvio's QuickJS runtime has no timer globals. Its plugin runner already
+    // enforces an overall execution timeout, so issue the request directly.
+    if (typeof setTimeout !== 'function') {
+        return fetch(url, fetchOptions);
+    }
+
     let timer = null;
     const timeoutPromise = new Promise((_, reject) => {
         timer = setTimeout(() => reject(new Error('Timeout')), timeoutMs);
     });
     try {
-        const mergedHeaders = {
-            'User-Agent': HEADERS['User-Agent'],
-            'Referer': HEADERS['Referer'],
-            ...(options.headers || {})
-        };
         const res = await Promise.race([
-            fetch(url, {
-                skipSizeCheck: true,
-                ...options,
-                headers: mergedHeaders
-            }),
+            fetch(url, fetchOptions),
             timeoutPromise
         ]);
         clearTimeout(timer);

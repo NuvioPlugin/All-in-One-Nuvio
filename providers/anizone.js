@@ -1,6 +1,6 @@
 /**
  * anizone - Built from src/anizone/
- * Generated: 2026-09-24T02:51:26.296Z
+ * Generated: 2026-09-25T19:36:47.745Z
  */
 var __create = Object.create;
 var __defProp = Object.defineProperty;
@@ -87,21 +87,25 @@ function parseXDataJson(rawArg) {
 }
 function fetchWithTimeout(_0) {
   return __async(this, arguments, function* (url, options = {}, timeoutMs = 8e3) {
+    const mergedHeaders = __spreadValues({
+      "User-Agent": HEADERS["User-Agent"],
+      "Referer": HEADERS["Referer"]
+    }, options.headers || {});
+    const fetchOptions = __spreadProps(__spreadValues({
+      skipSizeCheck: true
+    }, options), {
+      headers: mergedHeaders
+    });
+    if (typeof setTimeout !== "function") {
+      return fetch(url, fetchOptions);
+    }
     let timer = null;
     const timeoutPromise = new Promise((_, reject) => {
       timer = setTimeout(() => reject(new Error("Timeout")), timeoutMs);
     });
     try {
-      const mergedHeaders = __spreadValues({
-        "User-Agent": HEADERS["User-Agent"],
-        "Referer": HEADERS["Referer"]
-      }, options.headers || {});
       const res = yield Promise.race([
-        fetch(url, __spreadProps(__spreadValues({
-          skipSizeCheck: true
-        }, options), {
-          headers: mergedHeaders
-        })),
+        fetch(url, fetchOptions),
         timeoutPromise
       ]);
       clearTimeout(timer);

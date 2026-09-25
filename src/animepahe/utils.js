@@ -79,22 +79,30 @@ export function isDateMatch(d1, d2) {
 }
 
 async function fetchWithTimeout(url, options = {}, timeoutMs = 6000) {
+    const mergedHeaders = {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/135.0.0.0 Safari/537.36',
+        'Accept': 'application/json, text/plain, */*',
+        ...(options.headers || {})
+    };
+    const fetchOptions = {
+        skipSizeCheck: true,
+        headers: mergedHeaders,
+        ...options
+    };
+
+    // Nuvio's QuickJS runtime has no timer globals. Its plugin runner already
+    // enforces an overall execution timeout, so issue the request directly.
+    if (typeof setTimeout !== 'function') {
+        return fetch(url, fetchOptions);
+    }
+
     let timer = null;
     const timeoutPromise = new Promise((_, reject) => {
         timer = setTimeout(() => reject(new Error('Timeout')), timeoutMs);
     });
     try {
-        const mergedHeaders = {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/135.0.0.0 Safari/537.36',
-            'Accept': 'application/json, text/plain, */*',
-            ...(options.headers || {})
-        };
         const res = await Promise.race([
-            fetch(url, {
-                skipSizeCheck: true,
-                headers: mergedHeaders,
-                ...options
-            }),
+            fetch(url, fetchOptions),
             timeoutPromise
         ]);
         clearTimeout(timer);

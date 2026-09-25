@@ -1,6 +1,6 @@
 /**
  * animepahe - Built from src/animepahe/
- * Generated: 2026-09-23T07:17:17.173Z
+ * Generated: 2026-09-25T19:36:47.578Z
  */
 var __create = Object.create;
 var __defProp = Object.defineProperty;
@@ -158,20 +158,24 @@ function isDateMatch(d1, d2) {
 }
 function fetchWithTimeout(_0) {
   return __async(this, arguments, function* (url, options = {}, timeoutMs = 6e3) {
+    const mergedHeaders = __spreadValues({
+      "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/135.0.0.0 Safari/537.36",
+      "Accept": "application/json, text/plain, */*"
+    }, options.headers || {});
+    const fetchOptions = __spreadValues({
+      skipSizeCheck: true,
+      headers: mergedHeaders
+    }, options);
+    if (typeof setTimeout !== "function") {
+      return fetch(url, fetchOptions);
+    }
     let timer = null;
     const timeoutPromise = new Promise((_, reject) => {
       timer = setTimeout(() => reject(new Error("Timeout")), timeoutMs);
     });
     try {
-      const mergedHeaders = __spreadValues({
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/135.0.0.0 Safari/537.36",
-        "Accept": "application/json, text/plain, */*"
-      }, options.headers || {});
       const res = yield Promise.race([
-        fetch(url, __spreadValues({
-          skipSizeCheck: true,
-          headers: mergedHeaders
-        }, options)),
+        fetch(url, fetchOptions),
         timeoutPromise
       ]);
       clearTimeout(timer);
