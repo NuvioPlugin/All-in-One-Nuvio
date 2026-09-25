@@ -270,6 +270,36 @@ function extractFebBoxShare(showboxId, mediaType, seasonNum, episodeNum, uiToken
 function processShowBoxResponse(data, mediaInfo, mediaType, seasonNum, episodeNum) {
   const streams = [];
   try {
+    // Also accept internal link responses shaped as
+    // { code, data: { list: [{ path, quality, size }] } }.
+    const nativeLinks = data?.data?.list || data?.list;
+    if (Array.isArray(nativeLinks)) {
+      let streamTitle = mediaInfo.title || "Unknown Title";
+      if (mediaType === "tv" && seasonNum != null && episodeNum != null) {
+        streamTitle = `${streamTitle} S${String(seasonNum).padStart(2, "0")}E${String(episodeNum).padStart(2, "0")}`;
+      }
+      nativeLinks.forEach((link) => {
+        if (!link || !link.path)
+          return;
+        const quality = getQualityFromName(link.quality || link.real_quality || "Unknown");
+        streams.push({
+          name: `ShowBox Internal [${quality}]`,
+          title: link.filename || streamTitle,
+          url: String(link.path).replace(/\\\//g, "/"),
+          quality,
+          size: formatFileSize(link.size || link.size_bytes),
+          headers: {
+            ...WORKING_HEADERS,
+            "Referer": "https://www.febbox.com/",
+            "Range": "bytes=0-"
+          },
+          provider: "showbox"
+        });
+      });
+      if (streams.length > 0)
+        return streams;
+    }
+
     if (!data || !data.success)
       return streams;
     if (!data.versions || !Array.isArray(data.versions) || data.versions.length === 0)

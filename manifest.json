@@ -707,7 +707,7 @@
       "name": "Anikoto",
       "description": "Anikoto anime streams with site and mapper servers",
       "version": "1.0.0",
-      "author": "Adapted from Yuzono anime-extensions",
+      "author": "Nuvio Team",
       "supportedTypes": [
         "movie",
         "tv"

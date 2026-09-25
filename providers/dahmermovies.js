@@ -300,26 +300,21 @@ function invokeDahmerMovies(title, year, season = null, episode = null) {
         const paths = parseLinks(html);
         console.log(`[DahmerMovies] Found ${paths.length} total links`);
 
-        // Filter based on content type and quality settings
+        // Match StreamPlay's DahmerMovies selection rules: movies are limited
+        // to 1080p/2160p, while TV listings are matched by SxxEyy.
         let filteredPaths;
         if (season === null) {
-            // For movies, filter by quality
             filteredPaths = paths.filter(path => {
                 const q = getIndexQuality(path.text);
-                return allowed.includes(q);
+                return (q === 1080 || q === 2160) && allowed.includes(q);
             });
-            console.log(`[DahmerMovies] Filtered to ${filteredPaths.length} movie links (Allowed: ${allowed.join(', ')})`);
+            console.log(`[DahmerMovies] Filtered to ${filteredPaths.length} movie links (1080p/2160p)`);
         } else {
-            // For TV shows, filter by season and episode + quality
+            // The reference provider doesn't quality-filter TV episodes.
             const [seasonSlug, episodeSlug] = getEpisodeSlug(season, episode);
             const episodePattern = new RegExp(`S${seasonSlug}E${episodeSlug}`, 'i');
-            filteredPaths = paths.filter(path => {
-                if (!episodePattern.test(path.text)) return false;
-                
-                const q = getIndexQuality(path.text);
-                return allowed.includes(q);
-            });
-            console.log(`[DahmerMovies] Filtered to ${filteredPaths.length} TV episode links (S${seasonSlug}E${episodeSlug}, Allowed: ${allowed.join(', ')})`);
+            filteredPaths = paths.filter(path => episodePattern.test(path.text));
+            console.log(`[DahmerMovies] Filtered to ${filteredPaths.length} TV episode links (S${seasonSlug}E${episodeSlug})`);
         }
 
         if (filteredPaths.length === 0) {
@@ -327,63 +322,35 @@ function invokeDahmerMovies(title, year, season = null, episode = null) {
             return [];
         }
 
-        // Function to sleep/delay
-        const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
-
-        // Process results sequentially to avoid 429 rate limiting
+        // StreamPlay passes the DahmerMovies href to its extractor without
+        // probing it first. Keep the index URL intact so HEAD-only or
+        // nonstandard redirects don't cause valid entries to be discarded.
         const results = [];
-        const maxLinks = 10; // Increased to 10 links
-        const pathsToProcess = filteredPaths.slice(0, maxLinks);
-        
-        async function processPaths() {
-            for (const path of pathsToProcess) {
+
+        function processPaths() {
+            for (const path of filteredPaths) {
                 const quality = getIndexQuality(path.text);
                 const qualityWithCodecs = getQualityWithCodecs(path.text);
-                const tags = getIndexQualityTags(path.text);
-
-                // Construct proper URL
                 let fullUrl;
-                if (path.href.startsWith('http')) {
-                    try {
-                        const url = new URL(path.href);
-                        fullUrl = `${url.protocol}//${url.host}${url.pathname}`;
-                    } catch (error) {
-                        fullUrl = path.href.replace(/ /g, '%20');
-                    }
-                } else if (path.href.startsWith('/')) {
-                    const urlObj = new URL(DAHMER_MOVIES_API);
-                    const encodedPath = path.href.split('/').map(p => encodeURIComponent(decode(p))).join('/');
-                    fullUrl = `${urlObj.protocol}//${urlObj.host}${encodedPath}`;
-                } else {
-                    const baseUrl = encodedUrl.endsWith('/') ? encodedUrl : encodedUrl + '/';
-                    const encodedPath = path.href.split('/').map(p => encodeURIComponent(decode(p))).join('/');
-                    fullUrl = baseUrl + encodedPath;
-                }
-
                 try {
-                    const finalUrl = await resolveFinalUrl(fullUrl);
-                    if (finalUrl) {
-                        results.push({
-                            name: "DahmerMovies",
-                            title: path.text,
-                            url: finalUrl,
-                            quality: qualityWithCodecs,
-                            size: formatFileSize(path.size),
-                            type: "direct",
-                            headers: {
-                                'User-Agent': 'Mozilla/5.0 (Android) ExoPlayer',
-                                'Referer': DAHMER_MOVIES_API + '/'
-                            },
-                            provider: "dahmermovies",
-                            filename: path.text
-                        });
-                    }
-                    
-                    // 1.5 second delay to balance speed and safety
-                    await sleep(1500);
-                } catch (e) {
-                    console.log(`[DahmerMovies] Failed to resolve ${fullUrl}`);
+                    fullUrl = new URL(path.href, DAHMER_MOVIES_API).href;
+                } catch (error) {
+                    fullUrl = path.href;
                 }
+                results.push({
+                    name: "DahmerMovies",
+                    title: path.text,
+                    url: fullUrl,
+                    quality: qualityWithCodecs,
+                    size: formatFileSize(path.size),
+                    type: "direct",
+                    headers: {
+                        'User-Agent': 'Mozilla/5.0 (Android) ExoPlayer',
+                        'Referer': DAHMER_MOVIES_API + '/'
+                    },
+                    provider: "dahmermovies",
+                    filename: path.text
+                });
             }
             
             // Sort by quality (highest first)
