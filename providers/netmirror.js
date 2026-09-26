@@ -1,6 +1,6 @@
 /**
  * netmirror - Built from src/netmirror/
- * Generated: 2026-09-26T10:03:28.194Z
+ * Generated: 2026-09-26T10:28:39.006Z
  */
 var __defProp = Object.defineProperty;
 var __defProps = Object.defineProperties;
@@ -164,7 +164,21 @@ function getCookie(name) {
   return ((_a = cookieJar.find((cookie) => cookie.name === name)) == null ? void 0 : _a.value) || "";
 }
 function delay(ms) {
-  return new Promise((resolve) => setTimeout(resolve, ms));
+  if (typeof setTimeout === "function") {
+    return new Promise((resolve) => setTimeout(resolve, ms));
+  }
+  return Promise.resolve().then(() => {
+    if (typeof SharedArrayBuffer === "function" && typeof Atomics !== "undefined" && typeof Atomics.wait === "function") {
+      try {
+        Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, ms);
+        return;
+      } catch (e) {
+      }
+    }
+    const deadline = Date.now() + ms;
+    while (Date.now() < deadline) {
+    }
+  });
 }
 function bypass(mainUrl) {
   return __async(this, null, function* () {

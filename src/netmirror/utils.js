@@ -60,7 +60,25 @@ function getCookie(name) {
 }
 
 function delay(ms) {
-    return new Promise(resolve => setTimeout(resolve, ms));
+    if (typeof setTimeout === 'function') {
+        return new Promise(resolve => setTimeout(resolve, ms));
+    }
+
+    // Nuvio's plugin runtime omits browser timers. Use an atomic wait when
+    // available; otherwise block this plugin worker until the retry interval.
+    return Promise.resolve().then(() => {
+        if (typeof SharedArrayBuffer === 'function' && typeof Atomics !== 'undefined' && typeof Atomics.wait === 'function') {
+            try {
+                Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, ms);
+                return;
+            } catch (e) {
+                // Some JS runtimes disable Atomics.wait on their worker thread.
+            }
+        }
+
+        const deadline = Date.now() + ms;
+        while (Date.now() < deadline) {}
+    });
 }
 
 export async function bypass(mainUrl) {
