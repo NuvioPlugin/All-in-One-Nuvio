@@ -1,6 +1,6 @@
 /**
  * netmirror - Built from src/netmirror/
- * Generated: 2026-09-26T05:40:49.456Z
+ * Generated: 2026-09-26T09:58:23.642Z
  */
 var __defProp = Object.defineProperty;
 var __defProps = Object.defineProperties;
@@ -44,7 +44,6 @@ var __async = (__this, __arguments, generator) => {
 
 // src/netmirror/constants.js
 var TMDB_API_KEY = "1865f43a0549ca50d341dd9ab8b29f49";
-var NEW_TV_USER_TOKEN = "5b5dc5b4b392a15a1877518bb5575632::b0881b4d377ad6c15cafe38474b0d92b::1790264661::ni";
 var PLATFORM_MAP = {
   netflix: {
     ott: "nf",
@@ -83,154 +82,155 @@ var PLATFORM_MAP = {
     epImg: "hsepimg"
   }
 };
-var NEW_TV_BASE_HEADERS = {
-  "Cache-Control": "no-cache, no-store, must-revalidate",
-  "Pragma": "no-cache",
-  "Expires": "0",
-  "X-Requested-With": "NetmirrorNewTV v1.0",
-  "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:136.0) Gecko/20100101 Firefox/136.0 /OS.GatuNewTV v1.0",
-  "Accept": "application/json, text/plain, */*"
+var BASE_HEADERS = {
+  "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7",
+  "Accept-Language": "en-IN,en-US;q=0.9,en;q=0.8",
+  "Cache-Control": "max-age=0",
+  "Connection": "keep-alive",
+  "sec-ch-ua": '"Not(A:Brand";v="8", "Chromium";v="144", "Android WebView";v="144"',
+  "sec-ch-ua-mobile": "?0",
+  "sec-ch-ua-platform": '"Android"',
+  "Sec-Fetch-Dest": "document",
+  "Sec-Fetch-Mode": "navigate",
+  "Sec-Fetch-Site": "same-origin",
+  "Sec-Fetch-User": "?1",
+  "Upgrade-Insecure-Requests": "1",
+  "User-Agent": "Mozilla/5.0 (Linux; Android 13; Pixel 5 Build/TQ3A.230901.001; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/144.0.7559.132 Safari/537.36 /OS.Gatu v3.0",
+  "X-Requested-With": "XMLHttpRequest"
 };
-var NEW_TV_DOMAINS = [
-  "aHR0cHM6Ly9tb2JpbGVkZXRlY3RzLmNvbQ==",
-  "aHR0cHM6Ly9tb2JpbGVkZXRlY3QuYXBw",
-  "aHR0cHM6Ly9tb2JpZGV0ZWN0LmFydA==",
-  "aHR0cHM6Ly9tb2JpZGV0ZWN0LmNj",
-  "aHR0cHM6Ly9tb2JpZGV0ZWN0LmNsaWNr",
-  "aHR0cHM6Ly9tb2JpZGV0ZWN0Lmluaw==",
-  "aHR0cHM6Ly9tb2JpZGV0ZWN0LmxpdmU=",
-  "aHR0cHM6Ly9tb2JpZGV0ZWN0LnBybw==",
-  "aHR0cHM6Ly9tb2JpZGV0ZWN0LnNob3A=",
-  "aHR0cHM6Ly9tb2JpZGV0ZWN0LnNpdGU=",
-  "aHR0cHM6Ly9tb2JpZGV0ZWN0LnNwYWNl",
-  "aHR0cHM6Ly9tb2JpZGV0ZWN0LnN0b3Jl",
-  "aHR0cHM6Ly9tb2JpZGV0ZWN0LnZpcA==",
-  "aHR0cHM6Ly9tb2JpZGV0ZWN0Lndpa2k=",
-  "aHR0cHM6Ly9tb2JpZGV0ZWN0Lnh5eg==",
-  "aHR0cHM6Ly9tb2JpZGV0ZWN0cy5hcnQ=",
-  "aHR0cHM6Ly9tb2JpZGV0ZWN0cy5jYw==",
-  "aHR0cHM6Ly9tb2JpZGV0ZWN0cy5pbmZv",
-  "aHR0cHM6Ly9tb2JpZGV0ZWN0cy5pbms=",
-  "aHR0cHM6Ly9tb2JpZGV0ZWN0cy5saXZl",
-  "aHR0cHM6Ly9tb2JpZGV0ZWN0cy5wcm8=",
-  "aHR0cHM6Ly9tb2JpZGV0ZWN0cy5zdG9yZQ==",
-  "aHR0cHM6Ly9tb2JpZGV0ZWN0cy50b3A=",
-  "aHR0cHM6Ly9tb2JpZGV0ZWN0cy54eXo="
-];
 
 // src/netmirror/utils.js
-var resolvedApiUrl = "";
-function safeAtob(encoded) {
-  if (typeof atob === "function") {
-    return atob(encoded);
-  }
-  return Buffer.from(encoded, "base64").toString("binary");
-}
-function resolveApiUrl() {
-  return __async(this, null, function* () {
-    if (resolvedApiUrl)
-      return resolvedApiUrl;
-    for (const encoded of NEW_TV_DOMAINS) {
-      const base = safeAtob(encoded).replace(/\/$/, "");
-      try {
-        const response = yield fetch(`${base}/checknewtv.php`, {
-          headers: __spreadProps(__spreadValues({}, NEW_TV_BASE_HEADERS), { "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36" })
-        });
-        const data = yield response.json();
-        const tokenHash = data.token_hash;
-        if (tokenHash) {
-          resolvedApiUrl = safeAtob(tokenHash).replace(/\/$/, "");
-          return resolvedApiUrl;
-        }
-      } catch (error) {
-      }
-    }
-    throw new Error("Failed to resolve NewTV API base URL");
-  });
-}
+var COOKIE_TTL = 54e6;
+var VERIFY_ATTEMPTS = 7;
+var VERIFY_DELAY = 1e4;
+var APP_USER_AGENT = "Mozilla/5.0 (Linux; Android 12; RMX2117 Build/SP1A.210812.016; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/147.0.7727.55 Mobile Safari/537.36 /OS.Gatu v3.0";
 var cookieValue = "";
 var cookieTimestamp = 0;
-function readNetMirrorCookie(headers) {
+var cookieJar = [];
+function setCookieValues(headers) {
+  var _a, _b;
   if (!headers)
-    return "";
-  let setCookie = headers.get("set-cookie") || headers.get("Set-Cookie");
-  if (!setCookie && headers.getSetCookie) {
+    return [];
+  if (typeof headers.getSetCookie === "function") {
     try {
-      setCookie = headers.getSetCookie().join(",");
+      return headers.getSetCookie();
     } catch (e) {
     }
   }
-  if (!setCookie && headers.forEach) {
-    try {
-      headers.forEach((value, key) => {
-        if (key.toLowerCase() === "set-cookie")
-          setCookie = `${setCookie || ""},${value}`;
-      });
-    } catch (e) {
-    }
-  }
-  const match = (setCookie || "").match(/(?:^|[,;\s])t_hash_t=([^;,\s]+)/i);
-  return match ? match[1] : "";
+  const raw = ((_a = headers.get) == null ? void 0 : _a.call(headers, "set-cookie")) || ((_b = headers.get) == null ? void 0 : _b.call(headers, "Set-Cookie")) || "";
+  return raw.split(/,(?=\s*[^;,\s]+=)/g).map((value) => value.trim()).filter(Boolean);
 }
-function bypass(ott) {
-  return __async(this, null, function* () {
-    if (cookieValue && Date.now() - cookieTimestamp < 54e6) {
-      return cookieValue;
+function rememberResponseCookies(headers, responseUrl) {
+  const host = new URL(responseUrl).hostname.toLowerCase();
+  for (const raw of setCookieValues(headers)) {
+    const pair = raw.split(";", 1)[0];
+    const equals = pair.indexOf("=");
+    if (equals <= 0)
+      continue;
+    const name = pair.slice(0, equals).trim();
+    const value = pair.slice(equals + 1).trim();
+    const domainMatch = raw.match(/(?:^|;)\s*domain=([^;]+)/i);
+    const domain = (domainMatch ? domainMatch[1] : host).trim().replace(/^\./, "").toLowerCase();
+    const index = cookieJar.findIndex((cookie2) => cookie2.name === name && cookie2.domain === domain);
+    if (/max-age\s*=\s*0/i.test(raw) || !value) {
+      if (index >= 0)
+        cookieJar.splice(index, 1);
+      continue;
     }
-    try {
-      console.log("[NetMirror] Requesting an access cookie...");
-      const uuid = typeof crypto !== "undefined" && crypto.randomUUID ? crypto.randomUUID() : "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, (char) => {
-        const random = Math.random() * 16 | 0;
-        return (char === "x" ? random : random & 3 | 8).toString(16);
-      });
-      const verifyUrl = "https://net52.cc/verify.php";
-      const requestOptions = {
-        method: "POST",
-        headers: {
-          "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7",
-          "Accept-Language": "en-US,en;q=0.9",
-          "Cache-Control": "max-age=0",
-          "Content-Type": "application/x-www-form-urlencoded",
-          "Origin": "https://net22.cc",
-          "Referer": "https://net22.cc/verify2",
-          "sec-ch-ua": '"Google Chrome";v="147", "Not.A/Brand";v="8", "Chromium";v="147"',
-          "sec-ch-ua-mobile": "?0",
-          "sec-ch-ua-platform": '"Windows"',
-          "Sec-Fetch-Dest": "document",
-          "Sec-Fetch-Mode": "navigate",
-          "Sec-Fetch-Site": "same-origin",
-          "Sec-Fetch-User": "?1",
-          "Upgrade-Insecure-Requests": "1",
-          "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36"
-        },
-        body: `g-recaptcha-response=${encodeURIComponent(uuid)}`
-      };
-      let verifyResponse;
-      try {
-        verifyResponse = yield fetch(verifyUrl, __spreadProps(__spreadValues({}, requestOptions), { redirect: "manual" }));
-      } catch (manualRedirectError) {
-        verifyResponse = yield fetch(verifyUrl, requestOptions);
-      }
-      yield verifyResponse.text();
-      const newCookie = readNetMirrorCookie(verifyResponse.headers);
-      if (newCookie) {
-        cookieValue = newCookie;
-        cookieTimestamp = Date.now();
-        console.log("[NetMirror] Access cookie acquired.");
-        return cookieValue;
-      }
-      console.error("[NetMirror] Verification response did not contain a t_hash_t cookie.");
-    } catch (e) {
-      cookieValue = "";
-      console.error("[NetMirror] Cookie request failed:", e.message);
-    }
-    return "";
+    const cookie = { name, value, domain };
+    if (index >= 0)
+      cookieJar[index] = cookie;
+    else
+      cookieJar.push(cookie);
+  }
+}
+function cookieHeaderFor(url) {
+  const host = new URL(url).hostname.toLowerCase();
+  return cookieJar.filter((cookie) => host === cookie.domain || host.endsWith(`.${cookie.domain}`)).map((cookie) => `${cookie.name}=${cookie.value}`).join("; ");
+}
+function request(_0) {
+  return __async(this, arguments, function* (url, options = {}) {
+    const headers = __spreadValues({}, options.headers || {});
+    const cookieHeader = cookieHeaderFor(url);
+    if (cookieHeader)
+      headers.Cookie = cookieHeader;
+    const response = yield fetch(url, __spreadProps(__spreadValues({}, options), { headers }));
+    rememberResponseCookies(response.headers, response.url || url);
+    return response;
   });
 }
-function buildNewTvHeaders(ott, extra = {}) {
-  return __spreadValues(__spreadProps(__spreadValues({}, NEW_TV_BASE_HEADERS), {
-    "Ott": ott
-  }), extra);
+function getCookie(name) {
+  var _a;
+  return ((_a = cookieJar.find((cookie) => cookie.name === name)) == null ? void 0 : _a.value) || "";
+}
+function delay(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+function bypass(mainUrl) {
+  return __async(this, null, function* () {
+    var _a;
+    if (cookieValue && Date.now() - cookieTimestamp < COOKIE_TTL)
+      return cookieValue;
+    const base = String(mainUrl || "https://net52.cc").replace(/\/$/, "");
+    const homeUrl = `${base}/mobile/home?app=1`;
+    const appHeaders = {
+      "User-Agent": APP_USER_AGENT,
+      "X-Requested-With": "app.netmirror.netmirrornew"
+    };
+    try {
+      console.log("[NetMirror] Starting CNC Verse mobile cookie verification...");
+      cookieJar = [];
+      const homeResponse = yield request(homeUrl, { headers: appHeaders });
+      const homeHtml = yield homeResponse.text();
+      if (!homeResponse.ok)
+        throw new Error(`Mobile home returned HTTP ${homeResponse.status}`);
+      const addhash = (_a = homeHtml.match(/data-addhash\s*=\s*["']([^"']+)["']/i)) == null ? void 0 : _a[1];
+      if (!addhash)
+        throw new Error("NetMirror mobile home did not provide data-addhash");
+      const userverUrl = `https://userver.net52.cc/?hee5=${encodeURIComponent(addhash)}&a=y&t=${Math.random()}`;
+      const userverResponse = yield request(userverUrl, { headers: appHeaders });
+      yield userverResponse.text();
+      const verifyUrl = `${base}/mobile/verify2.php`;
+      const verifyHeaders = {
+        "User-Agent": APP_USER_AGENT,
+        "X-Requested-With": "XMLHttpRequest",
+        "Content-Type": "application/x-www-form-urlencoded"
+      };
+      for (let attempt = 1; attempt <= VERIFY_ATTEMPTS; attempt++) {
+        yield delay(VERIFY_DELAY);
+        const response = yield request(verifyUrl, {
+          method: "POST",
+          headers: verifyHeaders,
+          body: `verify=${encodeURIComponent(addhash)}`
+        });
+        const text = yield response.text();
+        let allDone = text.includes('"statusup":"All Done"');
+        if (!allDone) {
+          try {
+            allDone = JSON.parse(text).statusup === "All Done";
+          } catch (e) {
+          }
+        }
+        if (!allDone) {
+          console.log(`[NetMirror] Cookie verification pending (attempt ${attempt}/${VERIFY_ATTEMPTS}).`);
+          continue;
+        }
+        const verifiedCookie = getCookie("t_hash_t");
+        if (!verifiedCookie)
+          throw new Error("Verification completed without a t_hash_t cookie");
+        cookieValue = verifiedCookie;
+        cookieTimestamp = Date.now();
+        console.log("[NetMirror] CNC Verse mobile cookie verified.");
+        return cookieValue;
+      }
+      throw new Error("CNC Verse mobile verification did not complete; NetMirror may be waiting for an ad click");
+    } catch (error) {
+      cookieValue = "";
+      cookieTimestamp = 0;
+      console.error("[NetMirror] Mobile cookie verification failed:", error.message);
+      return "";
+    }
+  });
 }
 
 // src/netmirror/index.js
@@ -271,123 +271,134 @@ function getStreams(tmdbId, mediaType, season, episode) {
 function fetchFromPlatform(platformKey, title, mediaType, season, episode) {
   return __async(this, null, function* () {
     const platform = PLATFORM_MAP[platformKey];
-    const apiBase = yield resolveApiUrl();
-    const cookie = yield bypass(platform.ott);
-    const reqCookies = [];
-    if (cookie) {
-      reqCookies.push(`t_hash_t=${cookie}`);
-    }
-    const settings = globalThis.SCRAPER_SETTINGS || {};
-    if (settings.forceHd !== false) {
-      reqCookies.push("hd=on");
-    }
-    const cookieHeader = reqCookies.length > 0 ? { "Cookie": reqCookies.join("; ") } : {};
-    const searchUrl = `${apiBase}/newtv/search.php?s=${encodeURIComponent(title)}`;
-    const searchResp = yield fetch(searchUrl, {
-      headers: buildNewTvHeaders(platform.ott, cookieHeader)
-    });
-    const searchData = yield searchResp.json();
-    if (!searchData.searchResult || searchData.searchResult.length === 0)
-      return null;
-    const result = searchData.searchResult[0];
-    const contentId = result.id;
-    const postUrl = `${apiBase}/newtv/post.php?id=${contentId}`;
-    const postResp = yield fetch(postUrl, {
-      headers: buildNewTvHeaders(platform.ott, __spreadValues({ Lastep: "", Usertoken: "" }, cookieHeader))
-    });
-    const postData = yield postResp.json();
-    let targetId = contentId;
-    if (mediaType === "tv") {
-      const episodes = yield getAllEpisodes(contentId, postData, platform, apiBase);
-      const targetEp = episodes.find((ep) => ep && ep.s === season && ep.ep === episode);
-      if (targetEp) {
-        targetId = targetEp.id;
-      } else {
-        return null;
-      }
-    } else {
-      const isSeries = postData.type === "t" || postData.episodes && postData.episodes.filter((e) => e !== null).length > 0;
-      if (isSeries)
-        return null;
-      targetId = postData.main_id || contentId;
-    }
-    const playerUrl = `${apiBase}/newtv/player.php?id=${encodeURIComponent(targetId)}`;
-    const playerResp = yield fetch(playerUrl, {
-      headers: buildNewTvHeaders(platform.ott, { Usertoken: NEW_TV_USER_TOKEN })
-    });
-    const playerData = yield playerResp.json();
-    if (!playerResp.ok || !playerData.video_link)
-      return null;
-    const referer = playerData.referer || apiBase;
-    return [{
-      name: `NetMirror (${platformKey.charAt(0).toUpperCase() + platformKey.slice(1)})`,
-      title: `${title} - Auto`,
-      url: playerData.video_link,
-      quality: "Auto",
-      headers: { Referer: referer }
-    }];
+    return fetchMobileContent(platformKey, platform, title, mediaType, season, episode);
   });
 }
-function getAllEpisodes(contentId, postData, platform, apiBase) {
+function fetchMobileContent(platformKey, platform, title, mediaType, season, episode) {
   return __async(this, null, function* () {
-    const episodes = [];
-    const selectedSeasonIdx = postData.season ? postData.season.findIndex((s) => s.selected === true) : -1;
-    const selectedSeasonId = selectedSeasonIdx >= 0 ? postData.season[selectedSeasonIdx].id : postData.nextPageSeason;
-    const selectedSeasonNumber = selectedSeasonIdx >= 0 ? selectedSeasonIdx + 1 : null;
-    if (postData.episodes) {
-      postData.episodes.filter((e) => e !== null).forEach((ep) => {
-        const epNum = ep.ep ? parseInt(ep.ep) : ep.epNum ? parseInt(ep.epNum.replace("E", "")) : null;
-        const sNum = selectedSeasonNumber || (ep.sNum ? parseInt(ep.sNum.replace("S", "")) : null);
-        episodes.push({
-          id: ep.id,
-          s: sNum,
-          ep: epNum
-        });
+    var _a, _b;
+    const base = "https://net52.cc";
+    const cookie = yield bypass(base);
+    const settings = globalThis.SCRAPER_SETTINGS || {};
+    const cookies = [];
+    if (cookie)
+      cookies.push(`t_hash_t=${cookie}`);
+    cookies.push(`ott=${platform.ott}`);
+    if (settings.forceHd !== false)
+      cookies.push("hd=on");
+    const headers = __spreadProps(__spreadValues({}, BASE_HEADERS), { Cookie: cookies.join("; ") });
+    const getJson = (_0, ..._1) => __async(this, [_0, ..._1], function* (url, referer = `${base}/home`, extraHeaders = {}) {
+      const response = yield fetch(url, {
+        headers: __spreadValues(__spreadProps(__spreadValues({}, headers), { Referer: referer }), extraHeaders)
       });
-    }
-    if (postData.nextPageShow === 1 && selectedSeasonId) {
-      const more = yield fetchEpisodesPage(contentId, selectedSeasonId, 2, selectedSeasonNumber, platform, apiBase);
-      episodes.push(...more);
-    }
-    if (postData.season) {
-      for (let index = 0; index < postData.season.length; index++) {
-        const season = postData.season[index];
-        if (season.id !== selectedSeasonId && season.id) {
-          const more = yield fetchEpisodesPage(contentId, season.id, 1, index + 1, platform, apiBase);
-          episodes.push(...more);
+      if (!response.ok)
+        throw new Error(`NetMirror mobile returned HTTP ${response.status}`);
+      return response.json();
+    });
+    const search = yield getJson(`${base}${platform.search}?s=${encodeURIComponent(title)}&t=${Math.floor(Date.now() / 1e3)}`);
+    const results = Array.isArray(search.searchResult) ? search.searchResult : [];
+    if (!results.length)
+      return null;
+    const normalize = (value) => String(value || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]+/g, " ").trim();
+    const wanted = normalize(title);
+    const rank = (item) => {
+      const candidate = normalize(item.t || item.title);
+      return candidate === wanted ? 0 : candidate.includes(wanted) || wanted.includes(candidate) ? 1 : 2;
+    };
+    results.sort((a, b) => rank(a) - rank(b));
+    const wantedSeason = Number(season);
+    const wantedEpisode = Number(episode);
+    for (const result of results.slice(0, 8)) {
+      if (!result.id)
+        continue;
+      const post = yield getJson(`${base}${platform.post}?id=${encodeURIComponent(result.id)}&t=${Math.floor(Date.now() / 1e3)}`);
+      if (!post || post.status === "n" && post.error)
+        continue;
+      let targetId = result.id;
+      if (mediaType === "tv") {
+        if (post.type !== "t" && !(post.episodes || []).some(Boolean))
+          continue;
+        let episodeEntry = findMobileEpisode(
+          post.episodes,
+          wantedSeason,
+          wantedEpisode,
+          ((_b = (_a = post.season) == null ? void 0 : _a.findIndex((s) => s.selected === true)) != null ? _b : -1) + 1
+        );
+        const seasonEntry = Array.isArray(post.season) ? post.season.find((s) => Number(String(s.s || "").replace(/\D/g, "")) === wantedSeason) : null;
+        if (!episodeEntry && (seasonEntry == null ? void 0 : seasonEntry.id)) {
+          let page = 1;
+          while (page <= 30) {
+            const url = `${base}${platform.episodes}?s=${encodeURIComponent(seasonEntry.id)}&series=${encodeURIComponent(result.id)}&t=${Math.floor(Date.now() / 1e3)}&page=${page}`;
+            const data = yield getJson(url);
+            episodeEntry = findMobileEpisode(data.episodes, wantedSeason, wantedEpisode, wantedSeason);
+            if (episodeEntry || !data.nextPageShow || Number(data.nextPageShow) === 0)
+              break;
+            page++;
+          }
+        }
+        if (!(episodeEntry == null ? void 0 : episodeEntry.id))
+          continue;
+        targetId = episodeEntry.id;
+      } else if (post.type === "t" || (post.episodes || []).some(Boolean)) {
+        continue;
+      }
+      const playlistUrl = `${base}${platform.playlist}?id=${encodeURIComponent(targetId)}&t=${encodeURIComponent(title)}&tm=${Math.floor(Date.now() / 1e3)}`;
+      const playlist = yield getJson(playlistUrl, `${base}/mobile/home?app=1`, {
+        "X-Requested-With": "app.netmirror.netmirrornew",
+        "Accept": "*/*",
+        "Sec-Fetch-Dest": "empty",
+        "Sec-Fetch-Mode": "cors"
+      });
+      const entries = Array.isArray(playlist) ? playlist : playlist.playlist || playlist.data || [];
+      const streams = [];
+      for (const entry of entries) {
+        for (const source of entry.sources || []) {
+          if (!source.file)
+            continue;
+          const streamUrl = /^https?:\/\//i.test(source.file) ? source.file : source.file.startsWith("//") ? `https:${source.file}` : `${base}${source.file.startsWith("/") ? "" : "/"}${source.file}`;
+          const label = source.label || "Auto";
+          const quality = (String(label).match(/\d{3,4}p?/i) || [])[0] || (/full\s*hd/i.test(label) ? "1080p" : /mid\s*hd/i.test(label) ? "720p" : /low\s*hd/i.test(label) ? "480p" : "Auto");
+          const playbackHeaders = {
+            "Accept": "*/*",
+            "Accept-Language": "en-IN,en-US;q=0.9,en;q=0.8",
+            "Connection": "keep-alive",
+            "Referer": `${base}/mobile/home?app=1`,
+            "sec-ch-ua": '"Android WebView";v="149", "Chromium";v="149", "Not)A;Brand";v="24"',
+            "sec-ch-ua-mobile": "?0",
+            "sec-ch-ua-platform": '"Android"',
+            "Sec-Fetch-Dest": "empty",
+            "Sec-Fetch-Mode": "cors",
+            "Sec-Fetch-Site": "same-origin",
+            "User-Agent": "Mozilla/5.0 (Linux; Android 13; Pixel 5 Build/TQ3A.230901.001; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/149.0.7827.91 Safari/537.36 /OS.Gatu v3.0",
+            "X-Requested-With": "app.netmirror.netmirrornew"
+          };
+          if (settings.forceHd !== false)
+            playbackHeaders.Cookie = "hd=on";
+          streams.push({
+            name: `NetMirror (${platformKey})`,
+            title: mediaType === "tv" ? `${title} S${wantedSeason}E${wantedEpisode} - ${label}` : `${title} - ${label}`,
+            url: streamUrl,
+            quality,
+            headers: playbackHeaders
+          });
         }
       }
+      if (streams.length)
+        return streams;
     }
-    return episodes;
+    return null;
   });
 }
-function fetchEpisodesPage(contentId, seasonId, page, seasonNumber, platform, apiBase) {
-  return __async(this, null, function* () {
-    const episodes = [];
-    let pg = page;
-    while (true) {
-      const url = `${apiBase}/newtv/episodes.php?id=${seasonId}&page=${pg}`;
-      const resp = yield fetch(url, {
-        headers: buildNewTvHeaders(platform.ott)
-      });
-      const data = yield resp.json();
-      if (data.episodes) {
-        data.episodes.filter((e) => e !== null).forEach((ep) => {
-          const epNum = ep.ep ? parseInt(ep.ep) : ep.epNum ? parseInt(ep.epNum.replace("E", "")) : null;
-          const sNum = seasonNumber || (ep.sNum ? parseInt(ep.sNum.replace("S", "")) : null);
-          episodes.push({
-            id: ep.id,
-            s: sNum,
-            ep: epNum
-          });
-        });
-      }
-      if (data.nextPageShow !== 1)
-        break;
-      pg++;
-    }
-    return episodes;
-  });
+function findMobileEpisode(episodes, season, episode, fallbackSeason) {
+  if (!Array.isArray(episodes))
+    return null;
+  return episodes.find((item) => {
+    if (!item)
+      return false;
+    const epNumber = Number(String(item.ep || "").replace(/\D/g, ""));
+    const seasonNumber = Number(String(item.s || item.sNum || "").replace(/\D/g, "")) || fallbackSeason;
+    return epNumber === episode && seasonNumber === season;
+  }) || null;
 }
 function onSettings() {
   return __async(this, null, function* () {

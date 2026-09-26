@@ -626,7 +626,7 @@
       "id": "netmirror",
       "name": "NetMirror",
       "description": "Streaming links from netmirror.",
-      "version": "1.0.5",
+      "version": "1.0.7",
       "author": "Nuvio Team",
       "supportedTypes": [
         "movie",
