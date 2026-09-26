@@ -617,22 +617,15 @@
     {
       "id": "netmirror",
       "name": "NetMirror",
-      "description": "Streaming links from netmirror. Automatically disabled on iOS due to compatibility issues.",
+      "description": "Streaming links from netmirror.",
       "version": "1.0.4",
       "author": "Nuvio Team",
-      "supportedTypes": [
-        "movie",
-        "tv"
-      ],
       "filename": "providers/netmirror.js",
       "enabled": true,
       "hasSettings": true,
       "logo": "https://net22.cc/favicon.ico",
       "contentLanguage": [
         "en"
-      ],
-      "disabledPlatforms": [
-        "ios"
       ],
       "supportsExternalPlayer": false
     },
