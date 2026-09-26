@@ -143,6 +143,13 @@ def increment_plugin_version(version):
     return f"{major}.{minor}.{patch}"
 
 
+def plugin_version_tuple(version):
+    match = re.fullmatch(r"(\d+)\.(\d+)\.(\d+)", str(version or ""))
+    if not match:
+        raise ValueError(f"Invalid numeric plugin version: {version!r}")
+    return tuple(map(int, match.groups()))
+
+
 def encode_entry(entry, indent):
     lines = json.dumps(entry, ensure_ascii=False, indent=2).splitlines()
     return lines[0] + "\n" + "\n".join(indent + line for line in lines[1:])
@@ -285,7 +292,14 @@ def main():
             if previous is None:
                 continue
             bumped = dict(entry)
-            bumped["version"] = increment_plugin_version(previous.get("version"))
+            source_version = entry.get("version")
+            previous_version = previous.get("version")
+            if plugin_version_tuple(source_version) > plugin_version_tuple(previous_version):
+                # The dev manifest may already carry the next version while
+                # main is still behind; preserve it instead of regressing it.
+                bumped["version"] = source_version
+            else:
+                bumped["version"] = increment_plugin_version(previous_version)
             updates[provider_id] = (bumped, encode_entry(bumped, "    "))
 
     # Manifest-only updates stay scoped to changed IDs.

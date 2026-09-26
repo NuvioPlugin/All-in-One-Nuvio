@@ -1,6 +1,6 @@
 /**
  * netmirror - Built from src/netmirror/
- * Generated: 2026-07-13T13:46:15.289Z
+ * Generated: 2026-09-26T05:13:59.294Z
  */
 var __defProp = Object.defineProperty;
 var __defProps = Object.defineProperties;
@@ -149,97 +149,79 @@ function resolveApiUrl() {
 }
 var cookieValue = "";
 var cookieTimestamp = 0;
+function readNetMirrorCookie(headers) {
+  if (!headers)
+    return "";
+  let setCookie = headers.get("set-cookie") || headers.get("Set-Cookie");
+  if (!setCookie && headers.getSetCookie) {
+    try {
+      setCookie = headers.getSetCookie().join(",");
+    } catch (e) {
+    }
+  }
+  if (!setCookie && headers.forEach) {
+    try {
+      headers.forEach((value, key) => {
+        if (key.toLowerCase() === "set-cookie")
+          setCookie = `${setCookie || ""},${value}`;
+      });
+    } catch (e) {
+    }
+  }
+  const match = (setCookie || "").match(/(?:^|[,;\s])t_hash_t=([^;,\s]+)/i);
+  return match ? match[1] : "";
+}
 function bypass(ott) {
   return __async(this, null, function* () {
     if (cookieValue && Date.now() - cookieTimestamp < 54e6) {
       return cookieValue;
     }
-    const newUrl = "https://net52.cc";
-    const userAgent = "Mozilla/5.0 (Linux; Android 12; RMX2117 Build/SP1A.210812.016; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/147.0.7727.55 Mobile Safari/537.36 /OS.Gatu v3.0";
     try {
-      console.log("[NetMirror] Running NetMirror Mobile bypass...");
-      const homeResponse = yield fetch(`${newUrl}/mobile/home?app=1`, {
-        headers: {
-          "User-Agent": userAgent,
-          "X-Requested-With": "app.netmirror.netmirrornew"
-        }
+      console.log("[NetMirror] Requesting an access cookie...");
+      const uuid = typeof crypto !== "undefined" && crypto.randomUUID ? crypto.randomUUID() : "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, (char) => {
+        const random = Math.random() * 16 | 0;
+        return (char === "x" ? random : random & 3 | 8).toString(16);
       });
-      const homeHtml = yield homeResponse.text();
-      const match = homeHtml.match(/<body[^>]*data-addhash=["']([^"']+)["']/i);
-      if (!match) {
-        console.error("[NetMirror] Failed to extract data-addhash from home page");
-        return "";
-      }
-      const addhash = match[1];
-      console.log("[NetMirror] Extracted addhash:", addhash);
-      const triggerUrl = `https://userver.net52.cc/?jjoii=${encodeURIComponent(addhash)}&a=y&t=${Math.floor(Date.now() / 1e3)}`;
-      yield fetch(triggerUrl, {
+      const verifyUrl = "https://net52.cc/verify.php";
+      const requestOptions = {
+        method: "POST",
         headers: {
-          "User-Agent": userAgent
-        }
-      });
-      const verifyUrl = `${newUrl}/mobile/verify2.php`;
-      for (let count = 1; count <= 7; count++) {
-        yield new Promise((resolve) => setTimeout(resolve, 1e4));
-        console.log(`[NetMirror] Polling verify2.php (attempt ${count}/7)...`);
-        const verifyResponse = yield fetch(verifyUrl, {
-          method: "POST",
-          headers: {
-            "User-Agent": userAgent,
-            "X-Requested-With": "XMLHttpRequest",
-            "Content-Type": "application/x-www-form-urlencoded"
-          },
-          body: `verify=${encodeURIComponent(addhash)}`
-        });
-        const verifyText = yield verifyResponse.text();
-        console.log("[NetMirror] Poll response:", verifyText);
-        if (verifyText.includes('"statusup":"All Done"')) {
-          let newCookie = "";
-          const headers = verifyResponse.headers;
-          if (headers) {
-            let setCookie = headers.get("set-cookie") || headers.get("Set-Cookie") || headers.get("SET-COOKIE");
-            if (setCookie) {
-              const match2 = setCookie.match(/t_hash_t=([^;]+)/);
-              if (match2)
-                newCookie = match2[1];
-            }
-            if (!newCookie && headers.entries) {
-              try {
-                for (const [key, val] of headers.entries()) {
-                  if (key.toLowerCase() === "set-cookie") {
-                    const match2 = val.match(/t_hash_t=([^;]+)/);
-                    if (match2) {
-                      newCookie = match2[1];
-                      break;
-                    }
-                  }
-                }
-              } catch (e) {
-              }
-            }
-            if (!newCookie && headers.forEach) {
-              try {
-                headers.forEach((val, key) => {
-                  if (key.toLowerCase() === "set-cookie") {
-                    const match2 = val.match(/t_hash_t=([^;]+)/);
-                    if (match2)
-                      newCookie = match2[1];
-                  }
-                });
-              } catch (e) {
-              }
-            }
-          }
-          cookieValue = newCookie;
-          cookieTimestamp = Date.now();
-          console.log("[NetMirror] Verification completed successfully. Cookie:", cookieValue);
-          return cookieValue;
-        }
+          "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7",
+          "Accept-Language": "en-US,en;q=0.9",
+          "Cache-Control": "max-age=0",
+          "Content-Type": "application/x-www-form-urlencoded",
+          "Origin": "https://net22.cc",
+          "Referer": "https://net22.cc/verify2",
+          "sec-ch-ua": '"Google Chrome";v="147", "Not.A/Brand";v="8", "Chromium";v="147"',
+          "sec-ch-ua-mobile": "?0",
+          "sec-ch-ua-platform": '"Windows"',
+          "Sec-Fetch-Dest": "document",
+          "Sec-Fetch-Mode": "navigate",
+          "Sec-Fetch-Site": "same-origin",
+          "Sec-Fetch-User": "?1",
+          "Upgrade-Insecure-Requests": "1",
+          "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36"
+        },
+        body: `g-recaptcha-response=${encodeURIComponent(uuid)}`
+      };
+      let verifyResponse;
+      try {
+        verifyResponse = yield fetch(verifyUrl, __spreadProps(__spreadValues({}, requestOptions), { redirect: "manual" }));
+      } catch (manualRedirectError) {
+        verifyResponse = yield fetch(verifyUrl, requestOptions);
       }
-      console.error("[NetMirror] Verification timed out");
+      yield verifyResponse.text();
+      const newCookie = readNetMirrorCookie(verifyResponse.headers);
+      if (newCookie) {
+        cookieValue = newCookie;
+        cookieTimestamp = Date.now();
+        console.log("[NetMirror] Access cookie acquired.");
+        return cookieValue;
+      }
+      console.error("[NetMirror] Verification response did not contain a t_hash_t cookie.");
     } catch (e) {
       cookieValue = "";
-      console.error("[NetMirror] Polling bypass failed:", e.message);
+      console.error("[NetMirror] Cookie request failed:", e.message);
     }
     return "";
   });
