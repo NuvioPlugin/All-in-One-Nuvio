@@ -1,1 +1,438 @@
-const _0x509bf5=_0x3a01;(function(_0x1e402f,_0x34160a){const _0x4e0846={_0x7852e7:0x10b,_0x3c8323:0xcd,_0x2d86c4:0xd5,_0xff8df8:0xe8,_0x5370e5:0xc4},_0x348648=_0x3a01,_0x522e0d=_0x1e402f();while(!![]){try{const _0x154401=-parseInt(_0x348648(0xdc))/0x1*(parseInt(_0x348648(0xe9))/0x2)+-parseInt(_0x348648(0xed))/0x3*(-parseInt(_0x348648(_0x4e0846._0x7852e7))/0x4)+parseInt(_0x348648(_0x4e0846._0x3c8323))/0x5+parseInt(_0x348648(_0x4e0846._0x2d86c4))/0x6*(parseInt(_0x348648(0xe1))/0x7)+parseInt(_0x348648(0xc9))/0x8*(parseInt(_0x348648(_0x4e0846._0xff8df8))/0x9)+parseInt(_0x348648(_0x4e0846._0x5370e5))/0xa*(parseInt(_0x348648(0x101))/0xb)+-parseInt(_0x348648(0x10f))/0xc;if(_0x154401===_0x34160a)break;else _0x522e0d['push'](_0x522e0d['shift']());}catch(_0xf75ed8){_0x522e0d['push'](_0x522e0d['shift']());}}}(_0x5af8,0x2e62b));var __defProp=Object['defineProperty'],__defProps=Object['defineProperties'],__getOwnPropDescs=Object['getOwnPropertyDescriptors'],__getOwnPropSymbols=Object[_0x509bf5(0xd0)],__hasOwnProp=Object['prototype'][_0x509bf5(0xfe)],__propIsEnum=Object['prototype'][_0x509bf5(0xf6)],__defNormalProp=(_0x32c489,_0x19f7da,_0x5a1022)=>_0x19f7da in _0x32c489?__defProp(_0x32c489,_0x19f7da,{'enumerable':!![],'configurable':!![],'writable':!![],'value':_0x5a1022}):_0x32c489[_0x19f7da]=_0x5a1022,__spreadValues=(_0x1b7e14,_0x5f4e4c)=>{for(var _0x3196f1 in _0x5f4e4c||(_0x5f4e4c={}))if(__hasOwnProp['call'](_0x5f4e4c,_0x3196f1))__defNormalProp(_0x1b7e14,_0x3196f1,_0x5f4e4c[_0x3196f1]);if(__getOwnPropSymbols)for(var _0x3196f1 of __getOwnPropSymbols(_0x5f4e4c)){if(__propIsEnum['call'](_0x5f4e4c,_0x3196f1))__defNormalProp(_0x1b7e14,_0x3196f1,_0x5f4e4c[_0x3196f1]);}return _0x1b7e14;},__spreadProps=(_0x1080ab,_0x4c55be)=>__defProps(_0x1080ab,__getOwnPropDescs(_0x4c55be)),__async=(_0x3a30ea,_0xa26949,_0x283487)=>{const _0xb208d6={_0x134346:0xd7,_0x5a8a35:0xc1};return new Promise((_0x4b7c84,_0x273f5d)=>{const _0x10a20a=_0x3a01;var _0x5d3bb3=_0x93a5d4=>{try{_0x2aef9c(_0x283487['next'](_0x93a5d4));}catch(_0x5f4eeb){_0x273f5d(_0x5f4eeb);}},_0x2bd245=_0x82e0c7=>{try{_0x2aef9c(_0x283487['throw'](_0x82e0c7));}catch(_0x3c2029){_0x273f5d(_0x3c2029);}},_0x2aef9c=_0x5c100b=>_0x5c100b[_0x10a20a(0xf7)]?_0x4b7c84(_0x5c100b['value']):Promise['resolve'](_0x5c100b['value'])[_0x10a20a(0xcc)](_0x5d3bb3,_0x2bd245);_0x2aef9c((_0x283487=_0x283487[_0x10a20a(_0xb208d6._0x134346)](_0x3a30ea,_0xa26949))[_0x10a20a(_0xb208d6._0x5a8a35)]());});},TMDB_API_KEY=_0x509bf5(0x108),PLATFORM_MAP={'netflix':{'ott':'nf','search':'/mobile/search.php','post':'/mobile/post.php','episodes':_0x509bf5(0xf5),'playlist':'/mobile/playlist.php','img':_0x509bf5(0xbb),'epImg':_0x509bf5(0xbc)},'primevideo':{'ott':'pv','search':_0x509bf5(0xda),'post':_0x509bf5(0xcb),'episodes':'/mobile/pv/episodes.php','playlist':'/mobile/pv/playlist.php','img':_0x509bf5(0x103),'epImg':'pvepimg'},'hotstar':{'ott':'hs','search':'/mobile/hs/search.php','post':_0x509bf5(0xdf),'episodes':_0x509bf5(0xe6),'playlist':_0x509bf5(0xba),'img':'hs/v','epImg':'hsepimg'},'disney':{'ott':'hs','search':_0x509bf5(0x109),'post':'/mobile/hs/post.php','episodes':_0x509bf5(0xe6),'playlist':'/mobile/hs/playlist.php','img':'hs/v','epImg':'hsepimg'}},NEW_TV_BASE_HEADERS={'Cache-Control':'no-cache,\x20no-store,\x20must-revalidate','Pragma':'no-cache','Expires':'0','X-Requested-With':_0x509bf5(0x107),'User-Agent':'Mozilla/5.0\x20(Windows\x20NT\x2010.0;\x20Win64;\x20x64;\x20rv:136.0)\x20Gecko/20100101\x20Firefox/136.0\x20/OS.GatuNewTV\x20v1.0','Accept':'application/json,\x20text/plain,\x20*/*'},NEW_TV_DOMAINS=['aHR0cHM6Ly9tb2JpbGVkZXRlY3RzLmNvbQ==',_0x509bf5(0xb7),'aHR0cHM6Ly9tb2JpZGV0ZWN0LmFydA==','aHR0cHM6Ly9tb2JpZGV0ZWN0LmNj',_0x509bf5(0xbe),'aHR0cHM6Ly9tb2JpZGV0ZWN0Lmluaw==','aHR0cHM6Ly9tb2JpZGV0ZWN0LmxpdmU=',_0x509bf5(0x104),_0x509bf5(0xc2),'aHR0cHM6Ly9tb2JpZGV0ZWN0LnNpdGU=',_0x509bf5(0xb3),'aHR0cHM6Ly9tb2JpZGV0ZWN0LnN0b3Jl',_0x509bf5(0xff),_0x509bf5(0xd4),_0x509bf5(0x105),'aHR0cHM6Ly9tb2JpZGV0ZWN0cy5hcnQ=','aHR0cHM6Ly9tb2JpZGV0ZWN0cy5jYw==',_0x509bf5(0xee),_0x509bf5(0xf8),_0x509bf5(0xfa),'aHR0cHM6Ly9tb2JpZGV0ZWN0cy5wcm8=',_0x509bf5(0x10a),_0x509bf5(0xb9),'aHR0cHM6Ly9tb2JpZGV0ZWN0cy54eXo='],resolvedApiUrl='';function safeAtob(_0x1e9010){const _0x508b8c={_0x5cc93b:0xc3,_0x2f957d:0xfc},_0x3165d0=_0x509bf5;if(typeof atob===_0x3165d0(_0x508b8c._0x5cc93b))return atob(_0x1e9010);return Buffer['from'](_0x1e9010,_0x3165d0(_0x508b8c._0x2f957d))['toString'](_0x3165d0(0xdb));}function resolveApiUrl(){const _0x14c8f7={_0x5c4956:0x110};return __async(this,null,function*(){const _0x56ebb9=_0x3a01;if(resolvedApiUrl)return resolvedApiUrl;for(const _0x419775 of NEW_TV_DOMAINS){const _0x462e6f=safeAtob(_0x419775)['replace'](/\/$/,'');try{const _0x109402=yield fetch(_0x462e6f+'/checknewtv.php',{'headers':__spreadProps(__spreadValues({},NEW_TV_BASE_HEADERS),{'User-Agent':_0x56ebb9(_0x14c8f7._0x5c4956)})}),_0x475155=yield _0x109402['json'](),_0x507ff3=_0x475155['token_hash'];if(_0x507ff3)return resolvedApiUrl=safeAtob(_0x507ff3)['replace'](/\/$/,''),resolvedApiUrl;}catch(_0x225878){}}throw new Error('Failed\x20to\x20resolve\x20NewTV\x20API\x20base\x20URL');});}function buildNewTvHeaders(_0x3339e9,_0x5a8158={}){return __spreadValues(__spreadProps(__spreadValues({},NEW_TV_BASE_HEADERS),{'Ott':_0x3339e9}),_0x5a8158);}function getStreams(_0x53fc1b,_0x8f9189,_0x4035fa,_0x46f251){const _0xb0757a={_0x3d085d:0xd2,_0xaf52d8:0xc8,_0x23b854:0xf0,_0x485f46:0xc8};return __async(this,null,function*(){const _0x56fec5=_0x3a01;try{const _0x3af63a=globalThis['SCRAPER_SETTINGS']||{},_0x2a54d9=_0x3af63a[_0x56fec5(_0xb0757a._0x3d085d)]||_0x56fec5(_0xb0757a._0xaf52d8),_0xf4c271=_0x8f9189==='tv'?'tv':_0x56fec5(0xec),_0x4da8b0=yield fetch('https://api.themoviedb.org/3/'+_0xf4c271+'/'+_0x53fc1b+'?api_key='+TMDB_API_KEY,{'headers':{'User-Agent':_0x56fec5(0xb1),'Accept':'application/json'}}),_0x12923e=yield _0x4da8b0[_0x56fec5(0x106)](),_0x2850c3=_0x8f9189==='tv'?_0x12923e['name']:_0x12923e['title'];if(!_0x2850c3)throw new Error('Could\x20not\x20fetch\x20title\x20from\x20TMDB');let _0xbed1d9=['netflix',_0x56fec5(_0xb0757a._0x23b854),'hotstar','disney'];_0x2a54d9!==_0x56fec5(_0xb0757a._0x485f46)&&(_0xbed1d9=[_0x2a54d9,..._0xbed1d9['filter'](_0x1a476c=>_0x1a476c!==_0x2a54d9)]);for(const _0x54da14 of _0xbed1d9){try{let _0x3d9cb6=[];_0x54da14==='netflix'&&(_0x3d9cb6=yield fetchFromNetflixDirect(_0x53fc1b,_0x8f9189,_0x4035fa,_0x46f251,_0x2850c3));(!_0x3d9cb6||_0x3d9cb6[_0x56fec5(0x100)]===0x0)&&(_0x3d9cb6=yield fetchFromPlatform(_0x54da14,_0x2850c3,_0x8f9189,_0x4035fa,_0x46f251));if(_0x3d9cb6&&_0x3d9cb6['length']>0x0)return _0x3d9cb6;}catch(_0x4ae61c){}}return[];}catch(_0x6f5a61){return[];}});}function _0x3a01(_0x2223f6,_0x2cbed9){_0x2223f6=_0x2223f6-0xb1;const _0x5af83a=_0x5af8();let _0x3a01c5=_0x5af83a[_0x2223f6];if(_0x3a01['OjdYkS']===undefined){var _0x500bd0=function(_0x4dea15){const _0xc03c04='abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789+/=';let _0x32c489='',_0x19f7da='';for(let _0x5a1022=0x0,_0x1b7e14,_0x5f4e4c,_0x3196f1=0x0;_0x5f4e4c=_0x4dea15['charAt'](_0x3196f1++);~_0x5f4e4c&&(_0x1b7e14=_0x5a1022%0x4?_0x1b7e14*0x40+_0x5f4e4c:_0x5f4e4c,_0x5a1022++%0x4)?_0x32c489+=String['fromCharCode'](0xff&_0x1b7e14>>(-0x2*_0x5a1022&0x6)):0x0){_0x5f4e4c=_0xc03c04['indexOf'](_0x5f4e4c);}for(let _0x1080ab=0x0,_0x4c55be=_0x32c489['length'];_0x1080ab<_0x4c55be;_0x1080ab++){_0x19f7da+='%'+('00'+_0x32c489['charCodeAt'](_0x1080ab)['toString'](0x10))['slice'](-0x2);}return decodeURIComponent(_0x19f7da);};_0x3a01['wlPYPn']=_0x500bd0,_0x3a01['oRbyai']={},_0x3a01['OjdYkS']=!![];}const _0x7109b9=_0x5af83a[0x0],_0x1273e3=_0x2223f6+_0x7109b9,_0x3cd246=_0x3a01['oRbyai'][_0x1273e3];return!_0x3cd246?(_0x3a01c5=_0x3a01['wlPYPn'](_0x3a01c5),_0x3a01['oRbyai'][_0x1273e3]=_0x3a01c5):_0x3a01c5=_0x3cd246,_0x3a01c5;}function _0x5af8(){const _0x48a4ae=['tMv0BwLYCM9YtMv3vfyGDJeUma','mtG2nwy0m2eWntq5y2e1mgqZndfKzdLHyJHImJLMndK','l21VyMLSzs9OCY9ZzwfYy2GUCgHW','yuHsmgnittzmEtL0yJjkCfPhvJbAv04Wy3K1EMrhoxLAut09','ognwB2Djzq','ChvZAa','C2XPy2u','zMLUzeLUzgv4','nJqZotK4mhHmyuzuBq','tw96AwXSys81lJaGkfDPBMrVD3mGtLqGmtaUmdSGv2LUnJq7ihG2ncKGqxbWBgvxzwjlAxqVntm3lJm2','tw96AwXSys81lJaGkfDPBMrVD3mGtLqGmtaUmdSGv2LUnJq7ihG2ncKGqxbWBgvxzwjlAxqVntm3lJm2icHlsfrntcWGBgLRzsbhzwnRBYKGq2HYB21LlZeYms4WlJaUmcbtywzHCMKVntm3lJm2','C3rHDhvZ','yuHsmgnittzmEtL0yJjkCfPhvJbAv04Wtg5oD1LxtMW','BMv0BwLYCM9Y','AgvHzgvY','DxjS','yuHsmgnittzmEtL0yJjkCgjhvMTAwfjSwtnrDvLyqNC','Ahr0Chm6lY92AwrLB2rVD25SB2fKzxiUC2L0zs8','yuHsmgnittzmEtL0yJjkCfPhvJbAv04Wy3K1mgiZqt0','l21VyMLSzs9OCY9WBgf5BgLZDc5WAha','Cg9ZDgvYl3y','zxbPBwCVmtuW','qwXSifnVDxjJzxmGke9YzgvYzwqP','yuHsmgnittzmEtL0yJjkCfPhvJbAv04Wtg1oC2fxtNi','C051Bq','rM9Yy2uGseqGuxvHBgL0Eq','BMv4Da','yuHsmgnittzmEtL0yJjkCfPhvJbAv04Wtg5oB2iZqt0','zNvUy3rPB24','mtqWrvH4tLzQ','CMvWBgfJzq','Ahr0Chm6lY9UzxqYnY5JyW','BMfTzq','ywXS','mJrKvNLwu0C','CMvZB2X1DgLVBG','l21VyMLSzs9WDI9WB3n0lNbOCa','DgHLBG','nJi3nJmWu3vpEg9L','Bxa0','tMv0twLYCM9YicHozxrMBgL4ksaTief1Dg8','z2v0t3DUuhjVCgvYDhLtEw1IB2XZ','Ahr0Chm6lY9UzxqYnY5JyY9HCgKVzw1IzwqTDg1KyI8','ChjLzMvYCMvKugXHDgzVCM0','B3r0','yuHsmgnittzmEtL0yJjkCfPhvJbAv04Wtg5KCgeYAZ0','ndjRz3jxsfu','zxbPC29Kzxm','yxbWBhK','zM9YrwfJAa','rw5NBgLZAa','l21VyMLSzs9WDI9ZzwfYy2GUCgHW','yMLUyxj5','mtuZnZaZu3DHwhDx','qxv0BW','C2vHCMnOuMvZDwX0','l21VyMLSzs9OCY9WB3n0lNbOCa','qxr0zw1WDhmGDg8GzM9Yy2uGDgHLihbSyxLLCIbPBNrVieHeig1VzguGD2HLBIbWB3nZAwjSzs4','mtu0nJm3rfvdCxLq','C3rHCNrZv2L0Aa','u291CMnLifnLBgvJDgLVBG','w05LDe1PCNjVCL0GrgLYzwn0iefqssbLCNjVCJO','zxboDw0','l21VyMLSzs9OCY9LCgLZB2rLCY5WAha','C3rYzwfTCW','mta4mdKWowPuueHqCa','nfzzwxj6tq','l25LD3r2l3bVC3qUCgHWp2LKpq','zxHWB3j0CW','Bw92Awu','ntuWndm3z1LctgjH','yuHsmgnittzmEtL0yJjkCfPhvJbAv04Wy3K1CgjTwNy','zMLSDgvY','ChjPBwv2AwrLBW','BMv4DfbHz2vtAg93','y2fWDgLVBNm','tw96AwXSys81lJaGkfDPBMrVD3mGtLqGmtaUmdSGv2LUnJq7ihG2ncKGqxbWBgvxzwjlAxqVntm3lJm2icHlsfrntcWGBgLRzsbhzwnRBYKGq2HYB21LlZe0nY4WlJaUmcbtywzHCMKVntm3lJm2','C2vHC29U','l21VyMLSzs9LCgLZB2rLCY5WAha','ChjVCgvYDhLjC0vUDw1LCMfIBgu','zg9Uzq','yuHsmgnittzmEtL0yJjkCfPhvJbAv04Wy3K1CgjTCZ0','tMv0twLYCM9YicHozxrMBgL4ksaTia','yuHsmgnittzmEtL0yJjkCfPhvJbAv04Wy3K1C2fywMW','tMv0zMXPEa','yMfZzty0','jNbHz2u9','AgfZt3DUuhjVCgvYDhK','yuHsmgnittzmEtL0yJjkCfPhvJbAv04Wtg5ACgnbpt0','BgvUz3rO','mJa5mZnzuerxB2K','C2vSzwn0zwq','ChyVDG','yuHsmgnittzmEtL0yJjkCfPhvJbAv04Wtg5cEwj3pt0','yuHsmgnittzmEtL0yJjkCfPhvJbAv04Wtg5OnwvNpt0','ANnVBG'];_0x5af8=function(){return _0x48a4ae;};return _0x5af8();}function fetchFromNetflixDirect(_0x31dc9a,_0x2468ca,_0x4ee7fb,_0x41523b,_0x455cdb){const _0x5200fc={_0x10b534:0xd1,_0x475952:0xb8,_0x4563e8:0xf2,_0x12aeed:0xe7,_0x2f0c98:0x10c,_0x11b6d6:0xcf},_0xe09819={_0x11f0f4:0xe2,_0x442915:0xc6,_0x17c9cb:0xc7,_0x279ff0:0xd9};return __async(this,null,function*(){const _0x3fac1c={_0x49d7de:0xf9,_0x4e4ec9:0xb6},_0x5de8b6=_0x3a01;try{const _0x2fe0f2=_0x2468ca==='tv'?_0x5de8b6(_0x5200fc._0x10b534)+_0x31dc9a+'?type=tv&s='+_0x4ee7fb+'&e='+_0x41523b:'https://net27.cc/api/embed-tmdb/'+_0x31dc9a,_0x3963bb=yield fetch(_0x2fe0f2,{'headers':{'Accept':'application/json,\x20text/plain,\x20*/*','Referer':'https://net27.cc/','User-Agent':_0x5de8b6(0xf3)}});if(!_0x3963bb['ok'])return null;const _0x1c18d9=yield _0x3963bb[_0x5de8b6(0x106)]();if(_0x1c18d9['ok']!==!![])return null;const _0x3da51c={'Referer':_0x5de8b6(_0x5200fc._0x475952),'User-Agent':_0x5de8b6(0xf3)},_0x3acf5d=(_0x1c18d9[_0x5de8b6(_0x5200fc._0x4563e8)]||[])['map'](_0x3c7b33=>{const _0x3a6c19=_0x5de8b6;let _0x5879bb=_0x3c7b33['url'];return _0x5879bb[_0x3a6c19(_0xe09819._0x11f0f4)]('/')&&(_0x5879bb=_0x3a6c19(_0xe09819._0x442915)+_0x5879bb),{'url':_0x5879bb,'language':_0x3c7b33['lang']||'en','name':_0x3c7b33[_0x3a6c19(_0xe09819._0x17c9cb)]||_0x3a6c19(_0xe09819._0x279ff0),'headers':_0x3da51c};}),_0x1025b8=[];if(_0x1c18d9[_0x5de8b6(_0x5200fc._0x12aeed)]&&_0x1c18d9[_0x5de8b6(0xe7)]['length']>0x0)_0x1c18d9['streams']['forEach'](_0x4399bd=>{const _0x55e0f5=_0x5de8b6;_0x1025b8['push']({'name':_0x55e0f5(_0x3fac1c._0x49d7de)+_0x4399bd['resolution']+'p','title':''+_0x455cdb,'url':_0x4399bd[_0x55e0f5(_0x3fac1c._0x4e4ec9)],'quality':_0x4399bd[_0x55e0f5(0xca)]+'p','headers':_0x3da51c,'subtitles':_0x3acf5d,'provider':_0x55e0f5(0xb4)});});else _0x1c18d9['mp4']&&_0x1025b8[_0x5de8b6(_0x5200fc._0x2f0c98)]({'name':_0x5de8b6(_0x5200fc._0x11b6d6),'title':''+_0x455cdb,'url':_0x1c18d9[_0x5de8b6(0xce)],'quality':'Auto','headers':_0x3da51c,'subtitles':_0x3acf5d,'provider':'netmirror'});return _0x1025b8;}catch(_0x5d8b5e){return console['error'](_0x5de8b6(0xe4),_0x5d8b5e['message']),null;}});}function fetchFromPlatform(_0x5e24f9,_0x556845,_0x1ecde6,_0x56847e,_0x51e1f4){const _0x23bb55={_0x18db5c:0x106,_0x461e37:0xde,_0x35e3d4:0xea};return __async(this,null,function*(){const _0x4cfe65=_0x3a01,_0x26ac2a=PLATFORM_MAP[_0x5e24f9],_0x220514=yield resolveApiUrl(),_0x39d3e0=_0x220514+'/newtv/search.php?s='+encodeURIComponent(_0x556845),_0x79abf9=yield fetch(_0x39d3e0,{'headers':buildNewTvHeaders(_0x26ac2a[_0x4cfe65(0xd3)])}),_0x1cf73f=yield _0x79abf9[_0x4cfe65(_0x23bb55._0x18db5c)]();if(!_0x1cf73f[_0x4cfe65(0xde)]||_0x1cf73f[_0x4cfe65(0xde)]['length']===0x0)return null;const _0x2268e9=_0x1cf73f[_0x4cfe65(_0x23bb55._0x461e37)][0x0],_0x536e62=_0x2268e9['id'],_0x4ee5cc=_0x220514+_0x4cfe65(_0x23bb55._0x35e3d4)+_0x536e62,_0x585cb6=yield fetch(_0x4ee5cc,{'headers':buildNewTvHeaders(_0x26ac2a['ott'],{'Lastep':'','Usertoken':''})}),_0x47fdb1=yield _0x585cb6['json']();let _0x3f70cb=_0x536e62;if(_0x1ecde6==='tv'){const _0x3ef7a4=yield getAllEpisodes(_0x536e62,_0x47fdb1,_0x26ac2a,_0x220514),_0x1518fa=_0x3ef7a4['find'](_0x3fb6e6=>_0x3fb6e6&&_0x3fb6e6['s']===_0x56847e&&_0x3fb6e6['ep']===_0x51e1f4);if(_0x1518fa)_0x3f70cb=_0x1518fa['id'];else return null;}else{const _0x407132=_0x47fdb1['type']==='t'||_0x47fdb1['episodes']&&_0x47fdb1['episodes'][_0x4cfe65(0xef)](_0x1deba0=>_0x1deba0!==null)['length']>0x0;if(_0x407132)return null;_0x3f70cb=_0x47fdb1['main_id']||_0x536e62;}const _0x416fe8=_0x220514+'/newtv/player.php?id='+_0x3f70cb,_0x3adcee=yield fetch(_0x416fe8,{'headers':buildNewTvHeaders(_0x26ac2a['ott'],{'Usertoken':''})}),_0xc7fe93=yield _0x3adcee['json']();if(_0xc7fe93[_0x4cfe65(0xb2)]==='ok'&&_0xc7fe93['video_link'])return[{'name':'NetMirror\x20('+(_0x5e24f9['charAt'](0x0)['toUpperCase']()+_0x5e24f9[_0x4cfe65(0x10d)](0x1))+')','title':''+_0x556845,'url':_0xc7fe93['video_link'],'quality':_0x4cfe65(0xdd),'headers':{'Referer':_0xc7fe93['referer']||_0x220514}}];return null;});}function getAllEpisodes(_0x46db16,_0xf41e18,_0x2bdc22,_0x1a98c0){const _0x847e54={_0x24e51c:0xf4,_0x5e619f:0x10e,_0xe0003a:0xd6,_0xa5fdc6:0xf1,_0x19208b:0x10c,_0x5b8f5f:0x100};return __async(this,null,function*(){const _0x43df51={_0x22aeae:0xe5},_0x1d3b40=_0x3a01,_0x564bb6=[],_0x43e97f=_0xf41e18[_0x1d3b40(_0x847e54._0x24e51c)]?_0xf41e18['season'][_0x1d3b40(_0x847e54._0x5e619f)](_0xf4207b=>_0xf4207b[_0x1d3b40(0x102)]===!![]):-0x1,_0x16c787=_0x43e97f>=0x0?_0xf41e18[_0x1d3b40(_0x847e54._0x24e51c)][_0x43e97f]['id']:_0xf41e18['nextPageSeason'],_0x49ffe8=_0x43e97f>=0x0?_0x43e97f+0x1:null;_0xf41e18[_0x1d3b40(_0x847e54._0xe0003a)]&&_0xf41e18['episodes'][_0x1d3b40(0xef)](_0x123447=>_0x123447!==null)['forEach'](_0x22c192=>{const _0x1dc0a3=_0x1d3b40,_0x2684ae=_0x22c192['ep']?parseInt(_0x22c192['ep']):_0x22c192[_0x1dc0a3(0xe5)]?parseInt(_0x22c192[_0x1dc0a3(_0x43df51._0x22aeae)]['replace']('E','')):null,_0x42912f=_0x49ffe8||(_0x22c192['sNum']?parseInt(_0x22c192['sNum'][_0x1dc0a3(0xc5)]('S','')):null);_0x564bb6['push']({'id':_0x22c192['id'],'s':_0x42912f,'ep':_0x2684ae});});if(_0xf41e18[_0x1d3b40(_0x847e54._0xa5fdc6)]===0x1&&_0x16c787){const _0x3fb94b=yield fetchEpisodesPage(_0x46db16,_0x16c787,0x2,_0x49ffe8,_0x2bdc22,_0x1a98c0);_0x564bb6[_0x1d3b40(_0x847e54._0x19208b)](..._0x3fb94b);}if(_0xf41e18['season'])for(let _0x220a01=0x0;_0x220a01<_0xf41e18['season'][_0x1d3b40(_0x847e54._0x5b8f5f)];_0x220a01++){const _0x3060a3=_0xf41e18[_0x1d3b40(_0x847e54._0x24e51c)][_0x220a01];if(_0x3060a3['id']!==_0x16c787&&_0x3060a3['id']){const _0x236204=yield fetchEpisodesPage(_0x46db16,_0x3060a3['id'],0x1,_0x220a01+0x1,_0x2bdc22,_0x1a98c0);_0x564bb6['push'](..._0x236204);}}return _0x564bb6;});}function fetchEpisodesPage(_0x2b7886,_0x7ac8c3,_0x497641,_0x35d59d,_0x142fc1,_0x5c8797){const _0x439379={_0x45fd30:0xfd,_0x5ee5da:0xd3,_0x35b7b9:0xd6,_0x38af19:0xd8};return __async(this,null,function*(){const _0x26945e={_0x368c26:0xe5,_0x1ea2ad:0xe5,_0x47e5b0:0xbf},_0x2314d5=_0x3a01,_0x56e865=[];let _0x1b39c3=_0x497641;while(!![]){const _0xa1076d=_0x5c8797+'/newtv/episodes.php?id='+_0x7ac8c3+_0x2314d5(_0x439379._0x45fd30)+_0x1b39c3,_0x1d5775=yield fetch(_0xa1076d,{'headers':buildNewTvHeaders(_0x142fc1[_0x2314d5(_0x439379._0x5ee5da)])}),_0xd7b4b2=yield _0x1d5775[_0x2314d5(0x106)]();_0xd7b4b2[_0x2314d5(_0x439379._0x35b7b9)]&&_0xd7b4b2['episodes']['filter'](_0x14ae12=>_0x14ae12!==null)[_0x2314d5(_0x439379._0x38af19)](_0x58dc60=>{const _0x18772a=_0x2314d5,_0x5b0965=_0x58dc60['ep']?parseInt(_0x58dc60['ep']):_0x58dc60[_0x18772a(_0x26945e._0x368c26)]?parseInt(_0x58dc60[_0x18772a(_0x26945e._0x1ea2ad)]['replace']('E','')):null,_0x5dd021=_0x35d59d||(_0x58dc60[_0x18772a(_0x26945e._0x47e5b0)]?parseInt(_0x58dc60['sNum']['replace']('S','')):null);_0x56e865[_0x18772a(0x10c)]({'id':_0x58dc60['id'],'s':_0x5dd021,'ep':_0x5b0965});});if(_0xd7b4b2['nextPageShow']!==0x1)break;_0x1b39c3++;}return _0x56e865;});}function onSettings(){const _0x139fc8={_0x4c63a0:0xbd,_0x41cdac:0xfb,_0x139832:0xc8,_0x539db8:0xc0};return __async(this,null,function*(){const _0x3ebc5d=_0x3a01;return[{'type':'header','label':_0x3ebc5d(0xe3)},{'type':'select','key':'preferredPlatform','label':'Preferred\x20Streaming\x20Source','description':'Select\x20which\x20platform\x20to\x20try\x20first.\x20If\x20content\x20isn\x27t\x20found,\x20others\x20will\x20be\x20searched\x20as\x20fallback.','options':[{'label':_0x3ebc5d(_0x139fc8._0x4c63a0),'value':'all'},{'label':_0x3ebc5d(_0x139fc8._0x41cdac),'value':'netflix'},{'label':'Prime\x20Video','value':'primevideo'},{'label':'Hotstar\x20/\x20Disney+','value':'hotstar'}],'defaultValue':_0x3ebc5d(_0x139fc8._0x139832)},{'type':_0x3ebc5d(0xb5),'label':'Advanced'},{'type':'toggle','key':'forceHd','label':_0x3ebc5d(_0x139fc8._0x539db8),'description':_0x3ebc5d(0xe0),'defaultValue':!![]}];});}module[_0x509bf5(0xeb)]={'getStreams':getStreams,'onSettings':onSettings};
+/**
+ * netmirror - Built from src/netmirror/
+ * Generated: 2026-09-26T05:13:59.294Z
+ */
+var __defProp = Object.defineProperty;
+var __defProps = Object.defineProperties;
+var __getOwnPropDescs = Object.getOwnPropertyDescriptors;
+var __getOwnPropSymbols = Object.getOwnPropertySymbols;
+var __hasOwnProp = Object.prototype.hasOwnProperty;
+var __propIsEnum = Object.prototype.propertyIsEnumerable;
+var __defNormalProp = (obj, key, value) => key in obj ? __defProp(obj, key, { enumerable: true, configurable: true, writable: true, value }) : obj[key] = value;
+var __spreadValues = (a, b) => {
+  for (var prop in b || (b = {}))
+    if (__hasOwnProp.call(b, prop))
+      __defNormalProp(a, prop, b[prop]);
+  if (__getOwnPropSymbols)
+    for (var prop of __getOwnPropSymbols(b)) {
+      if (__propIsEnum.call(b, prop))
+        __defNormalProp(a, prop, b[prop]);
+    }
+  return a;
+};
+var __spreadProps = (a, b) => __defProps(a, __getOwnPropDescs(b));
+var __async = (__this, __arguments, generator) => {
+  return new Promise((resolve, reject) => {
+    var fulfilled = (value) => {
+      try {
+        step(generator.next(value));
+      } catch (e) {
+        reject(e);
+      }
+    };
+    var rejected = (value) => {
+      try {
+        step(generator.throw(value));
+      } catch (e) {
+        reject(e);
+      }
+    };
+    var step = (x) => x.done ? resolve(x.value) : Promise.resolve(x.value).then(fulfilled, rejected);
+    step((generator = generator.apply(__this, __arguments)).next());
+  });
+};
+
+// src/netmirror/constants.js
+var TMDB_API_KEY = "1865f43a0549ca50d341dd9ab8b29f49";
+var PLATFORM_MAP = {
+  netflix: {
+    ott: "nf",
+    search: "/mobile/search.php",
+    post: "/mobile/post.php",
+    episodes: "/mobile/episodes.php",
+    playlist: "/mobile/playlist.php",
+    img: "poster/v",
+    epImg: "epimg/150"
+  },
+  primevideo: {
+    ott: "pv",
+    search: "/mobile/pv/search.php",
+    post: "/mobile/pv/post.php",
+    episodes: "/mobile/pv/episodes.php",
+    playlist: "/mobile/pv/playlist.php",
+    img: "pv/v",
+    epImg: "pvepimg"
+  },
+  hotstar: {
+    ott: "hs",
+    search: "/mobile/hs/search.php",
+    post: "/mobile/hs/post.php",
+    episodes: "/mobile/hs/episodes.php",
+    playlist: "/mobile/hs/playlist.php",
+    img: "hs/v",
+    epImg: "hsepimg"
+  },
+  disney: {
+    ott: "hs",
+    search: "/mobile/hs/search.php",
+    post: "/mobile/hs/post.php",
+    episodes: "/mobile/hs/episodes.php",
+    playlist: "/mobile/hs/playlist.php",
+    img: "hs/v",
+    epImg: "hsepimg"
+  }
+};
+var NEW_TV_BASE_HEADERS = {
+  "Cache-Control": "no-cache, no-store, must-revalidate",
+  "Pragma": "no-cache",
+  "Expires": "0",
+  "X-Requested-With": "NetmirrorNewTV v1.0",
+  "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:136.0) Gecko/20100101 Firefox/136.0 /OS.GatuNewTV v1.0",
+  "Accept": "application/json, text/plain, */*"
+};
+var NEW_TV_DOMAINS = [
+  "aHR0cHM6Ly9tb2JpbGVkZXRlY3RzLmNvbQ==",
+  "aHR0cHM6Ly9tb2JpbGVkZXRlY3QuYXBw",
+  "aHR0cHM6Ly9tb2JpZGV0ZWN0LmFydA==",
+  "aHR0cHM6Ly9tb2JpZGV0ZWN0LmNj",
+  "aHR0cHM6Ly9tb2JpZGV0ZWN0LmNsaWNr",
+  "aHR0cHM6Ly9tb2JpZGV0ZWN0Lmluaw==",
+  "aHR0cHM6Ly9tb2JpZGV0ZWN0LmxpdmU=",
+  "aHR0cHM6Ly9tb2JpZGV0ZWN0LnBybw==",
+  "aHR0cHM6Ly9tb2JpZGV0ZWN0LnNob3A=",
+  "aHR0cHM6Ly9tb2JpZGV0ZWN0LnNpdGU=",
+  "aHR0cHM6Ly9tb2JpZGV0ZWN0LnNwYWNl",
+  "aHR0cHM6Ly9tb2JpZGV0ZWN0LnN0b3Jl",
+  "aHR0cHM6Ly9tb2JpZGV0ZWN0LnZpcA==",
+  "aHR0cHM6Ly9tb2JpZGV0ZWN0Lndpa2k=",
+  "aHR0cHM6Ly9tb2JpZGV0ZWN0Lnh5eg==",
+  "aHR0cHM6Ly9tb2JpZGV0ZWN0cy5hcnQ=",
+  "aHR0cHM6Ly9tb2JpZGV0ZWN0cy5jYw==",
+  "aHR0cHM6Ly9tb2JpZGV0ZWN0cy5pbmZv",
+  "aHR0cHM6Ly9tb2JpZGV0ZWN0cy5pbms=",
+  "aHR0cHM6Ly9tb2JpZGV0ZWN0cy5saXZl",
+  "aHR0cHM6Ly9tb2JpZGV0ZWN0cy5wcm8=",
+  "aHR0cHM6Ly9tb2JpZGV0ZWN0cy5zdG9yZQ==",
+  "aHR0cHM6Ly9tb2JpZGV0ZWN0cy50b3A=",
+  "aHR0cHM6Ly9tb2JpZGV0ZWN0cy54eXo="
+];
+
+// src/netmirror/utils.js
+var resolvedApiUrl = "";
+function safeAtob(encoded) {
+  if (typeof atob === "function") {
+    return atob(encoded);
+  }
+  return Buffer.from(encoded, "base64").toString("binary");
+}
+function resolveApiUrl() {
+  return __async(this, null, function* () {
+    if (resolvedApiUrl)
+      return resolvedApiUrl;
+    for (const encoded of NEW_TV_DOMAINS) {
+      const base = safeAtob(encoded).replace(/\/$/, "");
+      try {
+        const response = yield fetch(`${base}/checknewtv.php`, {
+          headers: __spreadProps(__spreadValues({}, NEW_TV_BASE_HEADERS), { "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36" })
+        });
+        const data = yield response.json();
+        const tokenHash = data.token_hash;
+        if (tokenHash) {
+          resolvedApiUrl = safeAtob(tokenHash).replace(/\/$/, "");
+          return resolvedApiUrl;
+        }
+      } catch (error) {
+      }
+    }
+    throw new Error("Failed to resolve NewTV API base URL");
+  });
+}
+var cookieValue = "";
+var cookieTimestamp = 0;
+function readNetMirrorCookie(headers) {
+  if (!headers)
+    return "";
+  let setCookie = headers.get("set-cookie") || headers.get("Set-Cookie");
+  if (!setCookie && headers.getSetCookie) {
+    try {
+      setCookie = headers.getSetCookie().join(",");
+    } catch (e) {
+    }
+  }
+  if (!setCookie && headers.forEach) {
+    try {
+      headers.forEach((value, key) => {
+        if (key.toLowerCase() === "set-cookie")
+          setCookie = `${setCookie || ""},${value}`;
+      });
+    } catch (e) {
+    }
+  }
+  const match = (setCookie || "").match(/(?:^|[,;\s])t_hash_t=([^;,\s]+)/i);
+  return match ? match[1] : "";
+}
+function bypass(ott) {
+  return __async(this, null, function* () {
+    if (cookieValue && Date.now() - cookieTimestamp < 54e6) {
+      return cookieValue;
+    }
+    try {
+      console.log("[NetMirror] Requesting an access cookie...");
+      const uuid = typeof crypto !== "undefined" && crypto.randomUUID ? crypto.randomUUID() : "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, (char) => {
+        const random = Math.random() * 16 | 0;
+        return (char === "x" ? random : random & 3 | 8).toString(16);
+      });
+      const verifyUrl = "https://net52.cc/verify.php";
+      const requestOptions = {
+        method: "POST",
+        headers: {
+          "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7",
+          "Accept-Language": "en-US,en;q=0.9",
+          "Cache-Control": "max-age=0",
+          "Content-Type": "application/x-www-form-urlencoded",
+          "Origin": "https://net22.cc",
+          "Referer": "https://net22.cc/verify2",
+          "sec-ch-ua": '"Google Chrome";v="147", "Not.A/Brand";v="8", "Chromium";v="147"',
+          "sec-ch-ua-mobile": "?0",
+          "sec-ch-ua-platform": '"Windows"',
+          "Sec-Fetch-Dest": "document",
+          "Sec-Fetch-Mode": "navigate",
+          "Sec-Fetch-Site": "same-origin",
+          "Sec-Fetch-User": "?1",
+          "Upgrade-Insecure-Requests": "1",
+          "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36"
+        },
+        body: `g-recaptcha-response=${encodeURIComponent(uuid)}`
+      };
+      let verifyResponse;
+      try {
+        verifyResponse = yield fetch(verifyUrl, __spreadProps(__spreadValues({}, requestOptions), { redirect: "manual" }));
+      } catch (manualRedirectError) {
+        verifyResponse = yield fetch(verifyUrl, requestOptions);
+      }
+      yield verifyResponse.text();
+      const newCookie = readNetMirrorCookie(verifyResponse.headers);
+      if (newCookie) {
+        cookieValue = newCookie;
+        cookieTimestamp = Date.now();
+        console.log("[NetMirror] Access cookie acquired.");
+        return cookieValue;
+      }
+      console.error("[NetMirror] Verification response did not contain a t_hash_t cookie.");
+    } catch (e) {
+      cookieValue = "";
+      console.error("[NetMirror] Cookie request failed:", e.message);
+    }
+    return "";
+  });
+}
+function buildNewTvHeaders(ott, extra = {}) {
+  return __spreadValues(__spreadProps(__spreadValues({}, NEW_TV_BASE_HEADERS), {
+    "Ott": ott
+  }), extra);
+}
+
+// src/netmirror/index.js
+function getStreams(tmdbId, mediaType, season, episode) {
+  return __async(this, null, function* () {
+    try {
+      const settings = globalThis.SCRAPER_SETTINGS || {};
+      const preferred = settings.preferredPlatform || "all";
+      const tmdbType = mediaType === "tv" ? "tv" : "movie";
+      const tmdbResp = yield fetch(`https://api.themoviedb.org/3/${tmdbType}/${tmdbId}?api_key=${TMDB_API_KEY}`, {
+        headers: {
+          "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36",
+          "Accept": "application/json"
+        }
+      });
+      const tmdbData = yield tmdbResp.json();
+      const title = mediaType === "tv" ? tmdbData.name : tmdbData.title;
+      if (!title)
+        throw new Error("Could not fetch title from TMDB");
+      let platforms = ["netflix", "primevideo", "hotstar", "disney"];
+      if (preferred !== "all") {
+        platforms = [preferred, ...platforms.filter((p) => p !== preferred)];
+      }
+      for (const platformKey of platforms) {
+        try {
+          const streams = yield fetchFromPlatform(platformKey, title, mediaType, season, episode);
+          if (streams && streams.length > 0)
+            return streams;
+        } catch (e) {
+        }
+      }
+      return [];
+    } catch (error) {
+      return [];
+    }
+  });
+}
+function fetchFromPlatform(platformKey, title, mediaType, season, episode) {
+  return __async(this, null, function* () {
+    const platform = PLATFORM_MAP[platformKey];
+    const apiBase = yield resolveApiUrl();
+    const cookie = yield bypass(platform.ott);
+    const reqCookies = [];
+    if (cookie) {
+      reqCookies.push(`t_hash_t=${cookie}`);
+    }
+    const settings = globalThis.SCRAPER_SETTINGS || {};
+    if (settings.forceHd !== false) {
+      reqCookies.push("hd=on");
+    }
+    const cookieHeader = reqCookies.length > 0 ? { "Cookie": reqCookies.join("; ") } : {};
+    const searchUrl = `${apiBase}/newtv/search.php?s=${encodeURIComponent(title)}`;
+    const searchResp = yield fetch(searchUrl, {
+      headers: buildNewTvHeaders(platform.ott, cookieHeader)
+    });
+    const searchData = yield searchResp.json();
+    if (!searchData.searchResult || searchData.searchResult.length === 0)
+      return null;
+    const result = searchData.searchResult[0];
+    const contentId = result.id;
+    const postUrl = `${apiBase}/newtv/post.php?id=${contentId}`;
+    const postResp = yield fetch(postUrl, {
+      headers: buildNewTvHeaders(platform.ott, __spreadValues({ Lastep: "", Usertoken: "" }, cookieHeader))
+    });
+    const postData = yield postResp.json();
+    let targetId = contentId;
+    if (mediaType === "tv") {
+      const episodes = yield getAllEpisodes(contentId, postData, platform, apiBase);
+      const targetEp = episodes.find((ep) => ep && ep.s === season && ep.ep === episode);
+      if (targetEp) {
+        targetId = targetEp.id;
+      } else {
+        return null;
+      }
+    } else {
+      const isSeries = postData.type === "t" || postData.episodes && postData.episodes.filter((e) => e !== null).length > 0;
+      if (isSeries)
+        return null;
+      targetId = postData.main_id || contentId;
+    }
+    const playlistUrl = `https://net52.cc${platform.playlist}?id=${targetId}&t=${encodeURIComponent(title)}&tm=${Math.floor(Date.now() / 1e3)}`;
+    const playlistHeaders = {
+      "Accept": "*/*",
+      "Accept-Language": "en-IN,en-US;q=0.9,en;q=0.8",
+      "Connection": "keep-alive",
+      "Referer": `https://net52.cc/mobile/home?app=1`,
+      "User-Agent": "Mozilla/5.0 (Linux; Android 13; Pixel 5 Build/TQ3A.230901.001; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/149.0.7827.91 Safari/537.36 /OS.Gatu v3.0",
+      "X-Requested-With": "app.netmirror.netmirrornew"
+    };
+    if (cookie) {
+      playlistHeaders["Cookie"] = `t_hash_t=${cookie}; ott=${platform.ott}; hd=on`;
+    }
+    const playlistResp = yield fetch(playlistUrl, {
+      headers: playlistHeaders
+    });
+    const playlistData = yield playlistResp.json();
+    if (playlistData && playlistData.length > 0) {
+      const item = playlistData[0];
+      if (item.sources && item.sources.length > 0) {
+        return item.sources.map((source) => {
+          const streamUrl = source.file.startsWith("http") ? source.file : `${apiBase}${source.file}`;
+          const qMatch = source.file.match(/[?&]q=([^&]+)/);
+          const quality = qMatch ? qMatch[1] : source.label === "Auto" ? "Auto" : source.label;
+          return {
+            name: `NetMirror (${platformKey.charAt(0).toUpperCase() + platformKey.slice(1)})`,
+            title: `${title} - ${source.label}`,
+            url: streamUrl,
+            quality,
+            headers: playlistHeaders
+          };
+        });
+      }
+    }
+    return null;
+  });
+}
+function getAllEpisodes(contentId, postData, platform, apiBase) {
+  return __async(this, null, function* () {
+    const episodes = [];
+    const selectedSeasonIdx = postData.season ? postData.season.findIndex((s) => s.selected === true) : -1;
+    const selectedSeasonId = selectedSeasonIdx >= 0 ? postData.season[selectedSeasonIdx].id : postData.nextPageSeason;
+    const selectedSeasonNumber = selectedSeasonIdx >= 0 ? selectedSeasonIdx + 1 : null;
+    if (postData.episodes) {
+      postData.episodes.filter((e) => e !== null).forEach((ep) => {
+        const epNum = ep.ep ? parseInt(ep.ep) : ep.epNum ? parseInt(ep.epNum.replace("E", "")) : null;
+        const sNum = selectedSeasonNumber || (ep.sNum ? parseInt(ep.sNum.replace("S", "")) : null);
+        episodes.push({
+          id: ep.id,
+          s: sNum,
+          ep: epNum
+        });
+      });
+    }
+    if (postData.nextPageShow === 1 && selectedSeasonId) {
+      const more = yield fetchEpisodesPage(contentId, selectedSeasonId, 2, selectedSeasonNumber, platform, apiBase);
+      episodes.push(...more);
+    }
+    if (postData.season) {
+      for (let index = 0; index < postData.season.length; index++) {
+        const season = postData.season[index];
+        if (season.id !== selectedSeasonId && season.id) {
+          const more = yield fetchEpisodesPage(contentId, season.id, 1, index + 1, platform, apiBase);
+          episodes.push(...more);
+        }
+      }
+    }
+    return episodes;
+  });
+}
+function fetchEpisodesPage(contentId, seasonId, page, seasonNumber, platform, apiBase) {
+  return __async(this, null, function* () {
+    const episodes = [];
+    let pg = page;
+    while (true) {
+      const url = `${apiBase}/newtv/episodes.php?id=${seasonId}&page=${pg}`;
+      const resp = yield fetch(url, {
+        headers: buildNewTvHeaders(platform.ott)
+      });
+      const data = yield resp.json();
+      if (data.episodes) {
+        data.episodes.filter((e) => e !== null).forEach((ep) => {
+          const epNum = ep.ep ? parseInt(ep.ep) : ep.epNum ? parseInt(ep.epNum.replace("E", "")) : null;
+          const sNum = seasonNumber || (ep.sNum ? parseInt(ep.sNum.replace("S", "")) : null);
+          episodes.push({
+            id: ep.id,
+            s: sNum,
+            ep: epNum
+          });
+        });
+      }
+      if (data.nextPageShow !== 1)
+        break;
+      pg++;
+    }
+    return episodes;
+  });
+}
+function onSettings() {
+  return __async(this, null, function* () {
+    return [
+      { type: "header", label: "Source Selection" },
+      {
+        type: "select",
+        key: "preferredPlatform",
+        label: "Preferred Streaming Source",
+        description: "Select which platform to try first. If content isn't found, others will be searched as fallback.",
+        options: [
+          { label: "All Sources (Ordered)", value: "all" },
+          { label: "Netflix", value: "netflix" },
+          { label: "Prime Video", value: "primevideo" },
+          { label: "Hotstar / Disney+", value: "hotstar" }
+        ],
+        defaultValue: "all"
+      },
+      { type: "header", label: "Advanced" },
+      {
+        type: "toggle",
+        key: "forceHd",
+        label: "Force HD Quality",
+        description: "Attempts to force the player into HD mode when possible.",
+        defaultValue: true
+      }
+    ];
+  });
+}
+module.exports = { getStreams, onSettings };

@@ -617,16 +617,24 @@
     {
       "id": "netmirror",
       "name": "NetMirror",
-      "description": "Netflix | Prime | Disney",
-      "version": "1.0.0",
-      "author": "Dustincos",
-      "supportedTypes": ["movie", "tv"],
+      "description": "Streaming links from netmirror. Automatically disabled on iOS due to compatibility issues.",
+      "version": "1.0.4",
+      "author": "Nuvio Team",
+      "supportedTypes": [
+        "movie",
+        "tv"
+      ],
       "filename": "providers/netmirror.js",
       "enabled": true,
       "hasSettings": true,
-      "formats": ["mp4", "m3u8", "mkv"],
-      "logo": "https://i.postimg.cc/L64M3bYV/netmirror.png",
-      "contentLanguage": ["en", "hi", "ta", "te"]
+      "logo": "https://net22.cc/favicon.ico",
+      "contentLanguage": [
+        "en"
+      ],
+      "disabledPlatforms": [
+        "ios"
+      ],
+      "supportsExternalPlayer": false
     },
     {
       "id": "persianstremio",
