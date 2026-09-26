@@ -1,4 +1,4 @@
-import { PLATFORM_MAP, TMDB_API_KEY } from './constants.js';
+import { NEW_TV_USER_TOKEN, PLATFORM_MAP, TMDB_API_KEY } from './constants.js';
 import { resolveApiUrl, buildNewTvHeaders, bypass } from './utils.js';
 
 async function getStreams(tmdbId, mediaType, season, episode) {
@@ -88,43 +88,21 @@ async function fetchFromPlatform(platformKey, title, mediaType, season, episode)
         targetId = postData.main_id || contentId;
     }
 
-    const playlistUrl = `https://net52.cc${platform.playlist}?id=${targetId}&t=${encodeURIComponent(title)}&tm=${Math.floor(Date.now() / 1000)}`;
-    const playlistHeaders = {
-        "Accept": "*/*",
-        "Accept-Language": "en-IN,en-US;q=0.9,en;q=0.8",
-        "Connection": "keep-alive",
-        "Referer": `https://net52.cc/mobile/home?app=1`,
-        "User-Agent": "Mozilla/5.0 (Linux; Android 13; Pixel 5 Build/TQ3A.230901.001; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/149.0.7827.91 Safari/537.36 /OS.Gatu v3.0",
-        "X-Requested-With": "app.netmirror.netmirrornew"
-    };
-    if (cookie) {
-        playlistHeaders["Cookie"] = `t_hash_t=${cookie}; ott=${platform.ott}; hd=on`;
-    }
-    const playlistResp = await fetch(playlistUrl, {
-        headers: playlistHeaders
+    const playerUrl = `${apiBase}/newtv/player.php?id=${encodeURIComponent(targetId)}`;
+    const playerResp = await fetch(playerUrl, {
+        headers: buildNewTvHeaders(platform.ott, { Usertoken: NEW_TV_USER_TOKEN })
     });
-    const playlistData = await playlistResp.json();
+    const playerData = await playerResp.json();
+    if (!playerResp.ok || !playerData.video_link) return null;
 
-    if (playlistData && playlistData.length > 0) {
-        const item = playlistData[0];
-        if (item.sources && item.sources.length > 0) {
-            return item.sources.map(source => {
-                const streamUrl = source.file.startsWith('http') ? source.file : `${apiBase}${source.file}`;
-                const qMatch = source.file.match(/[?&]q=([^&]+)/);
-                const quality = qMatch ? qMatch[1] : (source.label === 'Auto' ? 'Auto' : source.label);
-                
-                return {
-                    name: `NetMirror (${platformKey.charAt(0).toUpperCase() + platformKey.slice(1)})`,
-                    title: `${title} - ${source.label}`,
-                    url: streamUrl,
-                    quality: quality,
-                    headers: playlistHeaders
-                };
-            });
-        }
-    }
-
-    return null;
+    const referer = playerData.referer || apiBase;
+    return [{
+        name: `NetMirror (${platformKey.charAt(0).toUpperCase() + platformKey.slice(1)})`,
+        title: `${title} - Auto`,
+        url: playerData.video_link,
+        quality: 'Auto',
+        headers: { Referer: referer }
+    }];
 }
 
 async function getAllEpisodes(contentId, postData, platform, apiBase) {

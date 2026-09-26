@@ -27,7 +27,7 @@ export async function extractMdrive(url) {
     if (!url) return [];
     const regex = /hubcloud|gdflix|gdlink/i;
     
-    if (regex.test(url) && (url.includes("/drive/") || url.includes("/file/"))) {
+    if (!url.includes("search-recover.php") && regex.test(url) && (url.includes("/drive/") || url.includes("/file/"))) {
         return [url];
     }
 

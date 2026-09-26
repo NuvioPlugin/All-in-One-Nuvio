@@ -150,7 +150,7 @@
       "id": "netmirror",
       "name": "NetMirror",
       "description": "Streaming links from netmirror.",
-      "version": "1.0.4",
+      "version": "1.0.5",
       "author": "Nuvio Team",
       "supportedTypes": [
         "movie",
@@ -619,7 +619,7 @@
       "id": "moviesdrive",
       "name": "MoviesDrive",
       "description": "MoviesDrive streaming with HubCloud and Google Drive extraction",
-      "version": "1.0.0",
+      "version": "1.0.1",
       "author": "Nuvio Team",
       "supportedTypes": [
         "movie",

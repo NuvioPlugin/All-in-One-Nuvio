@@ -1,4 +1,5 @@
 export const TMDB_API_KEY = '1865f43a0549ca50d341dd9ab8b29f49';
+export const NEW_TV_USER_TOKEN = '5b5dc5b4b392a15a1877518bb5575632::b0881b4d377ad6c15cafe38474b0d92b::1790264661::ni';
 
 export const PLATFORM_MAP = {
     netflix: {
