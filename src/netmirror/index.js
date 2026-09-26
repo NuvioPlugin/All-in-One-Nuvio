@@ -1,5 +1,5 @@
-import { NEW_TV_USER_TOKEN, PLATFORM_MAP, TMDB_API_KEY } from './constants.js';
-import { resolveApiUrl, buildNewTvHeaders, bypass } from './utils.js';
+import { BASE_HEADERS, PLATFORM_MAP, TMDB_API_KEY } from './constants.js';
+import { bypass } from './utils.js';
 
 async function getStreams(tmdbId, mediaType, season, episode) {
     try {
@@ -40,131 +40,134 @@ async function getStreams(tmdbId, mediaType, season, episode) {
 
 async function fetchFromPlatform(platformKey, title, mediaType, season, episode) {
     const platform = PLATFORM_MAP[platformKey];
-    const apiBase = await resolveApiUrl();
-
-    // Retrieve the bypass verification cookie
-    const cookie = await bypass(platform.ott);
-    const reqCookies = [];
-    if (cookie) {
-        reqCookies.push(`t_hash_t=${cookie}`);
-    }
-    const settings = globalThis.SCRAPER_SETTINGS || {};
-    if (settings.forceHd !== false) {
-        reqCookies.push("hd=on");
-    }
-
-    const cookieHeader = reqCookies.length > 0 ? { 'Cookie': reqCookies.join('; ') } : {};
-
-    const searchUrl = `${apiBase}/newtv/search.php?s=${encodeURIComponent(title)}`;
-    const searchResp = await fetch(searchUrl, {
-        headers: buildNewTvHeaders(platform.ott, cookieHeader)
-    });
-    const searchData = await searchResp.json();
-
-    if (!searchData.searchResult || searchData.searchResult.length === 0) return null;
-
-    const result = searchData.searchResult[0];
-    const contentId = result.id;
-
-    const postUrl = `${apiBase}/newtv/post.php?id=${contentId}`;
-    const postResp = await fetch(postUrl, {
-        headers: buildNewTvHeaders(platform.ott, { Lastep: "", Usertoken: "", ...cookieHeader })
-    });
-    const postData = await postResp.json();
-
-    let targetId = contentId;
-    if (mediaType === 'tv') {
-        const episodes = await getAllEpisodes(contentId, postData, platform, apiBase);
-        const targetEp = episodes.find(ep => ep && ep.s === season && ep.ep === episode);
-
-        if (targetEp) {
-            targetId = targetEp.id;
-        } else {
-            return null;
-        }
-    } else {
-        const isSeries = postData.type === 't' || (postData.episodes && postData.episodes.filter(e => e !== null).length > 0);
-        if (isSeries) return null;
-        targetId = postData.main_id || contentId;
-    }
-
-    const playerUrl = `${apiBase}/newtv/player.php?id=${encodeURIComponent(targetId)}`;
-    const playerResp = await fetch(playerUrl, {
-        headers: buildNewTvHeaders(platform.ott, { Usertoken: NEW_TV_USER_TOKEN })
-    });
-    const playerData = await playerResp.json();
-    if (!playerResp.ok || !playerData.video_link) return null;
-
-    const referer = playerData.referer || apiBase;
-    return [{
-        name: `NetMirror (${platformKey.charAt(0).toUpperCase() + platformKey.slice(1)})`,
-        title: `${title} - Auto`,
-        url: playerData.video_link,
-        quality: 'Auto',
-        headers: { Referer: referer }
-    }];
+    return fetchMobileContent(platformKey, platform, title, mediaType, season, episode);
 }
 
-async function getAllEpisodes(contentId, postData, platform, apiBase) {
-    const episodes = [];
-    const selectedSeasonIdx = postData.season ? postData.season.findIndex(s => s.selected === true) : -1;
-    const selectedSeasonId = selectedSeasonIdx >= 0 ? postData.season[selectedSeasonIdx].id : postData.nextPageSeason;
-    const selectedSeasonNumber = selectedSeasonIdx >= 0 ? (selectedSeasonIdx + 1) : null;
-
-    if (postData.episodes) {
-        postData.episodes.filter(e => e !== null).forEach(ep => {
-            const epNum = ep.ep ? parseInt(ep.ep) : (ep.epNum ? parseInt(ep.epNum.replace('E', '')) : null);
-            const sNum = selectedSeasonNumber || (ep.sNum ? parseInt(ep.sNum.replace('S', '')) : null);
-            episodes.push({
-                id: ep.id,
-                s: sNum,
-                ep: epNum
-            });
+// CNC Verse Mobile's registered providers use these mobile APIs for both
+// movies and series, including playlist resolution.
+async function fetchMobileContent(platformKey, platform, title, mediaType, season, episode) {
+    const base = 'https://net52.cc';
+    const cookie = await bypass(base);
+    const settings = globalThis.SCRAPER_SETTINGS || {};
+    const cookies = [];
+    if (cookie) cookies.push(`t_hash_t=${cookie}`);
+    cookies.push(`ott=${platform.ott}`);
+    if (settings.forceHd !== false) cookies.push('hd=on');
+    const headers = { ...BASE_HEADERS, Cookie: cookies.join('; ') };
+    const getJson = async (url, referer = `${base}/home`, extraHeaders = {}) => {
+        const response = await fetch(url, {
+            headers: { ...headers, Referer: referer, ...extraHeaders }
         });
-    }
+        if (!response.ok) throw new Error(`NetMirror mobile returned HTTP ${response.status}`);
+        return response.json();
+    };
 
-    if (postData.nextPageShow === 1 && selectedSeasonId) {
-        const more = await fetchEpisodesPage(contentId, selectedSeasonId, 2, selectedSeasonNumber, platform, apiBase);
-        episodes.push(...more);
-    }
+    const search = await getJson(`${base}${platform.search}?s=${encodeURIComponent(title)}&t=${Math.floor(Date.now() / 1000)}`);
+    const results = Array.isArray(search.searchResult) ? search.searchResult : [];
+    if (!results.length) return null;
+    const normalize = value => String(value || '').toLowerCase().normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]+/g, ' ').trim();
+    const wanted = normalize(title);
+    const rank = item => {
+        const candidate = normalize(item.t || item.title);
+        return candidate === wanted ? 0 : (candidate.includes(wanted) || wanted.includes(candidate) ? 1 : 2);
+    };
+    results.sort((a, b) => rank(a) - rank(b));
 
-    if (postData.season) {
-        for (let index = 0; index < postData.season.length; index++) {
-            const season = postData.season[index];
-            if (season.id !== selectedSeasonId && season.id) {
-                const more = await fetchEpisodesPage(contentId, season.id, 1, index + 1, platform, apiBase);
-                episodes.push(...more);
+    const wantedSeason = Number(season);
+    const wantedEpisode = Number(episode);
+    for (const result of results.slice(0, 8)) {
+        if (!result.id) continue;
+        const post = await getJson(`${base}${platform.post}?id=${encodeURIComponent(result.id)}&t=${Math.floor(Date.now() / 1000)}`);
+        if (!post || (post.status === 'n' && post.error)) continue;
+        let targetId = result.id;
+        if (mediaType === 'tv') {
+            if (post.type !== 't' && !(post.episodes || []).some(Boolean)) continue;
+            let episodeEntry = findMobileEpisode(post.episodes, wantedSeason, wantedEpisode,
+                (post.season?.findIndex(s => s.selected === true) ?? -1) + 1);
+
+            const seasonEntry = Array.isArray(post.season)
+                ? post.season.find(s => Number(String(s.s || '').replace(/\D/g, '')) === wantedSeason)
+                : null;
+            if (!episodeEntry && seasonEntry?.id) {
+                let page = 1;
+                while (page <= 30) {
+                    const url = `${base}${platform.episodes}?s=${encodeURIComponent(seasonEntry.id)}` +
+                        `&series=${encodeURIComponent(result.id)}&t=${Math.floor(Date.now() / 1000)}&page=${page}`;
+                    const data = await getJson(url);
+                    episodeEntry = findMobileEpisode(data.episodes, wantedSeason, wantedEpisode, wantedSeason);
+                    if (episodeEntry || !data.nextPageShow || Number(data.nextPageShow) === 0) break;
+                    page++;
+                }
+            }
+            if (!episodeEntry?.id) continue;
+            targetId = episodeEntry.id;
+        } else if (post.type === 't' || (post.episodes || []).some(Boolean)) {
+            continue;
+        }
+
+        const playlistUrl = `${base}${platform.playlist}?id=${encodeURIComponent(targetId)}` +
+            `&t=${encodeURIComponent(title)}&tm=${Math.floor(Date.now() / 1000)}`;
+        const playlist = await getJson(playlistUrl, `${base}/mobile/home?app=1`, {
+            'X-Requested-With': 'app.netmirror.netmirrornew',
+            'Accept': '*/*',
+            'Sec-Fetch-Dest': 'empty',
+            'Sec-Fetch-Mode': 'cors'
+        });
+        const entries = Array.isArray(playlist) ? playlist : (playlist.playlist || playlist.data || []);
+        const streams = [];
+        for (const entry of entries) {
+            for (const source of (entry.sources || [])) {
+                if (!source.file) continue;
+                const streamUrl = /^https?:\/\//i.test(source.file)
+                    ? source.file
+                    : source.file.startsWith('//')
+                        ? `https:${source.file}`
+                        : `${base}${source.file.startsWith('/') ? '' : '/'}${source.file}`;
+                const label = source.label || 'Auto';
+                const quality = (String(label).match(/\d{3,4}p?/i) || [])[0] ||
+                    (/full\s*hd/i.test(label) ? '1080p' : /mid\s*hd/i.test(label) ? '720p' : /low\s*hd/i.test(label) ? '480p' : 'Auto');
+                const playbackHeaders = {
+                    'Accept': '*/*',
+                    'Accept-Language': 'en-IN,en-US;q=0.9,en;q=0.8',
+                    'Connection': 'keep-alive',
+                    'Referer': `${base}/mobile/home?app=1`,
+                    'sec-ch-ua': '"Android WebView";v="149", "Chromium";v="149", "Not)A;Brand";v="24"',
+                    'sec-ch-ua-mobile': '?0',
+                    'sec-ch-ua-platform': '"Android"',
+                    'Sec-Fetch-Dest': 'empty',
+                    'Sec-Fetch-Mode': 'cors',
+                    'Sec-Fetch-Site': 'same-origin',
+                    'User-Agent': 'Mozilla/5.0 (Linux; Android 13; Pixel 5 Build/TQ3A.230901.001; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/149.0.7827.91 Safari/537.36 /OS.Gatu v3.0',
+                    'X-Requested-With': 'app.netmirror.netmirrornew'
+                };
+                // CNC Verse's video interceptor replaces the API cookie with
+                // hd=on for every HLS playlist request.
+                if (settings.forceHd !== false) playbackHeaders.Cookie = 'hd=on';
+                streams.push({
+                    name: `NetMirror (${platformKey})`,
+                    title: mediaType === 'tv'
+                        ? `${title} S${wantedSeason}E${wantedEpisode} - ${label}`
+                        : `${title} - ${label}`,
+                    url: streamUrl,
+                    quality,
+                    headers: playbackHeaders
+                });
             }
         }
+        if (streams.length) return streams;
     }
-
-    return episodes;
+    return null;
 }
 
-async function fetchEpisodesPage(contentId, seasonId, page, seasonNumber, platform, apiBase) {
-    const episodes = [];
-    let pg = page;
-    while (true) {
-        const url = `${apiBase}/newtv/episodes.php?id=${seasonId}&page=${pg}`;
-        const resp = await fetch(url, {
-            headers: buildNewTvHeaders(platform.ott)
-        });
-        const data = await resp.json();
-        if (data.episodes) {
-            data.episodes.filter(e => e !== null).forEach(ep => {
-                const epNum = ep.ep ? parseInt(ep.ep) : (ep.epNum ? parseInt(ep.epNum.replace('E', '')) : null);
-                const sNum = seasonNumber || (ep.sNum ? parseInt(ep.sNum.replace('S', '')) : null);
-                episodes.push({
-                    id: ep.id,
-                    s: sNum,
-                    ep: epNum
-                });
-            });
-        }
-        if (data.nextPageShow !== 1) break;
-        pg++;
-    }
-    return episodes;
+function findMobileEpisode(episodes, season, episode, fallbackSeason) {
+    if (!Array.isArray(episodes)) return null;
+    return episodes.find(item => {
+        if (!item) return false;
+        const epNumber = Number(String(item.ep || '').replace(/\D/g, ''));
+        const seasonNumber = Number(String(item.s || item.sNum || '').replace(/\D/g, '')) || fallbackSeason;
+        return epNumber === episode && seasonNumber === season;
+    }) || null;
 }
 
 async function onSettings() {
