@@ -74,7 +74,7 @@ export async function bypass(mainUrl) {
     };
 
     try {
-        console.log('[NetMirror] Starting CNC Verse mobile cookie verification...');
+        console.log('[NetMirror] Starting mobile cookie verification...');
         cookieJar = [];
 
         const homeResponse = await request(homeUrl, { headers: appHeaders });
@@ -115,11 +115,11 @@ export async function bypass(mainUrl) {
             if (!verifiedCookie) throw new Error('Verification completed without a t_hash_t cookie');
             cookieValue = verifiedCookie;
             cookieTimestamp = Date.now();
-            console.log('[NetMirror] CNC Verse mobile cookie verified.');
+            console.log('[NetMirror] Mobile cookie verified.');
             return cookieValue;
         }
 
-        throw new Error('CNC Verse mobile verification did not complete; NetMirror may be waiting for an ad click');
+        throw new Error('Mobile verification did not complete; NetMirror may be waiting for an ad click');
     } catch (error) {
         cookieValue = '';
         cookieTimestamp = 0;

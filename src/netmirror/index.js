@@ -43,8 +43,7 @@ async function fetchFromPlatform(platformKey, title, mediaType, season, episode)
     return fetchMobileContent(platformKey, platform, title, mediaType, season, episode);
 }
 
-// CNC Verse Mobile's registered providers use these mobile APIs for both
-// movies and series, including playlist resolution.
+// Use NetMirror's mobile APIs for movies and series, including playlist resolution.
 async function fetchMobileContent(platformKey, platform, title, mediaType, season, episode) {
     const base = 'https://net52.cc';
     const cookie = await bypass(base);
@@ -141,8 +140,7 @@ async function fetchMobileContent(platformKey, platform, title, mediaType, seaso
                     'User-Agent': 'Mozilla/5.0 (Linux; Android 13; Pixel 5 Build/TQ3A.230901.001; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/149.0.7827.91 Safari/537.36 /OS.Gatu v3.0',
                     'X-Requested-With': 'app.netmirror.netmirrornew'
                 };
-                // CNC Verse's video interceptor replaces the API cookie with
-                // hd=on for every HLS playlist request.
+                // NetMirror expects hd=on on HLS playlist requests.
                 if (settings.forceHd !== false) playbackHeaders.Cookie = 'hd=on';
                 streams.push({
                     name: `NetMirror (${platformKey})`,
