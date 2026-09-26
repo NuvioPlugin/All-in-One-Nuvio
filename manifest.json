@@ -152,6 +152,10 @@
       "description": "Streaming links from netmirror.",
       "version": "1.0.4",
       "author": "Nuvio Team",
+      "supportedTypes": [
+        "movie",
+        "tv"
+      ],
       "filename": "providers/netmirror.js",
       "enabled": true,
       "hasSettings": true,
