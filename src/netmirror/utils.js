@@ -7,6 +7,7 @@ const APP_USER_AGENT = 'Mozilla/5.0 (Linux; Android 12; RMX2117 Build/SP1A.21081
 let cookieValue = '';
 let cookieTimestamp = 0;
 let cookieJar = [];
+let delayModeLogged = false;
 
 function setCookieValues(headers) {
     if (!headers) return [];
@@ -59,16 +60,24 @@ function getCookie(name) {
     return cookieJar.find(cookie => cookie.name === name)?.value || '';
 }
 
+function logDelayMode(mode) {
+    if (delayModeLogged) return;
+    delayModeLogged = true;
+    console.log(`[NetMirror] Delay implementation: ${mode}`);
+}
+
 function delay(ms) {
     if (typeof setTimeout === 'function') {
+        logDelayMode('setTimeout (runtime timer)');
         return new Promise(resolve => setTimeout(resolve, ms));
     }
 
-    // Nuvio's plugin runtime omits browser timers. Use an atomic wait when
+    // Nuvio's plugin runtime may omit browser timers. Use an atomic wait when
     // available; otherwise block this plugin worker until the retry interval.
     return Promise.resolve().then(() => {
         if (typeof SharedArrayBuffer === 'function' && typeof Atomics !== 'undefined' && typeof Atomics.wait === 'function') {
             try {
+                logDelayMode('Atomics.wait fallback');
                 Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, ms);
                 return;
             } catch (e) {
@@ -76,6 +85,7 @@ function delay(ms) {
             }
         }
 
+        logDelayMode('synchronous busy-wait fallback');
         const deadline = Date.now() + ms;
         while (Date.now() < deadline) {}
     });

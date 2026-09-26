@@ -1,6 +1,6 @@
 /**
  * netmirror - Built from src/netmirror/
- * Generated: 2026-09-26T10:28:39.006Z
+ * Generated: 2026-09-26T18:41:31.637Z
  */
 var __defProp = Object.defineProperty;
 var __defProps = Object.defineProperties;
@@ -107,6 +107,7 @@ var APP_USER_AGENT = "Mozilla/5.0 (Linux; Android 12; RMX2117 Build/SP1A.210812.
 var cookieValue = "";
 var cookieTimestamp = 0;
 var cookieJar = [];
+var delayModeLogged = false;
 function setCookieValues(headers) {
   var _a, _b;
   if (!headers)
@@ -163,18 +164,27 @@ function getCookie(name) {
   var _a;
   return ((_a = cookieJar.find((cookie) => cookie.name === name)) == null ? void 0 : _a.value) || "";
 }
+function logDelayMode(mode) {
+  if (delayModeLogged)
+    return;
+  delayModeLogged = true;
+  console.log(`[NetMirror] Delay implementation: ${mode}`);
+}
 function delay(ms) {
   if (typeof setTimeout === "function") {
+    logDelayMode("setTimeout (runtime timer)");
     return new Promise((resolve) => setTimeout(resolve, ms));
   }
   return Promise.resolve().then(() => {
     if (typeof SharedArrayBuffer === "function" && typeof Atomics !== "undefined" && typeof Atomics.wait === "function") {
       try {
+        logDelayMode("Atomics.wait fallback");
         Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, ms);
         return;
       } catch (e) {
       }
     }
+    logDelayMode("synchronous busy-wait fallback");
     const deadline = Date.now() + ms;
     while (Date.now() < deadline) {
     }
