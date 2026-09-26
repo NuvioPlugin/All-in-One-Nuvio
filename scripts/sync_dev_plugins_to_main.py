@@ -122,6 +122,27 @@ def generated_entry(provider_path, source_bytes):
     }
 
 
+def increment_plugin_version(version):
+    match = re.fullmatch(r"(\d+)\.(\d+)\.(\d+)", str(version or ""))
+    if not match:
+        raise ValueError(f"Cannot increment non-numeric plugin version: {version!r}")
+
+    major, minor, patch = map(int, match.groups())
+    if patch >= 10:
+        if minor >= 10:
+            major += 1
+            minor = 0
+        else:
+            minor += 1
+        patch = 0
+    elif minor >= 10:
+        major += 1
+        minor = 0
+    else:
+        patch += 1
+    return f"{major}.{minor}.{patch}"
+
+
 def encode_entry(entry, indent):
     lines = json.dumps(entry, ensure_ascii=False, indent=2).splitlines()
     return lines[0] + "\n" + "\n".join(indent + line for line in lines[1:])
@@ -246,6 +267,26 @@ def main():
             entry = generated_entry(path, payload)
             provider_id = entry["id"]
             updates[provider_id] = (entry, encode_entry(entry, "    "))
+
+    # Bump the main-branch version once for each updated provider JS file.
+    # Manifest-only edits do not change a plugin's version.
+    for status, path in provider_changes:
+        if status.startswith("D"):
+            continue
+        for provider_id, (entry, _) in list(updates.items()):
+            if entry.get("filename") != path:
+                continue
+            previous = main_entries.get(provider_id, (None, None))[0]
+            if previous is None:
+                previous = next(
+                    (candidate for candidate, _ in main_entries.values() if candidate.get("filename") == path),
+                    None,
+                )
+            if previous is None:
+                continue
+            bumped = dict(entry)
+            bumped["version"] = increment_plugin_version(previous.get("version"))
+            updates[provider_id] = (bumped, encode_entry(bumped, "    "))
 
     # Manifest-only updates stay scoped to changed IDs.
     for provider_id in removals:
