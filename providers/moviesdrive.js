@@ -1,6 +1,6 @@
 /**
  * moviesdrive - Built from src/moviesdrive/
- * Generated: 2026-09-22T10:00:32.946Z
+ * Generated: 2026-09-26T06:11:02.295Z
  */
 var __create = Object.create;
 var __defProp = Object.defineProperty;
@@ -108,7 +108,7 @@ function extractMdrive(url) {
     if (!url)
       return [];
     const regex = /hubcloud|gdflix|gdlink/i;
-    if (regex.test(url) && (url.includes("/drive/") || url.includes("/file/"))) {
+    if (!url.includes("search-recover.php") && regex.test(url) && (url.includes("/drive/") || url.includes("/file/"))) {
       return [url];
     }
     try {

@@ -1,6 +1,6 @@
 /**
  * netmirror - Built from src/netmirror/
- * Generated: 2026-09-26T05:13:59.294Z
+ * Generated: 2026-09-26T05:40:49.456Z
  */
 var __defProp = Object.defineProperty;
 var __defProps = Object.defineProperties;
@@ -44,6 +44,7 @@ var __async = (__this, __arguments, generator) => {
 
 // src/netmirror/constants.js
 var TMDB_API_KEY = "1865f43a0549ca50d341dd9ab8b29f49";
+var NEW_TV_USER_TOKEN = "5b5dc5b4b392a15a1877518bb5575632::b0881b4d377ad6c15cafe38474b0d92b::1790264661::ni";
 var PLATFORM_MAP = {
   netflix: {
     ott: "nf",
@@ -310,40 +311,21 @@ function fetchFromPlatform(platformKey, title, mediaType, season, episode) {
         return null;
       targetId = postData.main_id || contentId;
     }
-    const playlistUrl = `https://net52.cc${platform.playlist}?id=${targetId}&t=${encodeURIComponent(title)}&tm=${Math.floor(Date.now() / 1e3)}`;
-    const playlistHeaders = {
-      "Accept": "*/*",
-      "Accept-Language": "en-IN,en-US;q=0.9,en;q=0.8",
-      "Connection": "keep-alive",
-      "Referer": `https://net52.cc/mobile/home?app=1`,
-      "User-Agent": "Mozilla/5.0 (Linux; Android 13; Pixel 5 Build/TQ3A.230901.001; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/149.0.7827.91 Safari/537.36 /OS.Gatu v3.0",
-      "X-Requested-With": "app.netmirror.netmirrornew"
-    };
-    if (cookie) {
-      playlistHeaders["Cookie"] = `t_hash_t=${cookie}; ott=${platform.ott}; hd=on`;
-    }
-    const playlistResp = yield fetch(playlistUrl, {
-      headers: playlistHeaders
+    const playerUrl = `${apiBase}/newtv/player.php?id=${encodeURIComponent(targetId)}`;
+    const playerResp = yield fetch(playerUrl, {
+      headers: buildNewTvHeaders(platform.ott, { Usertoken: NEW_TV_USER_TOKEN })
     });
-    const playlistData = yield playlistResp.json();
-    if (playlistData && playlistData.length > 0) {
-      const item = playlistData[0];
-      if (item.sources && item.sources.length > 0) {
-        return item.sources.map((source) => {
-          const streamUrl = source.file.startsWith("http") ? source.file : `${apiBase}${source.file}`;
-          const qMatch = source.file.match(/[?&]q=([^&]+)/);
-          const quality = qMatch ? qMatch[1] : source.label === "Auto" ? "Auto" : source.label;
-          return {
-            name: `NetMirror (${platformKey.charAt(0).toUpperCase() + platformKey.slice(1)})`,
-            title: `${title} - ${source.label}`,
-            url: streamUrl,
-            quality,
-            headers: playlistHeaders
-          };
-        });
-      }
-    }
-    return null;
+    const playerData = yield playerResp.json();
+    if (!playerResp.ok || !playerData.video_link)
+      return null;
+    const referer = playerData.referer || apiBase;
+    return [{
+      name: `NetMirror (${platformKey.charAt(0).toUpperCase() + platformKey.slice(1)})`,
+      title: `${title} - Auto`,
+      url: playerData.video_link,
+      quality: "Auto",
+      headers: { Referer: referer }
+    }];
   });
 }
 function getAllEpisodes(contentId, postData, platform, apiBase) {
