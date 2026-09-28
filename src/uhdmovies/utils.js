@@ -8,7 +8,7 @@ export async function getMainUrl() {
     try {
         const response = await fetch(DOMAINS_URL, { headers: { 'User-Agent': 'Mozilla/5.0' } });
         const data = await response.json();
-        cachedDomain = data["UHDMovies"] || FALLBACK_DOMAIN;
+        cachedDomain = String(data["UHDMovies"] || FALLBACK_DOMAIN).replace(/\/$/, "");
         return cachedDomain;
     } catch (e) {
         return FALLBACK_DOMAIN;
@@ -34,58 +34,108 @@ export function fixUrl(url, domain) {
 
 export async function bypassHrefli(url) {
     const host = getBaseUrl(url);
+    const cookies = new Map();
+
+    function absorbCookies(response) {
+        let setCookie = "";
+        try {
+            const allCookies = response.headers.getSetCookie?.();
+            if (Array.isArray(allCookies)) setCookie = allCookies.join("\n");
+        } catch (_) {}
+        if (!setCookie) setCookie = response.headers.get("set-cookie") || "";
+        for (const item of setCookie.split(/\n|,(?=[^;,]+=)/)) {
+            const pair = item.split(";")[0].trim();
+            const separator = pair.indexOf("=");
+            if (separator <= 0) continue;
+            const name = pair.slice(0, separator).trim();
+            const value = pair.slice(separator + 1).trim();
+            if (!value || value.toLowerCase() === "deleted") cookies.delete(name);
+            else cookies.set(name, value);
+        }
+    }
+
+    function cookieHeader(extra = {}) {
+        const values = new Map(cookies);
+        for (const [name, value] of Object.entries(extra)) {
+            if (value) values.set(name, value);
+        }
+        return Array.from(values, ([name, value]) => `${name}=${value}`).join("; ");
+    }
+
+    async function request(requestUrl, options = {}) {
+        const headers = { ...HEADERS, ...(options.headers || {}) };
+        const cookie = cookieHeader();
+        if (cookie) headers.Cookie = cookie;
+        const response = await fetch(requestUrl, { ...options, headers });
+        absorbCookies(response);
+        return response;
+    }
+
     try {
-        const res1 = await fetch(url, { headers: HEADERS });
-        const html1 = await res1.text();
-        const $1 = cheerio.load(html1);
-        const formUrl1 = $1("form#landing").attr("action");
-        const formData1 = {};
-        $1("form#landing input").each((_, el) => {
-            formData1[$1(el).attr("name")] = $1(el).attr("value") || "";
-        });
+        let currentUrl = url;
+        let response = await request(currentUrl);
+        let html = await response.text();
+        let lastFormData = {};
 
-        const res2 = await fetch(formUrl1, {
-            method: "POST",
-            headers: { ...HEADERS, "Content-Type": "application/x-www-form-urlencoded" },
-            body: new URLSearchParams(formData1).toString()
-        });
-        const html2 = await res2.text();
-        const $2 = cheerio.load(html2);
-        const formUrl2 = $2("form#landing").attr("action");
-        const formData2 = {};
-        $2("form#landing input").each((_, el) => {
-            formData2[$2(el).attr("name")] = $2(el).attr("value") || "";
-        });
+        // Hrefli pages can require several form posts; retain cookies across each step.
+        for (let step = 0; step < 5; step++) {
+            const $ = cheerio.load(html);
+            const form = $("form#landing").first();
+            const action = form.attr("action");
+            if (!action) break;
 
-        const res3 = await fetch(formUrl2, {
-            method: "POST",
-            headers: { ...HEADERS, "Content-Type": "application/x-www-form-urlencoded" },
-            body: new URLSearchParams(formData2).toString()
-        });
-        const html3 = await res3.text();
-        const $3 = cheerio.load(html3);
-        const script = $3("script:contains(?go=)").html() || "";
-        const skTokenMatch = script.match(/\?go=([^"]+)/);
-        if (!skTokenMatch) return null;
-        const skToken = skTokenMatch[1];
-        const wpHttp2 = formData2["_wp_http2"] || "";
+            const formData = {};
+            form.find("input[name]").each((_, el) => {
+                const name = $(el).attr("name");
+                if (name) formData[name] = $(el).attr("value") || "";
+            });
+            if (Object.keys(formData).length === 0) break;
 
-        const res4 = await fetch(`${host}?go=${skToken}`, {
-            headers: { ...HEADERS, "Cookie": `${skToken}=${wpHttp2}` }
-        });
-        const html4 = await res4.text();
-        const $4 = cheerio.load(html4);
-        const metaRefresh = $4('meta[http-equiv="refresh"]').attr("content") || "";
-        const driveUrlMatch = metaRefresh.match(/url=(.+)/);
-        if (!driveUrlMatch) return null;
-        const driveUrl = driveUrlMatch[1];
+            lastFormData = formData;
+            currentUrl = new URL(action, currentUrl).toString();
+            response = await request(currentUrl, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/x-www-form-urlencoded",
+                    "Referer": response.url || currentUrl
+                },
+                body: new URLSearchParams(formData).toString()
+            });
+            html = await response.text();
+            if (!cheerio.load(html)("form#landing").length) break;
+        }
 
-        const res5 = await fetch(driveUrl, { headers: HEADERS });
-        const html5 = await res5.text();
-        const pathMatch = html5.match(/replace\("([^"]+)"\)/);
-        if (!pathMatch || pathMatch[1] === "/404") return null;
-        return fixUrl(pathMatch[1], getBaseUrl(driveUrl));
+        const $ = cheerio.load(html);
+        let redirectUrl = $("meta[http-equiv='refresh']").attr("content") || "";
+        redirectUrl = redirectUrl.match(/url\s*=\s*['\"]?([^'\";]+)/i)?.[1] || "";
+
+        if (!redirectUrl) {
+            const goMatch = html.match(/[?&]go=([^"'&\s]+)/i);
+            if (goMatch) {
+                const skToken = decodeURIComponent(goMatch[1]);
+                const wpHttp2 = lastFormData._wp_http2 || "";
+                if (wpHttp2) cookies.set(skToken, wpHttp2);
+                response = await request(`${host}?go=${encodeURIComponent(skToken)}`);
+                html = await response.text();
+                const $go = cheerio.load(html);
+                redirectUrl = $go("meta[http-equiv='refresh']").attr("content") || "";
+                redirectUrl = redirectUrl.match(/url\s*=\s*['\"]?([^'\";]+)/i)?.[1] || "";
+            }
+        }
+
+        if (!redirectUrl) {
+            redirectUrl = html.match(/(?:location(?:\.href)?\s*=|replace\()\s*['\"]([^'\"]+)['\"]/i)?.[1] || "";
+        }
+        if (!redirectUrl) return null;
+
+        const driveUrl = new URL(redirectUrl.trim(), response.url || currentUrl).toString();
+        const driveRes = await request(driveUrl);
+        const driveHtml = await driveRes.text();
+        const path = driveHtml.match(/replace\(\s*['\"]([^'\"]+)['\"]\s*\)/i)?.[1];
+        if (!path || path === "/404") return null;
+        return new URL(path, driveRes.url || driveUrl).toString();
     } catch (e) {
+        console.log("[UHDMovies] Hrefli bypass failed:", e.message);
         return null;
     }
 }
@@ -99,9 +149,11 @@ export async function fetchTmdbDetails(tmdbId, mediaType) {
                 'Accept': 'application/json'
             } 
         });
+        if (!res.ok) return null;
         const data = await res.json();
         return {
             title: mediaType === 'movie' ? (data.title || data.original_title) : (data.name || data.original_name),
+            originalTitle: mediaType === 'movie' ? data.original_title : data.original_name,
             year: (data.release_date || data.first_air_date || "").substring(0, 4),
             imdbId: data.external_ids?.imdb_id
         };
@@ -152,7 +204,7 @@ export async function extractDriveseedPage(url) {
             const html = await res.text();
             const redirectMatch = html.match(/replace\("([^"]+)"\)/);
             if (redirectMatch) {
-                pageUrl = getBaseUrl(url) + redirectMatch[1];
+                pageUrl = fixUrl(redirectMatch[1], getBaseUrl(url));
             }
         }
         
@@ -172,17 +224,17 @@ export async function extractDriveseedPage(url) {
             if (!href) continue;
 
             if (text.includes("instant download")) {
-                const instantRes = await fetch(href, { headers: HEADERS, redirect: "follow" });
+                const instantRes = await fetch(fixUrl(href, baseDomain), { headers: HEADERS, redirect: "follow" });
                 if (instantRes.url && instantRes.url.includes("url=")) {
                     streams.push({ name: "Driveseed Instant", url: instantRes.url.split("url=")[1], quality, size });
                 }
             } else if (text.includes("resume cloud")) {
-                const cloudRes = await fetch(baseDomain + href, { headers: HEADERS });
+                const cloudRes = await fetch(fixUrl(href, baseDomain), { headers: HEADERS });
                 const cloudHtml = await cloudRes.text();
                 const link = cheerio.load(cloudHtml)("a.btn-success").first().attr("href");
                 if (link) streams.push({ name: "Driveseed Cloud", url: link, quality, size });
             } else if (text.includes("cloud download")) {
-                streams.push({ name: "Driveseed Cloud", url: href, quality, size });
+                streams.push({ name: "Driveseed Cloud", url: fixUrl(href, baseDomain), quality, size });
             }
         }
     } catch (e) {}

@@ -1,6 +1,6 @@
 /**
  * uhdmovies - Built from src/uhdmovies/
- * Generated: 2026-09-21T12:17:47.745Z
+ * Generated: 2026-09-28T09:06:23.265Z
  */
 var __create = Object.create;
 var __defProp = Object.defineProperty;
@@ -89,7 +89,7 @@ function getMainUrl() {
     try {
       const response = yield fetch(DOMAINS_URL, { headers: { "User-Agent": "Mozilla/5.0" } });
       const data = yield response.json();
-      cachedDomain = data["UHDMovies"] || FALLBACK_DOMAIN;
+      cachedDomain = String(data["UHDMovies"] || FALLBACK_DOMAIN).replace(/\/$/, "");
       return cachedDomain;
     } catch (e) {
       return FALLBACK_DOMAIN;
@@ -117,58 +117,116 @@ function fixUrl(url, domain) {
 }
 function bypassHrefli(url) {
   return __async(this, null, function* () {
+    var _a, _b, _c, _d;
     const host = getBaseUrl(url);
+    const cookies = /* @__PURE__ */ new Map();
+    function absorbCookies(response) {
+      var _a2, _b2;
+      let setCookie = "";
+      try {
+        const allCookies = (_b2 = (_a2 = response.headers).getSetCookie) == null ? void 0 : _b2.call(_a2);
+        if (Array.isArray(allCookies))
+          setCookie = allCookies.join("\n");
+      } catch (_) {
+      }
+      if (!setCookie)
+        setCookie = response.headers.get("set-cookie") || "";
+      for (const item of setCookie.split(/\n|,(?=[^;,]+=)/)) {
+        const pair = item.split(";")[0].trim();
+        const separator = pair.indexOf("=");
+        if (separator <= 0)
+          continue;
+        const name = pair.slice(0, separator).trim();
+        const value = pair.slice(separator + 1).trim();
+        if (!value || value.toLowerCase() === "deleted")
+          cookies.delete(name);
+        else
+          cookies.set(name, value);
+      }
+    }
+    function cookieHeader(extra = {}) {
+      const values = new Map(cookies);
+      for (const [name, value] of Object.entries(extra)) {
+        if (value)
+          values.set(name, value);
+      }
+      return Array.from(values, ([name, value]) => `${name}=${value}`).join("; ");
+    }
+    function request(_0) {
+      return __async(this, arguments, function* (requestUrl, options = {}) {
+        const headers = __spreadValues(__spreadValues({}, HEADERS), options.headers || {});
+        const cookie = cookieHeader();
+        if (cookie)
+          headers.Cookie = cookie;
+        const response = yield fetch(requestUrl, __spreadProps(__spreadValues({}, options), { headers }));
+        absorbCookies(response);
+        return response;
+      });
+    }
     try {
-      const res1 = yield fetch(url, { headers: HEADERS });
-      const html1 = yield res1.text();
-      const $1 = import_cheerio_without_node_native.default.load(html1);
-      const formUrl1 = $1("form#landing").attr("action");
-      const formData1 = {};
-      $1("form#landing input").each((_, el) => {
-        formData1[$1(el).attr("name")] = $1(el).attr("value") || "";
-      });
-      const res2 = yield fetch(formUrl1, {
-        method: "POST",
-        headers: __spreadProps(__spreadValues({}, HEADERS), { "Content-Type": "application/x-www-form-urlencoded" }),
-        body: new URLSearchParams(formData1).toString()
-      });
-      const html2 = yield res2.text();
-      const $2 = import_cheerio_without_node_native.default.load(html2);
-      const formUrl2 = $2("form#landing").attr("action");
-      const formData2 = {};
-      $2("form#landing input").each((_, el) => {
-        formData2[$2(el).attr("name")] = $2(el).attr("value") || "";
-      });
-      const res3 = yield fetch(formUrl2, {
-        method: "POST",
-        headers: __spreadProps(__spreadValues({}, HEADERS), { "Content-Type": "application/x-www-form-urlencoded" }),
-        body: new URLSearchParams(formData2).toString()
-      });
-      const html3 = yield res3.text();
-      const $3 = import_cheerio_without_node_native.default.load(html3);
-      const script = $3("script:contains(?go=)").html() || "";
-      const skTokenMatch = script.match(/\?go=([^"]+)/);
-      if (!skTokenMatch)
+      let currentUrl = url;
+      let response = yield request(currentUrl);
+      let html = yield response.text();
+      let lastFormData = {};
+      for (let step = 0; step < 5; step++) {
+        const $2 = import_cheerio_without_node_native.default.load(html);
+        const form = $2("form#landing").first();
+        const action = form.attr("action");
+        if (!action)
+          break;
+        const formData = {};
+        form.find("input[name]").each((_, el) => {
+          const name = $2(el).attr("name");
+          if (name)
+            formData[name] = $2(el).attr("value") || "";
+        });
+        if (Object.keys(formData).length === 0)
+          break;
+        lastFormData = formData;
+        currentUrl = new URL(action, currentUrl).toString();
+        response = yield request(currentUrl, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/x-www-form-urlencoded",
+            "Referer": response.url || currentUrl
+          },
+          body: new URLSearchParams(formData).toString()
+        });
+        html = yield response.text();
+        if (!import_cheerio_without_node_native.default.load(html)("form#landing").length)
+          break;
+      }
+      const $ = import_cheerio_without_node_native.default.load(html);
+      let redirectUrl = $("meta[http-equiv='refresh']").attr("content") || "";
+      redirectUrl = ((_a = redirectUrl.match(/url\s*=\s*['\"]?([^'\";]+)/i)) == null ? void 0 : _a[1]) || "";
+      if (!redirectUrl) {
+        const goMatch = html.match(/[?&]go=([^"'&\s]+)/i);
+        if (goMatch) {
+          const skToken = decodeURIComponent(goMatch[1]);
+          const wpHttp2 = lastFormData._wp_http2 || "";
+          if (wpHttp2)
+            cookies.set(skToken, wpHttp2);
+          response = yield request(`${host}?go=${encodeURIComponent(skToken)}`);
+          html = yield response.text();
+          const $go = import_cheerio_without_node_native.default.load(html);
+          redirectUrl = $go("meta[http-equiv='refresh']").attr("content") || "";
+          redirectUrl = ((_b = redirectUrl.match(/url\s*=\s*['\"]?([^'\";]+)/i)) == null ? void 0 : _b[1]) || "";
+        }
+      }
+      if (!redirectUrl) {
+        redirectUrl = ((_c = html.match(/(?:location(?:\.href)?\s*=|replace\()\s*['\"]([^'\"]+)['\"]/i)) == null ? void 0 : _c[1]) || "";
+      }
+      if (!redirectUrl)
         return null;
-      const skToken = skTokenMatch[1];
-      const wpHttp2 = formData2["_wp_http2"] || "";
-      const res4 = yield fetch(`${host}?go=${skToken}`, {
-        headers: __spreadProps(__spreadValues({}, HEADERS), { "Cookie": `${skToken}=${wpHttp2}` })
-      });
-      const html4 = yield res4.text();
-      const $4 = import_cheerio_without_node_native.default.load(html4);
-      const metaRefresh = $4('meta[http-equiv="refresh"]').attr("content") || "";
-      const driveUrlMatch = metaRefresh.match(/url=(.+)/);
-      if (!driveUrlMatch)
+      const driveUrl = new URL(redirectUrl.trim(), response.url || currentUrl).toString();
+      const driveRes = yield request(driveUrl);
+      const driveHtml = yield driveRes.text();
+      const path = (_d = driveHtml.match(/replace\(\s*['\"]([^'\"]+)['\"]\s*\)/i)) == null ? void 0 : _d[1];
+      if (!path || path === "/404")
         return null;
-      const driveUrl = driveUrlMatch[1];
-      const res5 = yield fetch(driveUrl, { headers: HEADERS });
-      const html5 = yield res5.text();
-      const pathMatch = html5.match(/replace\("([^"]+)"\)/);
-      if (!pathMatch || pathMatch[1] === "/404")
-        return null;
-      return fixUrl(pathMatch[1], getBaseUrl(driveUrl));
+      return new URL(path, driveRes.url || driveUrl).toString();
     } catch (e) {
+      console.log("[UHDMovies] Hrefli bypass failed:", e.message);
       return null;
     }
   });
@@ -184,9 +242,12 @@ function fetchTmdbDetails(tmdbId, mediaType) {
           "Accept": "application/json"
         }
       });
+      if (!res.ok)
+        return null;
       const data = yield res.json();
       return {
         title: mediaType === "movie" ? data.title || data.original_title : data.name || data.original_name,
+        originalTitle: mediaType === "movie" ? data.original_title : data.original_name,
         year: (data.release_date || data.first_air_date || "").substring(0, 4),
         imdbId: (_a = data.external_ids) == null ? void 0 : _a.imdb_id
       };
@@ -240,7 +301,7 @@ function extractDriveseedPage(url) {
         const html2 = yield res2.text();
         const redirectMatch = html2.match(/replace\("([^"]+)"\)/);
         if (redirectMatch) {
-          pageUrl = getBaseUrl(url) + redirectMatch[1];
+          pageUrl = fixUrl(redirectMatch[1], getBaseUrl(url));
         }
       }
       const res = yield fetch(pageUrl, { headers: HEADERS });
@@ -257,18 +318,18 @@ function extractDriveseedPage(url) {
         if (!href)
           continue;
         if (text.includes("instant download")) {
-          const instantRes = yield fetch(href, { headers: HEADERS, redirect: "follow" });
+          const instantRes = yield fetch(fixUrl(href, baseDomain), { headers: HEADERS, redirect: "follow" });
           if (instantRes.url && instantRes.url.includes("url=")) {
             streams.push({ name: "Driveseed Instant", url: instantRes.url.split("url=")[1], quality, size });
           }
         } else if (text.includes("resume cloud")) {
-          const cloudRes = yield fetch(baseDomain + href, { headers: HEADERS });
+          const cloudRes = yield fetch(fixUrl(href, baseDomain), { headers: HEADERS });
           const cloudHtml = yield cloudRes.text();
           const link = import_cheerio_without_node_native.default.load(cloudHtml)("a.btn-success").first().attr("href");
           if (link)
             streams.push({ name: "Driveseed Cloud", url: link, quality, size });
         } else if (text.includes("cloud download")) {
-          streams.push({ name: "Driveseed Cloud", url: href, quality, size });
+          streams.push({ name: "Driveseed Cloud", url: fixUrl(href, baseDomain), quality, size });
         }
       }
     } catch (e) {
@@ -278,6 +339,9 @@ function extractDriveseedPage(url) {
 }
 
 // src/uhdmovies/index.js
+function normalizeTitle(value) {
+  return String(value || "").toLowerCase().replace(/\[[^\]]*\]|\([^)]*\)/g, " ").replace(/[^a-z0-9]+/g, " ").trim().replace(/\s+/g, " ");
+}
 function getStreams(tmdbId, mediaType, seasonNum = 1, episodeNum = 1) {
   return __async(this, null, function* () {
     console.log(`[UHDMovies] Querying streams for TMDB: ${tmdbId}, Type: ${mediaType}`);
@@ -285,21 +349,30 @@ function getStreams(tmdbId, mediaType, seasonNum = 1, episodeNum = 1) {
     if (!details)
       return [];
     const mainUrl = yield getMainUrl();
-    const query = details.title;
-    const searchUrl = `${mainUrl}/?s=${encodeURIComponent(query)}`;
     try {
-      const searchRes = yield fetch(searchUrl, { headers: __spreadProps(__spreadValues({}, HEADERS), { "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36" }) });
-      const searchHtml = yield searchRes.text();
-      const $search = import_cheerio_without_node_native2.default.load(searchHtml);
       let targetUrl = "";
-      $search("article.gridlove-post, article.latestPost").each((i, el) => {
-        const title = $search(el).find("h1.sanket, h2.title a").text() || $search(el).find("a").attr("title") || "";
-        const href = $search(el).find("div.entry-image > a, h2.title a, a").first().attr("href");
-        if (href && (title.toLowerCase().includes(details.title.toLowerCase()) || details.imdbId && title.includes(details.imdbId))) {
-          targetUrl = href;
-          return false;
-        }
-      });
+      const searchTitles = [...new Set([details.title, details.originalTitle].filter(Boolean))];
+      for (const query of searchTitles) {
+        const searchUrl = `${mainUrl}/?s=${encodeURIComponent(query)}`;
+        const searchRes = yield fetch(searchUrl, { headers: __spreadProps(__spreadValues({}, HEADERS), { "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36" }) });
+        if (!searchRes.ok)
+          continue;
+        const $search = import_cheerio_without_node_native2.default.load(yield searchRes.text());
+        const normalizedSearchTitle = normalizeTitle(query);
+        $search("article.gridlove-post, article.latestPost").each((i, el) => {
+          const title = $search(el).find("h1.sanket, h2.title a").text() || $search(el).find("a").attr("title") || "";
+          const href = $search(el).find("div.entry-image > a, h2.title a, a").first().attr("href");
+          const normalizedResultTitle = normalizeTitle(title);
+          const titleMatches = normalizedResultTitle && normalizedSearchTitle && (normalizedResultTitle === normalizedSearchTitle || normalizedResultTitle.includes(normalizedSearchTitle) || normalizedSearchTitle.includes(normalizedResultTitle));
+          const imdbMatches = details.imdbId && title.includes(details.imdbId);
+          if (href && (titleMatches || imdbMatches)) {
+            targetUrl = href;
+            return false;
+          }
+        });
+        if (targetUrl)
+          break;
+      }
       if (!targetUrl) {
         console.log("[UHDMovies] No search result found");
         return [];

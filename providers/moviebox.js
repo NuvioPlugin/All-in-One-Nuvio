@@ -1,6 +1,6 @@
 /**
  * moviebox - Built from src/moviebox/
- * Generated: 2026-09-21T13:26:04.396Z
+ * Generated: 2026-09-28T09:05:35.256Z
  */
 var __create = Object.create;
 var __defProp = Object.defineProperty;
@@ -64,6 +64,13 @@ var __async = (__this, __arguments, generator) => {
 
 // src/moviebox/constants.js
 var API_BASE = "https://api3.aoneroom.com";
+var HOST_POOL = [
+  "https://api6.aoneroom.com",
+  "https://api5.aoneroom.com",
+  "https://api4.aoneroom.com",
+  "https://api4sg.aoneroom.com",
+  "https://api3.aoneroom.com"
+];
 var KEY_B64_DEFAULT = "NzZpUmwwN3MweFNOOWpxbUVXQXQ3OUVCSlp1bElRSXNWNjRGWnIyTw==";
 var KEY_B64_ALT = "WHFuMm5uTzQxL0w5Mm8xaXVYaFNMSFRiWHZZNFo1Wlo2Mm04bVNMQQ==";
 var TMDB_API_KEY = "1865f43a0549ca50d341dd9ab8b29f49";
@@ -256,14 +263,22 @@ function movieBoxRequest(_0, _1) {
     if (body) {
       options.body = body;
     }
-    let retries = 2;
-    while (retries > 0) {
+    let originalUrl;
+    try {
+      originalUrl = new URL(url);
+    } catch (_) {
+      return null;
+    }
+    const apiHosts = new Set(HOST_POOL.map((host) => new URL(host).host));
+    const hosts = apiHosts.has(originalUrl.host) ? [originalUrl.host, ...HOST_POOL.map((host) => new URL(host).host).filter((host) => host !== originalUrl.host)] : [originalUrl.host];
+    const maxAttempts = Math.min(3, hosts.length);
+    for (let attempt = 0; attempt < maxAttempts; attempt++) {
       try {
-        const res = yield fetch(url, options);
+        const requestUrl = new URL(originalUrl.toString());
+        requestUrl.host = hosts[attempt];
+        const res = yield fetch(requestUrl.toString(), options);
         if (!res.ok) {
-          if (res.status === 403 || res.status === 429) {
-            retries--;
-            yield new Promise((resolve) => setTimeout(resolve, 1e3));
+          if ((res.status === 403 || res.status === 429 || res.status >= 500) && attempt + 1 < maxAttempts) {
             continue;
           }
           return null;
@@ -293,12 +308,10 @@ function movieBoxRequest(_0, _1) {
           headers: res.headers
         };
       } catch (err) {
-        retries--;
-        if (retries === 0) {
+        if (attempt + 1 === maxAttempts) {
           console.error("[MovieBox Request Error]", err.message);
           return null;
         }
-        yield new Promise((resolve) => setTimeout(resolve, 1e3));
       }
     }
     return null;
@@ -332,7 +345,7 @@ function fetchTmdbDetails(tmdbId, mediaType) {
 function normalizeTitle(s) {
   if (!s)
     return "";
-  return s.replace(/\[.*?\]/g, " ").replace(/\(.*?|/g, " ").replace(/\b(dub|dubbed|hd|4k|hindi|tamil|telugu|dual audio)\b/gi, " ").trim().toLowerCase().replace(/:/g, " ").replace(/[^\w\s]/g, " ").replace(/\s+/g, " ");
+  return String(s).replace(/\[[^\]]*\]/g, " ").replace(/\([^)]*\)/g, " ").replace(/\b(dub|dubbed|hd|4k|hindi|tamil|telugu|dual audio)\b/gi, " ").trim().toLowerCase().replace(/:/g, " ").replace(/[^\w\s]/g, " ").replace(/\s+/g, " ");
 }
 function parseQualityNumber(value) {
   const match = String(value || "").match(/(\d{3,4})/);

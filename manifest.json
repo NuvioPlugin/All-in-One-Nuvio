@@ -89,7 +89,7 @@
       "id": "uhdmovies",
       "name": "UHDMovies",
       "description": "UHD Movies streaming with multiple resolution",
-      "version": "1.2.0",
+      "version": "1.2.1",
       "author": "Nuvio Team",
       "supportedTypes": [
         "movie",
@@ -190,7 +190,7 @@
       "id": "moviebox",
       "name": "MovieBox",
       "description": "MovieBox streaming with multiple language support (DASH + MP4)",
-      "version": "1.2.0",
+      "version": "1.2.1",
       "author": "Nuvio Team",
       "supportedTypes": [
         "movie",

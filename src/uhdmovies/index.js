@@ -2,6 +2,11 @@ import cheerio from 'cheerio-without-node-native';
 import { HEADERS } from './constants.js';
 import { getMainUrl, fetchTmdbDetails, bypassHrefli, extractDriveseedPage, getIndexQuality, extractVideoSeed } from './utils.js';
 
+function normalizeTitle(value) {
+    return String(value || "").toLowerCase().replace(/\[[^\]]*\]|\([^)]*\)/g, " ")
+        .replace(/[^a-z0-9]+/g, " ").trim().replace(/\s+/g, " ");
+}
+
 async function getStreams(tmdbId, mediaType, seasonNum = 1, episodeNum = 1) {
     console.log(`[UHDMovies] Querying streams for TMDB: ${tmdbId}, Type: ${mediaType}`);
     
@@ -9,23 +14,32 @@ async function getStreams(tmdbId, mediaType, seasonNum = 1, episodeNum = 1) {
     if (!details) return [];
 
     const mainUrl = await getMainUrl();
-    const query = details.title;
-    const searchUrl = `${mainUrl}/?s=${encodeURIComponent(query)}`;
-    
     try {
-        const searchRes = await fetch(searchUrl, { headers: { ...HEADERS, 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36' } });
-        const searchHtml = await searchRes.text();
-        const $search = cheerio.load(searchHtml);
-        
         let targetUrl = "";
-        $search("article.gridlove-post, article.latestPost").each((i, el) => {
-            const title = $search(el).find("h1.sanket, h2.title a").text() || $search(el).find("a").attr("title") || "";
-            const href = $search(el).find("div.entry-image > a, h2.title a, a").first().attr("href");
-            if (href && (title.toLowerCase().includes(details.title.toLowerCase()) || (details.imdbId && title.includes(details.imdbId)))) {
-                targetUrl = href;
-                return false;
-            }
-        });
+        const searchTitles = [...new Set([details.title, details.originalTitle].filter(Boolean))];
+        for (const query of searchTitles) {
+            const searchUrl = `${mainUrl}/?s=${encodeURIComponent(query)}`;
+            const searchRes = await fetch(searchUrl, { headers: { ...HEADERS, 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36' } });
+            if (!searchRes.ok) continue;
+            const $search = cheerio.load(await searchRes.text());
+            const normalizedSearchTitle = normalizeTitle(query);
+
+            $search("article.gridlove-post, article.latestPost").each((i, el) => {
+                const title = $search(el).find("h1.sanket, h2.title a").text() || $search(el).find("a").attr("title") || "";
+                const href = $search(el).find("div.entry-image > a, h2.title a, a").first().attr("href");
+                const normalizedResultTitle = normalizeTitle(title);
+                const titleMatches = normalizedResultTitle && normalizedSearchTitle && (
+                    normalizedResultTitle === normalizedSearchTitle ||
+                    normalizedResultTitle.includes(normalizedSearchTitle) || normalizedSearchTitle.includes(normalizedResultTitle)
+                );
+                const imdbMatches = details.imdbId && title.includes(details.imdbId);
+                if (href && (titleMatches || imdbMatches)) {
+                    targetUrl = href;
+                    return false;
+                }
+            });
+            if (targetUrl) break;
+        }
 
         if (!targetUrl) {
             console.log("[UHDMovies] No search result found");

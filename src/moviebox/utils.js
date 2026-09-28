@@ -1,5 +1,5 @@
 import CryptoJS from 'crypto-js';
-import { API_BASE, TOKEN_URL, KEY_B64_DEFAULT, KEY_B64_ALT, BRAND_MODELS, PACKAGE_INFO, TMDB_BASE_URL, TMDB_API_KEY } from './constants.js';
+import { API_BASE, HOST_POOL, TOKEN_URL, KEY_B64_DEFAULT, KEY_B64_ALT, BRAND_MODELS, PACKAGE_INFO, TMDB_BASE_URL, TMDB_API_KEY } from './constants.js';
 
 const SECRET_KEY_DEFAULT = CryptoJS.enc.Base64.parse(
     CryptoJS.enc.Base64.parse(KEY_B64_DEFAULT).toString(CryptoJS.enc.Utf8)
@@ -188,14 +188,26 @@ export async function movieBoxRequest(method, url, body = null, customHeaders = 
         options.body = body;
     }
 
-    let retries = 2;
-    while (retries > 0) {
+    let originalUrl;
+    try {
+        originalUrl = new URL(url);
+    } catch (_) {
+        return null;
+    }
+
+    const apiHosts = new Set(HOST_POOL.map(host => new URL(host).host));
+    const hosts = apiHosts.has(originalUrl.host)
+        ? [originalUrl.host, ...HOST_POOL.map(host => new URL(host).host).filter(host => host !== originalUrl.host)]
+        : [originalUrl.host];
+    const maxAttempts = Math.min(3, hosts.length);
+
+    for (let attempt = 0; attempt < maxAttempts; attempt++) {
         try {
-            const res = await fetch(url, options);
+            const requestUrl = new URL(originalUrl.toString());
+            requestUrl.host = hosts[attempt];
+            const res = await fetch(requestUrl.toString(), options);
             if (!res.ok) {
-                if (res.status === 403 || res.status === 429) {
-                    retries--;
-                    await new Promise(resolve => setTimeout(resolve, 1000));
+                if ((res.status === 403 || res.status === 429 || res.status >= 500) && attempt + 1 < maxAttempts) {
                     continue;
                 }
                 return null;
@@ -227,12 +239,10 @@ export async function movieBoxRequest(method, url, body = null, customHeaders = 
                 headers: res.headers
             };
         } catch (err) {
-            retries--;
-            if (retries === 0) {
+            if (attempt + 1 === maxAttempts) {
                 console.error("[MovieBox Request Error]", err.message);
                 return null;
             }
-            await new Promise(resolve => setTimeout(resolve, 1000));
         }
     }
     return null;
@@ -263,8 +273,8 @@ export async function fetchTmdbDetails(tmdbId, mediaType) {
 
 export function normalizeTitle(s) {
     if (!s) return "";
-    return s.replace(/\[.*?\]/g, " ")
-        .replace(/\(.*?|/g, " ")
+    return String(s).replace(/\[[^\]]*\]/g, " ")
+        .replace(/\([^)]*\)/g, " ")
         .replace(/\b(dub|dubbed|hd|4k|hindi|tamil|telugu|dual audio)\b/gi, " ")
         .trim()
         .toLowerCase()
@@ -332,4 +342,3 @@ export function extractPolicyResource(signCookie) {
 
     return null;
 }
-
