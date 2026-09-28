@@ -1,4 +1,4 @@
-import { API_BASE, PACKAGE_INFO } from './constants.js';
+import { API_BASE, PLAYER_BASE, PLAYER_USER_AGENT } from './constants.js';
 import { movieBoxRequest, fetchTmdbDetails, normalizeTitle, parseQualityNumber, getFormatType, extractPolicyResource } from './utils.js';
 
 async function getStreams(tmdbId, mediaType, seasonNum = 1, episodeNum = 1) {
@@ -72,6 +72,57 @@ function findBestMatch(subjects, tmdbTitle, tmdbYear, mediaType) {
     return null;
 }
 
+function getPlaybackPage(subjectData, subjectId) {
+    const candidates = [subjectData.detailPath, subjectData.detail_path, subjectData.path, subjectData.slug];
+    let detailPath = candidates.find(value => typeof value === "string" && value.trim());
+    let webBase = PLAYER_BASE;
+
+    for (const value of [subjectData.detailDomain, subjectData.webDomain, subjectData.webUrl, subjectData.detailUrl, subjectData.shareUrl]) {
+        if (typeof value !== "string") continue;
+        try {
+            const parsed = new URL(value.startsWith("http") ? value : `https://${value}`);
+            if (!parsed.hostname.endsWith("aoneroom.com")) webBase = parsed.origin;
+            if (!detailPath && parsed.pathname && parsed.pathname !== "/") detailPath = parsed.pathname;
+            break;
+        } catch (e) {}
+    }
+
+    if (!detailPath) return { webBase, referer: `${webBase}/` };
+    detailPath = detailPath.replace(/^\/+/, "").replace(/^movies\//, "");
+    const pageUrl = new URL(`/movies/${detailPath}`, `${webBase}/`);
+    pageUrl.searchParams.set("id", subjectId);
+    pageUrl.searchParams.set("type", "/movie/detail");
+    pageUrl.searchParams.set("detailSe", "");
+    pageUrl.searchParams.set("detailEp", "");
+    pageUrl.searchParams.set("lang", "en");
+    return { webBase, detailPath, referer: pageUrl.toString() };
+}
+
+function collectStreams(playData) {
+    const streams = Array.isArray(playData?.streams) ? [...playData.streams] : [];
+    for (const [key, format] of [["netDash", "DASH"], ["netHls", "HLS"]]) {
+        const value = playData?.[key] ?? playData?.data?.[key];
+        const values = Array.isArray(value) ? value : value ? [value] : [];
+        for (const item of values) {
+            if (typeof item === "string") streams.push({ url: item, format });
+            else if (item && typeof item === "object") {
+                if (item.url || item.playUrl || item.resourceLink || item.streamUrl) streams.push({ ...item, format: item.format || format });
+                else for (const [resolution, url] of Object.entries(item)) {
+                    if (typeof url === "string" && /^https?:\/\//i.test(url)) streams.push({ url, resolution, format });
+                    else if (url && typeof url === "object") streams.push({ ...url, resolution: url.resolution || resolution, format: url.format || format });
+                }
+            }
+        }
+    }
+    const seen = new Set();
+    return streams.filter(stream => {
+        const key = stream?.url || stream?.playUrl || stream?.resourceLink || stream?.streamUrl;
+        if (!key || seen.has(key)) return false;
+        seen.add(key);
+        return true;
+    });
+}
+
 async function getStreamLinks(subjectId, season = 0, episode = 0, mediaTitle = "", mediaType = "movie") {
     const subjectUrl = `${API_BASE}/wefeed-mobile-bff/subject-api/get?subjectId=${subjectId}`;
     const detailRes = await movieBoxRequest("GET", subjectUrl);
@@ -79,6 +130,7 @@ async function getStreamLinks(subjectId, season = 0, episode = 0, mediaTitle = "
     if (!detailRes || !detailRes.data || !detailRes.data.data) return [];
 
     const subjectData = detailRes.data.data;
+    const playbackPage = getPlaybackPage(subjectData, subjectId);
     const subjectIds = [];
     let originalLang = "Original";
     const dubs = subjectData.dubs;
@@ -94,22 +146,33 @@ async function getStreamLinks(subjectId, season = 0, episode = 0, mediaTitle = "
     subjectIds.unshift({ id: subjectId, lang: originalLang });
 
     const allStreams = [];
-    const userAgent = `${PACKAGE_INFO.package_name}/${PACKAGE_INFO.version_code} (Linux; U; Android 14; en_IN; Pixel 8; Build/UD1A.230803.041; Cronet/145.0.7582.0)`;
+    const playbackHeaders = {
+        "Origin": playbackPage.webBase,
+        "Referer": playbackPage.referer,
+        "User-Agent": PLAYER_USER_AGENT,
+        "x-request-lang": "en",
+        "x-vip-restrict": "0",
+        "x-no-high-risk-restrict": "0"
+    };
 
     for (const item of subjectIds) {
         try {
-            const playUrl = `${API_BASE}/wefeed-mobile-bff/subject-api/play-info?subjectId=${item.id}&se=${season}&ep=${episode}`;
-            const playRes = await movieBoxRequest("GET", playUrl, null);
+            const playParams = new URLSearchParams({ subjectId: item.id, se: season, ep: episode, streamSignType: "1" });
+            if (playbackPage.detailPath) playParams.set("detailPath", playbackPage.detailPath);
+            playParams.set("supportCodecs[hevc]", "1");
+            playParams.set("supportCodecs[h264]", "1");
+            const playUrl = `${API_BASE}/wefeed-mobile-bff/subject-api/play-info?${playParams.toString()}`;
+            const playRes = await movieBoxRequest("GET", playUrl, null, playbackHeaders);
 
             let hasValidStream = false;
 
             if (playRes && playRes.data && playRes.data.data) {
                 const playData = playRes.data.data;
-                const streamsList = playData.streams;
+                const streamsList = collectStreams(playData);
 
                 if (Array.isArray(streamsList) && streamsList.length > 0) {
                     for (const stream of streamsList) {
-                        const rawStreamUrl = stream.url || "";
+                        const rawStreamUrl = stream.url || stream.playUrl || stream.resourceLink || stream.streamUrl || "";
                         const signCookie = stream.signCookie || null;
                         const policyUrl = extractPolicyResource(signCookie);
                         const finalStreamUrl = policyUrl || rawStreamUrl;
@@ -119,24 +182,25 @@ async function getStreamLinks(subjectId, season = 0, episode = 0, mediaTitle = "
                         if (finalStreamUrl === rawStreamUrl && rawStreamUrl.includes("/other/2026/09/")) continue;
 
                         let formatType = getFormatType(finalStreamUrl);
-                        if (stream.format && stream.format.toUpperCase() === "HLS") formatType = "HLS";
-                        const qualLabel = stream.resolutions || stream.quality || "Auto";
+                        if (stream.format) {
+                            const declaredFormat = String(stream.format).toUpperCase();
+                            formatType = ["DASH", "HLS", "MP4", "MKV"].includes(declaredFormat)
+                                ? declaredFormat : getFormatType(finalStreamUrl);
+                        }
+                        const qualLabel = stream.resolutions || stream.resolution || stream.quality || "Auto";
                         const qualNum = parseQualityNumber(qualLabel);
                         const quality = qualNum ? `${qualNum}p` : "Auto";
                         
                         const streamId = stream.id || `${item.id}|${season}|${episode}`;
                         const subtitles = await fetchSubtitles(item.id, streamId, item.lang);
+                        const signHeaderKey = stream.signHeaderKey || stream.sign_header_key || "Cookie";
 
                         allStreams.push({
                             name: "MovieBox",
                             title: `${mediaTitle}${season > 0 ? ` S${season}E${episode}` : ""} (${item.lang}) - ${quality} [${formatType}]`,
                             url: finalStreamUrl,
                             quality,
-                            headers: {
-                                "Referer": `${API_BASE}/`,
-                                "User-Agent": userAgent,
-                                ...(signCookie ? { "Cookie": signCookie } : {})
-                            },
+                            headers: { ...playbackHeaders, ...(signCookie ? { [signHeaderKey]: signCookie } : {}) },
                             subtitles,
                             provider: "moviebox"
                         });
@@ -169,8 +233,7 @@ async function getStreamLinks(subjectId, season = 0, episode = 0, mediaTitle = "
                                         url: video.resourceLink,
                                         quality,
                                         headers: {
-                                            "Referer": `${API_BASE}/`,
-                                            "User-Agent": userAgent
+                                            ...playbackHeaders
                                         },
                                         provider: "moviebox"
                                     });

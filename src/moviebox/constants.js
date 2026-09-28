@@ -1,4 +1,6 @@
 export const API_BASE = "https://api3.aoneroom.com";
+export const PLAYER_BASE = "https://moviebox.ph";
+export const PLAYER_USER_AGENT = "Mozilla/5.0 (Linux; Android 15; Pixel 9) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/154.0.0.0 Mobile Safari/537.36";
 export const HOST_POOL = [
     "https://api6.aoneroom.com",
     "https://api5.aoneroom.com",
