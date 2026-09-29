@@ -123,6 +123,34 @@ function collectStreams(playData) {
     });
 }
 
+function getAudioLabel(stream, fallbackLanguage) {
+    const rawLanguage = [stream.languageName, stream.lanName, stream.language, stream.lan, fallbackLanguage]
+        .find(value => typeof value === "string" && value.trim()) || "Unknown";
+    let language = rawLanguage
+        .replace(/\bdub\b/gi, " ")
+        .replace(/\baudio\b/gi, " ")
+        .replace(/[_-]+/g, " ")
+        .replace(/\s+/g, " ")
+        .trim();
+
+    const languageNames = {
+        ar: "Arabic", bn: "Bengali", de: "German", en: "English", es: "Spanish", fr: "French",
+        hi: "Hindi", id: "Indonesian", it: "Italian", ja: "Japanese", ko: "Korean", ml: "Malayalam",
+        mr: "Marathi", pt: "Portuguese", ru: "Russian", ta: "Tamil", te: "Telugu", th: "Thai",
+        tr: "Turkish", ur: "Urdu", vi: "Vietnamese", zh: "Chinese"
+    };
+    const languageCode = language.match(/^([a-z]{2,3})(?:\s|$)/i)?.[1]?.toLowerCase();
+    if (languageCode && languageNames[languageCode]) {
+        language = languageNames[languageCode];
+    } else if (language) {
+        language = language.charAt(0).toUpperCase() + language.slice(1);
+    } else {
+        language = "Unknown";
+    }
+
+    return `${language} Audio`;
+}
+
 async function getStreamLinks(subjectId, season = 0, episode = 0, mediaTitle = "", mediaType = "movie") {
     const subjectUrl = `${API_BASE}/wefeed-mobile-bff/subject-api/get?subjectId=${subjectId}`;
     const detailRes = await movieBoxRequest("GET", subjectUrl);
@@ -190,6 +218,7 @@ async function getStreamLinks(subjectId, season = 0, episode = 0, mediaTitle = "
                         const qualLabel = stream.resolutions || stream.resolution || stream.quality || "Auto";
                         const qualNum = parseQualityNumber(qualLabel);
                         const quality = qualNum ? `${qualNum}p` : "Auto";
+                        const audioLabel = getAudioLabel(stream, item.lang);
                         
                         const streamId = stream.id || `${item.id}|${season}|${episode}`;
                         const subtitles = await fetchSubtitles(item.id, streamId, item.lang);
@@ -197,7 +226,7 @@ async function getStreamLinks(subjectId, season = 0, episode = 0, mediaTitle = "
 
                         allStreams.push({
                             name: "MovieBox",
-                            title: `${mediaTitle}${season > 0 ? ` S${season}E${episode}` : ""} (${item.lang}) - ${quality} [${formatType}]`,
+                            title: `${mediaTitle}${season > 0 ? ` S${season}E${episode}` : ""} - ${quality} (${audioLabel}) [${formatType}]`,
                             url: finalStreamUrl,
                             quality,
                             headers: { ...playbackHeaders, ...(signCookie ? { [signHeaderKey]: signCookie } : {}) },
@@ -226,10 +255,11 @@ async function getStreamLinks(subjectId, season = 0, episode = 0, mediaTitle = "
                                     }
 
                                     const quality = video.resolution ? `${video.resolution}p` : "Auto";
+                                    const audioLabel = getAudioLabel({}, item.lang);
 
                                     allStreams.push({
                                         name: "MovieBox",
-                                        title: `${mediaTitle}${season > 0 ? ` S${season}E${episode}` : ""} (${item.lang}) - ${quality} [Fallback]`,
+                                        title: `${mediaTitle}${season > 0 ? ` S${season}E${episode}` : ""} - ${quality} (${audioLabel}) [Fallback]`,
                                         url: video.resourceLink,
                                         quality,
                                         headers: {
