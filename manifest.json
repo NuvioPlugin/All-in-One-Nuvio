@@ -48,7 +48,7 @@
       "id": "4khdhub",
       "name": "4KHDHub",
       "description": "4KHDHub direct links",
-      "version": "1.0.2",
+      "version": "1.0.3",
       "author": "Nuvio Team",
       "supportedTypes": [
         "movie",
@@ -509,7 +509,7 @@
       "id": "hdhub4u",
       "name": "HDHub4u",
       "description": "Direct links from HDHub4u with high-speed download support",
-      "version": "1.1.0",
+      "version": "1.1.1",
       "author": "Nuvio Team",
       "supportedTypes": [
         "movie",

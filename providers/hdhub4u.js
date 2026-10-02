@@ -1,6 +1,6 @@
 /**
  * hdhub4u - Built from src/hdhub4u/
- * Generated: 2026-09-21T12:17:11.368Z
+ * Generated: 2026-10-02T12:34:10.590Z
  */
 var __create = Object.create;
 var __defProp = Object.defineProperty;
@@ -400,7 +400,7 @@ function hbLinksExtractor(url) {
       const response = yield fetch(url, { headers: __spreadProps(__spreadValues({}, HEADERS), { Referer: url }) });
       const data = yield response.text();
       const $ = import_cheerio_without_node_native.default.load(data);
-      const links = $("h3 a, h5 a, div.entry-content p a").map((i, el) => $(el).attr("href")).get();
+      const links = [...new Set($("h3 a, h5 a, div.entry-content p a, div.entry-content a").map((i, el) => $(el).attr("href")).get().filter(Boolean))];
       const results = yield Promise.all(links.map((l) => loadExtractor(l, url)));
       return results.flat().map((link) => __spreadProps(__spreadValues({}, link), {
         source: `${link.source} Hblinks`

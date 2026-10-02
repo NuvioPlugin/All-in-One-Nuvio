@@ -271,6 +271,13 @@ function extractSourceResults($, el) {
       height,
       title
     };
+    const hblinksLink = $(el).find("a").filter((_, a) => {
+      const href = $(a).attr("href") || "";
+      return href.includes("hblinks") || href.includes("hubstream.dad");
+    }).attr("href");
+    if (hblinksLink) {
+      return { url: new URL(hblinksLink, BASE_URL).toString(), meta, extractor: "hblinks" };
+    }
     const hubCloudLink = $(el).find("a").filter((_, a) => {
       const text = $(a).text();
       const href = $(a).attr("href") || "";
@@ -361,6 +368,56 @@ function extractHubCloud(hubCloudUrl, baseMeta) {
     return results;
   });
 }
+function extractHblinks(hblinksUrl, baseMeta, depth = 0) {
+  return __async(this, null, function* () {
+    if (!hblinksUrl || depth > 2)
+      return [];
+    try {
+      const html = yield fetchText(hblinksUrl, { headers: { Referer: hblinksUrl } });
+      if (!html)
+        return [];
+      const $ = cheerio2.load(html);
+      const links = [...new Set($("h3 a, h5 a, div.entry-content p a, div.entry-content a").map((_, el) => $(el).attr("href")).get().filter(Boolean))];
+      const results = [];
+      for (const rawLink of links) {
+        try {
+          const absoluteLink = new URL(rawLink, hblinksUrl).toString();
+          const resolvedLink = yield resolveRedirectUrl(absoluteLink);
+          const link = resolvedLink || absoluteLink;
+          const hostname = new URL(link).hostname.toLowerCase();
+          if (hostname.includes("hblinks") || hostname.includes("hubstream.dad")) {
+            const nestedResults = yield extractHblinks(link, baseMeta, depth + 1);
+            results.push(...nestedResults);
+          } else if (hostname.includes("hubcloud")) {
+            const cloudResults = yield extractHubCloud(link, baseMeta);
+            results.push(...cloudResults);
+          } else if (hostname.includes("hubdrive")) {
+            const driveHtml = yield fetchText(link, { headers: { Referer: hblinksUrl } });
+            if (driveHtml) {
+              const $drive = cheerio2.load(driveHtml);
+              const cloudLink = $drive("a").filter((_, a) => {
+                const text = $drive(a).text();
+                const href = $drive(a).attr("href") || "";
+                return text.includes("HubCloud") || href.includes("hubcloud.") || href.includes("hubcloud/");
+              }).attr("href");
+              if (cloudLink) {
+                const absoluteCloudLink = new URL(cloudLink, link).toString();
+                const cloudResults = yield extractHubCloud(absoluteCloudLink, baseMeta);
+                results.push(...cloudResults);
+              }
+            }
+          } else if (/\.(m3u8|mpd|mp4|mkv)(?:$|\?)/i.test(link)) {
+            results.push({ source: "Hblinks Direct", url: link, meta: baseMeta });
+          }
+        } catch (e) {
+        }
+      }
+      return results;
+    } catch (e) {
+      return [];
+    }
+  });
+}
 var cheerio3 = require("cheerio-without-node-native");
 function getStreams(tmdbId, type, season, episode) {
   return __async(this, null, function* () {
@@ -402,8 +459,13 @@ function getStreams(tmdbId, type, season, episode) {
       try {
         const sourceResult = yield extractSourceResults($, item);
         if (sourceResult && sourceResult.url) {
-          console.log(`[4KHDHub] Extracting from HubCloud: ${sourceResult.url}`);
-          const extractedLinks = yield extractHubCloud(sourceResult.url, sourceResult.meta);
+          console.log(`[4KHDHub] Extracting from ${sourceResult.extractor === "hblinks" ? "Hblinks" : "HubCloud"}: ${sourceResult.url}`);
+          let extractedLinks;
+          if (sourceResult.extractor === "hblinks") {
+            extractedLinks = yield extractHblinks(sourceResult.url, sourceResult.meta);
+          } else {
+            extractedLinks = yield extractHubCloud(sourceResult.url, sourceResult.meta);
+          }
           return extractedLinks.map((link) => ({
             name: `4KHDHub - ${link.source}${sourceResult.meta.height ? ` ${sourceResult.meta.height}p` : ""}`,
             title: `${link.meta.title}

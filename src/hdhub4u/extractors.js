@@ -113,7 +113,10 @@ export async function hbLinksExtractor(url) {
         const response = await fetch(url, { headers: { ...HEADERS, Referer: url } });
         const data = await response.text();
         const $ = cheerio.load(data);
-        const links = $("h3 a, h5 a, div.entry-content p a").map((i, el) => $(el).attr("href")).get();
+        const links = [...new Set($("h3 a, h5 a, div.entry-content p a, div.entry-content a")
+            .map((i, el) => $(el).attr("href"))
+            .get()
+            .filter(Boolean))];
         const results = await Promise.all(links.map(l => loadExtractor(l, url)));
         return results.flat().map(link => ({
             ...link,
